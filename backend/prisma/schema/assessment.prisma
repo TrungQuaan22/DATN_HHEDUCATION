@@ -1,0 +1,191 @@
+enum AssessmentType {
+  quiz
+  exam
+}
+
+enum GradingType {
+  auto
+  manual
+}
+
+enum AssessmentVisibility {
+  draft
+  published
+  hidden
+}
+
+enum AssessmentItemType {
+  mcq
+  true_false
+  numeric
+  essay
+}
+
+enum SubmissionStatus {
+  doing
+  submitted
+  auto_submitted
+  completed
+}
+
+enum AiStatus {
+  none
+  processing
+  summarized
+  unsupported
+  failed
+}
+
+model Assessment {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId         String               @map("course_id") @db.Uuid
+  lessonId         String?              @map("lesson_id") @db.Uuid
+  type             AssessmentType
+  title            String
+  gradingType      GradingType          @map("grading_type")
+  timeLimitMinutes Int?                 @map("time_limit_minutes")
+  visibility       AssessmentVisibility @default(draft)
+  openTime         DateTime?            @map("open_time")
+  closeTime        DateTime?            @map("close_time")
+  maxAttempts      Int                  @default(1) @map("max_attempts")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+  deletedAt        DateTime?            @map("deleted_at")
+
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson?          @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  items       AssessmentItem[]
+  submissions Submission[]
+
+  @@index([courseId, visibility])
+  @@map("assessments")
+}
+
+model AssessmentItem {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId   String              @map("assessment_id") @db.Uuid
+  itemType       AssessmentItemType  @map("item_type")
+  questionId     String?             @map("question_id") @db.Uuid
+  topicId        String?             @map("topic_id") @db.Uuid
+  difficulty     QuestionDifficulty?
+  questionNumber Int                 @map("question_number")
+  correctAnswer  Json?               @map("correct_answer")
+  scoringConfig  Json?               @map("scoring_config")
+  maxScore       Decimal             @default(1) @map("max_score") @db.Decimal(8, 2)
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question   Question?  @relation(fields: [questionId], references: [id])
+  topic      Topic?     @relation(fields: [topicId], references: [id])
+
+  mcqAnswers     SubmissionMcqAnswer[]
+  tfAnswers      SubmissionTfAnswer[]
+  numericAnswers SubmissionNumericAnswer[]
+  essayAnswers   SubmissionEssayAnswer[]
+
+  @@unique([assessmentId, questionNumber])
+  @@index([assessmentId])
+  @@index([questionId])
+  @@index([topicId, difficulty])
+  @@map("assessment_items")
+}
+
+model Submission {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId   String           @map("assessment_id") @db.Uuid
+  studentId      String           @map("student_id") @db.Uuid
+  attemptNumber  Int              @map("attempt_number")
+  startTime      DateTime         @default(now()) @map("start_time")
+  submitTime     DateTime?        @map("submit_time")
+  status         SubmissionStatus @default(doing)
+  version        Int              @default(0)
+  finalScore     Decimal?         @map("final_score") @db.Decimal(8, 2)
+  violationCount Int              @default(0) @map("violation_count")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  assessment     Assessment                @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student        User                      @relation("SubmissionStudent", fields: [studentId], references: [id])
+  mcqAnswers     SubmissionMcqAnswer[]
+  tfAnswers      SubmissionTfAnswer[]
+  numericAnswers SubmissionNumericAnswer[]
+  essayAnswers   SubmissionEssayAnswer[]
+
+  @@unique([assessmentId, studentId, attemptNumber])
+  @@index([studentId])
+  @@index([assessmentId])
+  @@index([status])
+  @@index([assessmentId, status])
+  @@map("submissions")
+}
+
+model SubmissionMcqAnswer {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submissionId     String   @map("submission_id") @db.Uuid
+  itemId           String   @map("item_id") @db.Uuid
+  selectedOptionId String   @map("selected_option_id") @db.Uuid
+  isCorrect        Boolean? @map("is_correct")
+  pointEarned      Decimal  @default(0) @map("point_earned") @db.Decimal(8, 2)
+
+  submission     Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  item           AssessmentItem @relation(fields: [itemId], references: [id])
+  selectedOption QuestionOption @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([submissionId, itemId])
+  @@index([submissionId])
+  @@map("submission_mcq_answers")
+}
+
+model SubmissionTfAnswer {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submissionId  String   @map("submission_id") @db.Uuid
+  itemId        String   @map("item_id") @db.Uuid
+  optionId      String   @map("option_id") @db.Uuid
+  selectedValue Boolean  @map("selected_value")
+  isCorrect     Boolean? @map("is_correct")
+  pointEarned   Decimal  @default(0) @map("point_earned") @db.Decimal(8, 2)
+
+  submission Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  item       AssessmentItem @relation(fields: [itemId], references: [id])
+  option     QuestionOption @relation(fields: [optionId], references: [id])
+
+  @@unique([submissionId, itemId, optionId])
+  @@index([submissionId])
+  @@map("submission_tf_answers")
+}
+
+model SubmissionNumericAnswer {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submissionId String   @map("submission_id") @db.Uuid
+  itemId       String   @map("item_id") @db.Uuid
+  answerValue  Decimal  @map("answer_value") @db.Decimal(18, 6)
+  isCorrect    Boolean? @map("is_correct")
+  pointEarned  Decimal  @default(0) @map("point_earned") @db.Decimal(8, 2)
+
+  submission Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  item       AssessmentItem @relation(fields: [itemId], references: [id])
+
+  @@unique([submissionId, itemId])
+  @@index([submissionId])
+  @@map("submission_numeric_answers")
+}
+
+model SubmissionEssayAnswer {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submissionId String    @map("submission_id") @db.Uuid
+  itemId       String    @map("item_id") @db.Uuid
+  answer       String
+  aiSummary    String?   @map("ai_summary")
+  aiStatus     AiStatus  @default(none) @map("ai_status")
+  teacherScore Decimal?  @map("teacher_score") @db.Decimal(8, 2)
+  teacherNote  String?   @map("teacher_note")
+  gradedBy     String?   @map("graded_by") @db.Uuid
+  gradedAt     DateTime? @map("graded_at")
+
+  submission Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  item       AssessmentItem @relation(fields: [itemId], references: [id])
+  grader     User?          @relation("EssayGrader", fields: [gradedBy], references: [id])
+
+  @@unique([submissionId, itemId])
+  @@index([submissionId])
+  @@map("submission_essay_answers")
+}

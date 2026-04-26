@@ -1,0 +1,94 @@
+enum OrderStatus {
+  pending
+  completed
+  cancelled
+  expired
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  cancelled
+}
+
+enum WebhookStatus {
+  received
+  processing
+  processed
+  failed
+}
+
+model Order {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String      @map("user_id") @db.Uuid
+  idempotencyKey     String      @map("idempotency_key") @db.VarChar(255)
+  orderInvoiceNumber String      @unique @map("order_invoice_number") @db.VarChar(50)
+  totalAmount        Decimal     @map("total_amount") @db.Decimal(12, 2)
+  currency           String      @default("VND") @db.VarChar(3)
+  status             OrderStatus @default(pending)
+  expiresAt          DateTime    @map("expires_at")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+  enrollments Enrollment[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([status, expiresAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String  @map("order_id") @db.Uuid
+  courseId        String  @map("course_id") @db.Uuid
+  priceAtPurchase Decimal @map("price_at_purchase") @db.Decimal(12, 2)
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([orderId, courseId])
+  @@map("order_items")
+}
+
+model Payment {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId        String        @map("order_id") @db.Uuid
+  provider       String        @db.VarChar(50)
+  amount         Decimal       @db.Decimal(12, 2)
+  currency       String        @default("VND") @db.VarChar(3)
+  rawPayload     Json?         @map("raw_payload")
+  transactionRef String        @unique @map("transaction_ref") @db.VarChar(255)
+  status         PaymentStatus @default(pending)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  paidAt         DateTime?     @map("paid_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider     String        @db.VarChar(50)
+  eventId      String        @map("event_id") @db.VarChar(255)
+  status       WebhookStatus @default(received)
+  payload      Json
+  retryCount   Int           @default(0) @map("retry_count")
+  nextRetryAt  DateTime?     @map("next_retry_at")
+  errorMessage String?       @map("error_message")
+  processedAt  DateTime?     @map("processed_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@unique([provider, eventId])
+  @@index([status, nextRetryAt])
+  @@index([provider, createdAt])
+  @@map("webhook_events")
+}

@@ -1,0 +1,24 @@
+enum BlogPostStatus {
+  draft
+  published
+}
+
+model BlogPost {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String         @db.VarChar(255)
+  slug         String         @unique @db.VarChar(255)
+  content      Json
+  authorId     String         @map("author_id") @db.Uuid
+  thumbnailUrl String?        @map("thumbnail_url")
+  status       BlogPostStatus @default(draft)
+  publishedAt  DateTime?      @map("published_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  deletedAt    DateTime?      @map("deleted_at")
+
+  author User @relation("BlogAuthor", fields: [authorId], references: [id])
+
+  @@index([status])
+  @@index([authorId])
+  @@map("blog_posts")
+}

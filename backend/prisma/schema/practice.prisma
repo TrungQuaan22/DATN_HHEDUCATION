@@ -1,0 +1,44 @@
+enum PracticeSessionStatus {
+  doing
+  completed
+  abandoned
+}
+
+model PracticeSession {
+  id               String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId        String                @map("student_id") @db.Uuid
+  courseId         String                @map("course_id") @db.Uuid
+  targetTopicId    String?               @map("target_topic_id") @db.Uuid
+  targetDifficulty QuestionDifficulty?   @map("target_difficulty")
+  totalQuestions   Int                   @default(10) @map("total_questions")
+  score            Decimal?              @db.Decimal(8, 2)
+  status           PracticeSessionStatus @default(doing)
+  createdAt        DateTime              @default(now()) @map("created_at")
+  completedAt      DateTime?             @map("completed_at")
+
+  student     User             @relation(fields: [studentId], references: [id])
+  course      Course           @relation(fields: [courseId], references: [id])
+  targetTopic Topic?           @relation(fields: [targetTopicId], references: [id])
+  answers     PracticeAnswer[]
+
+  @@index([studentId, createdAt])
+  @@index([courseId])
+  @@map("practice_sessions")
+}
+
+model PracticeAnswer {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId      String   @map("session_id") @db.Uuid
+  questionId     String   @map("question_id") @db.Uuid
+  selectedAnswer Json     @map("selected_answer")
+  isCorrect      Boolean  @map("is_correct")
+  pointEarned    Decimal  @default(0) @map("point_earned") @db.Decimal(8, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  session  PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question Question        @relation(fields: [questionId], references: [id])
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@map("practice_answers")
+}

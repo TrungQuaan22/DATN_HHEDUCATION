@@ -1,0 +1,54 @@
+model LessonProgress {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  lessonId        String    @map("lesson_id") @db.Uuid
+  watchedSeconds  Int       @default(0) @map("watched_seconds")
+  lastPositionSec Int       @default(0) @map("last_position_sec")
+  durationSec     Int       @map("duration_sec")
+  isCompleted     Boolean   @default(false) @map("is_completed")
+  completedAt     DateTime? @map("completed_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId, isCompleted])
+  @@map("lesson_progress")
+}
+
+model CourseProgress {
+  userId           String    @map("user_id") @db.Uuid
+  courseId         String    @map("course_id") @db.Uuid
+  totalLessons     Int       @map("total_lessons")
+  completedLessons Int       @default(0) @map("completed_lessons")
+  lastLearnedAt    DateTime? @map("last_learned_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@id([userId, courseId])
+  @@index([courseId])
+  @@map("course_progress")
+}
+
+model StudentTopicPerformance {
+  studentId       String             @map("student_id") @db.Uuid
+  topicId         String             @map("topic_id") @db.Uuid
+  difficulty      QuestionDifficulty
+  totalAttempts   Int                @default(0) @map("total_attempts")
+  correctAttempts Int                @default(0) @map("correct_attempts")
+  totalPoints     Decimal            @default(0) @map("total_points") @db.Decimal(10, 2)
+  maxPoints       Decimal            @default(0) @map("max_points") @db.Decimal(10, 2)
+  lastAttemptAt   DateTime?          @map("last_attempt_at")
+
+  student User  @relation("PerformanceStudent", fields: [studentId], references: [id])
+  topic   Topic @relation(fields: [topicId], references: [id])
+
+  @@id([studentId, topicId, difficulty])
+  @@index([studentId])
+  @@index([topicId])
+  @@map("student_topic_performance")
+}

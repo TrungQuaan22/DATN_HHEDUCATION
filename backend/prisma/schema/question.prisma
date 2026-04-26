@@ -1,0 +1,76 @@
+enum QuestionDifficulty {
+  recognition
+  understanding
+  application
+  advanced
+}
+
+enum QuestionType {
+  mcq
+  true_false
+  numeric
+}
+
+enum QuestionStatus {
+  active
+  hidden
+  archived
+}
+
+model Topic {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String  @db.VarChar(100)
+  parentId String? @map("parent_id") @db.Uuid
+  courseId String  @map("course_id") @db.Uuid
+
+  course           Course                    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  parent           Topic?                    @relation("TopicTree", fields: [parentId], references: [id])
+  children         Topic[]                   @relation("TopicTree")
+  questions        Question[]
+  items            AssessmentItem[]
+  performances     StudentTopicPerformance[]
+  practiceSessions PracticeSession[]
+
+  @@unique([courseId, parentId, name])
+  @@index([courseId])
+  @@index([parentId])
+  @@map("topics")
+}
+
+model Question {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId     String             @map("topic_id") @db.Uuid
+  difficulty  QuestionDifficulty
+  type        QuestionType
+  content     Json
+  explanation Json?
+  status      QuestionStatus     @default(active)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  deletedAt   DateTime?          @map("deleted_at")
+
+  topic           Topic            @relation(fields: [topicId], references: [id])
+  options         QuestionOption[]
+  assessmentItems AssessmentItem[]
+  practiceAnswers PracticeAnswer[]
+
+  @@index([topicId, difficulty])
+  @@index([topicId, type])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  content    Json
+  isCorrect  Boolean @map("is_correct")
+  orderIndex Int     @map("order_index")
+
+  question   Question              @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  mcqAnswers SubmissionMcqAnswer[]
+  tfAnswers  SubmissionTfAnswer[]
+
+  @@unique([questionId, orderIndex])
+  @@index([questionId])
+  @@map("question_options")
+}
