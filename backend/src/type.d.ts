@@ -1,4 +1,6 @@
 
+import type { UserRole } from "@prisma/client";
+
 declare global {
     namespace Express {
         interface Request {
@@ -10,7 +12,7 @@ declare global {
             };
             user?: {
                 id: string;
-                role: "admin" | "teacher" | "student";
+                role: UserRole;
                 sessionId: string;
             }
         }

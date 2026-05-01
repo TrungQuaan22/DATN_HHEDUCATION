@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import express , {Request, Response, NextFunction} from 'express'
 import { authRoutes } from './modules/auth/routes'
 import { randomUUID } from 'crypto'
