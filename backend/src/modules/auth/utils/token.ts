@@ -7,6 +7,7 @@ import { jwtConfig } from "~/config/jwt_config";
 import { signAccessToken, signRefreshToken } from "./jwt";
 import { hashToken } from "./password";
 import { TokenType } from "~/common/constant/enums";
+import { authConfig } from "~/config/auth_config";
 
 type CreateLoginTokensInput = {
   userId: string;
@@ -66,4 +67,13 @@ export const createLoginTokens = async ({
     refreshTokenHash,
     refreshTokenExpiresAt: createRefreshTokenExpiresAt(),
   };
+};
+
+export const isWithinRefreshTokenRetryGrace = (rotatedAt: Date | null): boolean => {
+  if (!rotatedAt) {
+    return false;
+  }
+
+  const graceMs = authConfig.refreshToken.retryGraceSeconds * 1000;
+  return Date.now() - rotatedAt.getTime() <= graceMs;
 };

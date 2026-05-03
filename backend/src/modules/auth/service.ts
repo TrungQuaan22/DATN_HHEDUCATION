@@ -10,14 +10,13 @@ import { authRepository } from "./repository";
 import { ERROR_CODE } from "~/common/constant/error-code";
 import { ERROR_MESSAGE } from "~/common/constant/error-message";
 import { AppError } from "~/common/error/app-error";
-
 import { jwtConfig } from "~/config/jwt_config";
-
 import { hashPassword, verifyPassword } from "./utils/password";
-import { createLoginTokens } from "./utils/token";
+import { createLoginTokens, isWithinRefreshTokenRetryGrace } from "./utils/token";
 import { UserRole, UserStatus } from "@prisma/client";
 import { verifyRefreshToken } from "./utils/jwt";
 import { TokenType } from "~/common/constant/enums";
+
 
 export const authService = {
   async register(input: RegisterDto): Promise<RegisterResponseDto> {
@@ -28,7 +27,7 @@ export const authService = {
     }
 
     const passwordHash = await hashPassword(input.password);
-    const user = await authRepository.createActiveStudent({
+    const user = await authRepository.createStudent({
       fullName: input.fullName,
       email: input.email,
       passwordHash,
@@ -94,7 +93,7 @@ export const authService = {
  * 3. Retrieves the session from the database using the sessionId from the payload
  * 4. Validates the session by checking if it exists, is not revoked, and has not expired
  * 5. If the user associated with the session is banned, revokes the session and throws an error
- * 6. Verifies that the provided refresh token matches either the current or previous refresh token hash stored in the session
+ * 6. Verifies that the provided refresh token matches either the current or previous refresh token hash stored in the session within the allowed retry grace period to prevent token reuse attacks
  * 7. If valid, creates new access and refresh tokens, rotates the refresh token in the database, and returns the new tokens
  * @param input
  * @returns An object containing the new access token and refresh token
@@ -132,7 +131,6 @@ export const authService = {
       throw new AppError(403, ERROR_CODE.ACCOUNT_BANNED, ERROR_MESSAGE.ACCOUNT_BANNED);
     }
 
-    //compare provided refresh token with the current refresh token hash in db, if not match, compare with previous refresh token hash (if exists)
     const isCurrentRefreshToken = await verifyPassword(input.refreshToken, session.refreshTokenHash);
 
     if (!isCurrentRefreshToken) {
@@ -140,12 +138,14 @@ export const authService = {
         session.previousRefreshTokenHash !== null &&
         (await verifyPassword(input.refreshToken, session.previousRefreshTokenHash));
 
-      if (isPreviousRefreshToken) {
+      if (!isPreviousRefreshToken) {
+        throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN);
+      }
+
+      if (!isWithinRefreshTokenRetryGrace(session.previousTokenRotatedAt)) {
         await authRepository.revokeSession(session.id);
         throw new AppError(401, ERROR_CODE.REFRESH_TOKEN_REUSED, ERROR_MESSAGE.REFRESH_TOKEN_REUSED);
       }
-
-      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN);
     }
 
     const tokens = await createLoginTokens({

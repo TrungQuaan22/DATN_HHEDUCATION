@@ -8,8 +8,8 @@ export const authRepository = {
       where: { email },
     });
   },
-
-  createActiveStudent(data: { fullName: string; email: string; passwordHash: string }) {
+  //Bypass email verification for now, create active student directly
+  createStudent(data: { fullName: string; email: string; passwordHash: string }) {
     return prisma.user.create({
       data: {
         fullName: data.fullName,
