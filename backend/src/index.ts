@@ -4,6 +4,7 @@ import express , {Request, Response, NextFunction} from 'express'
 import { authRoutes } from './modules/auth/routes'
 import { randomUUID } from 'crypto'
 import { errorHandler } from './common/error/error'
+import { userRoutes } from "./modules/users/routes";
 
 const app = express()
 
@@ -20,6 +21,7 @@ app.use((req : Request, res : Response, next: NextFunction) => {
 )
 //Routes
 app.use('/auth', authRoutes)
+app.use('/users', userRoutes)
 //Error handling middleware
 app.use(errorHandler)
 
