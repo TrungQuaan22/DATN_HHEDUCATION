@@ -13,10 +13,7 @@ type RefreshTokenValidated = z.infer<typeof refreshTokenSchema>
 export const loginController = async (req: Request, res: Response) => {
     const validated = req.validated as LoginValidated
 
-    const dto : LoginDto = {
-        email: validated.body.email,
-        password: validated.body.password
-    }
+    const dto : LoginDto = validated.body
     const data = await authService.login(dto)
 
     sendSuccess({res, data})

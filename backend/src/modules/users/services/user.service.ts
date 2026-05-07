@@ -2,8 +2,8 @@ import { ERROR_CODE } from "~/common/constant/error-code";
 import { ERROR_MESSAGE } from "~/common/constant/error-message";
 import { AppError } from "~/common/error/app-error";
 
-import type { GetMeResponseDto } from "./dto";
-import { userRepository } from "./repository";
+import type { GetMeResponseDto } from "../dto/user.dto";
+import { userRepository } from "../repository";
 
 export const userService = {
   async getMe(userId: string): Promise<GetMeResponseDto> {

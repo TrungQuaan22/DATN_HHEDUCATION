@@ -21,6 +21,18 @@ export const authRepository = {
     });
   },
 
+  createTeacher(data: { fullName: string; email: string; passwordHash: string }) {
+    return prisma.user.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        role: UserRole.teacher,
+        status: UserStatus.active,
+      },
+    });
+  },
+
   createSession(data: { id: string; userId: string; refreshTokenHash: string; expiresAt: Date }) {
     return prisma.userSession.create({
       data: {
