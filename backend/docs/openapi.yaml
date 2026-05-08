@@ -1,0 +1,607 @@
+openapi: 3.0.3
+info:
+  title: HH Education API
+  version: 0.1.0
+  description: API documentation for the current backend implementation.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Authentication and token lifecycle
+  - name: Users
+    description: User profile and user management
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register student account
+      description: Register a new student account. Email verification is currently bypassed and the account is created as active.
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              fullName: Nguyen Van A
+              email: student@example.com
+              password: Password123!
+              confirmPassword: Password123!
+      responses:
+        '201':
+          description: Student account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: EMAIL_ALREADY_EXISTS
+                  message: Email already exists. Please use a different email address.
+                  details: null
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: Authenticate credentials and create a login session with access and refresh tokens.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: student@example.com
+              password: Password123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: Invalid credentials. Please check your email and password and try again.
+                  details: null
+        '403':
+          description: Account is banned or not verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Auth
+      summary: Refresh token
+      description: Rotate refresh token and issue a new access token and refresh token.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            example:
+              refreshToken: jwt-refresh-token
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid refresh token or refresh token reused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRefreshToken:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_REFRESH_TOKEN
+                      message: Invalid refresh token. Please log in again.
+                      details: null
+                refreshTokenReused:
+                  value:
+                    success: false
+                    error:
+                      code: REFRESH_TOKEN_REUSED
+                      message: Refresh token reuse detected. Please log in again.
+                      details: null
+        '403':
+          description: Account is banned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: Return the profile of the authenticated user.
+      operationId: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMeSuccessResponse'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    success: false
+                    error:
+                      code: UNAUTHORIZED
+                      message: Unauthorized. Please log in to access this resource.
+                      details: null
+                accessTokenExpired:
+                  value:
+                    success: false
+                    error:
+                      code: ACCESS_TOKEN_EXPIRED
+                      message: Access token expired. Please refresh your session.
+                      details: null
+                invalidAccessToken:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_ACCESS_TOKEN
+                      message: Invalid access token. Please log in again.
+                      details: null
+        '403':
+          description: Account is banned or not verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/teachers:
+    post:
+      tags:
+        - Users
+      summary: Create teacher account
+      description: Admin creates an active teacher account. Teacher email verification is bypassed for now.
+      operationId: createTeacher
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeacherRequest'
+            example:
+              fullName: Teacher A
+              email: teacher@example.com
+              password: Password123!
+              confirmPassword: Password123!
+      responses:
+        '201':
+          description: Teacher created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTeacherSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Admin lists users with offset pagination, optional role/status filters, and keyword search.
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number. Offset is calculated as `(page - 1) * limit`.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of users per page.
+        - in: query
+          name: role
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+        - in: query
+          name: keyword
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          description: Search by email or full name.
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUsersSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: BAD_REQUEST
+              message: Validation failed
+              details:
+                - location: body
+                  field: email
+                  message: Invalid email
+
+  schemas:
+    UserRole:
+      type: string
+      enum:
+        - admin
+        - teacher
+        - student
+
+    UserStatus:
+      type: string
+      enum:
+        - pending_verification
+        - active
+        - banned
+
+    RegisterRequest:
+      type: object
+      required:
+        - fullName
+        - email
+        - password
+        - confirmPassword
+      additionalProperties: false
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+          description: Must contain uppercase, lowercase, number, and special character.
+        confirmPassword:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    RegisterResponseData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          type: string
+          enum:
+            - student
+        status:
+          type: string
+          enum:
+            - active
+
+    RegisterSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/RegisterResponseData'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+    LoginResponseData:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/AuthUser'
+
+    LoginSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/LoginResponseData'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      additionalProperties: false
+      properties:
+        refreshToken:
+          type: string
+
+    RefreshTokenResponseData:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    RefreshTokenSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/RefreshTokenResponseData'
+
+    GetMeResponseData:
+      allOf:
+        - $ref: '#/components/schemas/AuthUser'
+        - type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    GetMeSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/GetMeResponseData'
+
+    CreateTeacherRequest:
+      allOf:
+        - $ref: '#/components/schemas/RegisterRequest'
+
+    CreateTeacherResponseData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          type: string
+          enum:
+            - teacher
+        status:
+          type: string
+          enum:
+            - active
+
+    CreateTeacherSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/CreateTeacherResponseData'
+
+    AdminUserItem:
+      allOf:
+        - $ref: '#/components/schemas/AuthUser'
+        - type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    OffsetPagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 1015
+        totalPages:
+          type: integer
+          example: 51
+
+    ListUsersResponseData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserItem'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+
+    ListUsersSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListUsersResponseData'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              nullable: true
