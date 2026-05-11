@@ -44,7 +44,6 @@ export const listUsersSchema = z.object({
   query: listUsersQuerySchema
 })
 
-
 export const updateUserStatusBodySchema = z
   .object({
     status: z.nativeEnum(UserStatus)

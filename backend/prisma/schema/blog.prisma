@@ -18,7 +18,6 @@ model BlogPost {
 
   author User @relation("BlogAuthor", fields: [authorId], references: [id])
 
-  @@index([status])
   @@index([authorId])
   @@map("blog_posts")
 }

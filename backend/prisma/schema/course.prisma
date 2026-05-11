@@ -17,11 +17,12 @@ enum EnrollmentSource {
 model Course {
   id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title        String       @db.VarChar(255)
-  slug         String       @unique @db.VarChar(255)
+  slug         String       @db.VarChar(255)
   description  String?
   teacherId    String       @map("teacher_id") @db.Uuid
   thumbnailUrl String?      @map("thumbnail_url")
-  price        Decimal      @default(0) @db.Decimal(12, 2)
+  price        Int          @default(0)
+  salePrice    Int?         @map("sale_price")
   status       CourseStatus @default(draft)
   allowPreview Boolean      @default(true) @map("allow_preview")
   createdAt    DateTime     @default(now()) @map("created_at")
@@ -38,7 +39,6 @@ model Course {
   practiceSessions PracticeSession[]
 
   @@index([teacherId])
-  @@index([status])
   @@map("courses")
 }
 

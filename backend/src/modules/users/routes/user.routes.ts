@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router } from 'express'
 
-import { asyncHandler } from "~/common/middlewares/async-handler";
-import { requireAuth } from "~/common/middlewares/require-auth";
+import { asyncHandler } from '~/common/middlewares/async-handler'
+import { requireAuth } from '~/common/middlewares/require-auth'
 
-import { getMeController } from "../controllers/user.controller";
+import { getMeController } from '../controllers/user.controller'
 
-export const userRoutes = Router();
+export const userRoutes = Router()
 
-userRoutes.get("/me", requireAuth, asyncHandler(getMeController));
+userRoutes.get('/me', requireAuth, asyncHandler(getMeController))

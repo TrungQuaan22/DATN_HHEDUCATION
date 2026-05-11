@@ -1,87 +1,87 @@
-import { UserRole } from "@prisma/client";
-import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
-import { TokenType } from "~/common/constant/enums";
+import { UserRole } from '@prisma/client'
+import jwt, { type Secret, type SignOptions } from 'jsonwebtoken'
+import { TokenType } from '~/common/constant/enums'
 
-export type JwtPayload = Record<string, unknown>;
+export type JwtPayload = Record<string, unknown>
 
 export type JwtSignInput<TPayload extends JwtPayload> = {
-  payload: TPayload;
-  privateKey: Secret;
-  options?: SignOptions;
-};
+  payload: TPayload
+  privateKey: Secret
+  options?: SignOptions
+}
 
 export type AccessTokenPayload = {
-  tokenType: TokenType.ACCESS;
-  userId: string;
-  role: UserRole;
-  sessionId: string;
-};
+  tokenType: TokenType.ACCESS
+  userId: string
+  role: UserRole
+  sessionId: string
+}
 
 export type RefreshTokenPayload = {
-  tokenType: TokenType.REFRESH;
-  userId: string;
-  sessionId: string;
-};
+  tokenType: TokenType.REFRESH
+  userId: string
+  sessionId: string
+}
 
 const signJwt = <TPayload extends JwtPayload>({
   payload,
   privateKey,
-  options,
+  options
 }: JwtSignInput<TPayload>): Promise<string> => {
   return new Promise((resolve, reject) => {
     jwt.sign(payload, privateKey, options ?? {}, (error, token) => {
       if (error) {
-        reject(error);
-        return;
+        reject(error)
+        return
       }
 
       if (!token) {
-        reject(new Error("JWT signing failed"));
-        return;
+        reject(new Error('JWT signing failed'))
+        return
       }
 
-      resolve(token);
-    });
-  });
-};
+      resolve(token)
+    })
+  })
+}
 
 export const signAccessToken = (input: JwtSignInput<AccessTokenPayload>): Promise<string> => {
-  return signJwt(input);
-};
+  return signJwt(input)
+}
 
 export const signRefreshToken = (input: JwtSignInput<RefreshTokenPayload>): Promise<string> => {
-  return signJwt(input);
-};
+  return signJwt(input)
+}
 
 const verifyJwt = <TPayload extends JwtPayload>({
   token,
-  privateKey,
+  privateKey
 }: {
-  token: string;
-  privateKey: Secret;
+  token: string
+  privateKey: Secret
 }): Promise<TPayload> => {
   return new Promise((resolve, reject) => {
     jwt.verify(token, privateKey, (error, decoded) => {
       if (error) {
-        reject(error);
-        return;
+        reject(error)
+        return
       }
 
-      resolve(decoded as TPayload);
-    });
-  });
-};
+      resolve(decoded as TPayload)
+    })
+  })
+}
 
 export const verifyRefreshToken = (input: {
-  token: string;
-  privateKey: Secret;
+  token: string
+  privateKey: Secret
 }): Promise<RefreshTokenPayload> => {
-  return verifyJwt<RefreshTokenPayload>(input);
-};
+  return verifyJwt<RefreshTokenPayload>(input)
+}
 
 export const verifyAccessToken = (input: {
-  token: string;
-  privateKey: Secret;
+  token: string
+  privateKey: Secret
 }): Promise<AccessTokenPayload> => {
-  return verifyJwt<AccessTokenPayload>(input);
-};
+  return verifyJwt<AccessTokenPayload>(input)
+}

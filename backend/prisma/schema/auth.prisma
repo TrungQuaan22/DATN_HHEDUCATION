@@ -54,6 +54,5 @@ model UserSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, expiresAt])
   @@map("user_sessions")
 }

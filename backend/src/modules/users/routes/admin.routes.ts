@@ -6,8 +6,16 @@ import { requireAuth } from '~/common/middlewares/require-auth'
 import { requireRole } from '~/common/middlewares/require-role'
 import { validateRequest } from '~/common/middlewares/validate-request'
 
-import { createTeacherController, getAllUsersController, updateUserStatusController } from '../controllers/admin.controller'
-import { createTeacherSchema, listUsersSchema, updateUserStatusSchema } from '../validators/admin.validator'
+import {
+  createTeacherController,
+  getAllUsersController,
+  updateUserStatusController
+} from '../controllers/admin.controller'
+import {
+  createTeacherSchema,
+  listUsersSchema,
+  updateUserStatusSchema
+} from '../validators/admin.validator'
 
 export const adminUserRoutes = Router()
 

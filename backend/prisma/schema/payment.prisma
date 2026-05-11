@@ -24,7 +24,7 @@ model Order {
   userId             String      @map("user_id") @db.Uuid
   idempotencyKey     String      @map("idempotency_key") @db.VarChar(255)
   orderInvoiceNumber String      @unique @map("order_invoice_number") @db.VarChar(50)
-  totalAmount        Decimal     @map("total_amount") @db.Decimal(12, 2)
+  totalAmount        Int         @map("total_amount")
   currency           String      @default("VND") @db.VarChar(3)
   status             OrderStatus @default(pending)
   expiresAt          DateTime    @map("expires_at")
@@ -46,7 +46,7 @@ model OrderItem {
   id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orderId         String  @map("order_id") @db.Uuid
   courseId        String  @map("course_id") @db.Uuid
-  priceAtPurchase Decimal @map("price_at_purchase") @db.Decimal(12, 2)
+  priceAtPurchase Int @map("price_at_purchase")
 
   order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id])
@@ -59,10 +59,10 @@ model Payment {
   id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orderId        String        @map("order_id") @db.Uuid
   provider       String        @db.VarChar(50)
-  amount         Decimal       @db.Decimal(12, 2)
+  amount         Int
   currency       String        @default("VND") @db.VarChar(3)
   rawPayload     Json?         @map("raw_payload")
-  transactionRef String        @unique @map("transaction_ref") @db.VarChar(255)
+  transactionRef String?       @unique @map("transaction_ref") @db.VarChar(255)
   status         PaymentStatus @default(pending)
   createdAt      DateTime      @default(now()) @map("created_at")
   paidAt         DateTime?     @map("paid_at")
