@@ -38,8 +38,8 @@ enum AiStatus {
 
 model Assessment {
   id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId         String               @map("course_id") @db.Uuid
-  lessonId         String?              @map("lesson_id") @db.Uuid
+  subject          Subject
+  grade            Int
   type             AssessmentType
   title            String
   gradingType      GradingType          @map("grading_type")
@@ -52,12 +52,42 @@ model Assessment {
   updatedAt        DateTime             @updatedAt @map("updated_at")
   deletedAt        DateTime?            @map("deleted_at")
 
-  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lesson      Lesson?          @relation(fields: [lessonId], references: [id], onDelete: SetNull)
-  items       AssessmentItem[]
-  submissions Submission[]
+  items             AssessmentItem[]
+  submissions       Submission[]
+  courseAssessments CourseAssessment[]
+  lessonAssessments LessonAssessment[]
 
   @@map("assessments")
+}
+
+model CourseAssessment {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId     String   @map("course_id") @db.Uuid
+  assessmentId String   @map("assessment_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, assessmentId])
+  @@index([courseId])
+  @@index([assessmentId])
+  @@map("course_assessments")
+}
+
+model LessonAssessment {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lessonId     String   @unique @map("lesson_id") @db.Uuid
+  assessmentId String   @map("assessment_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@map("lesson_assessments")
 }
 
 model AssessmentItem {

@@ -43,10 +43,10 @@ model Order {
 }
 
 model OrderItem {
-  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId         String  @map("order_id") @db.Uuid
-  courseId        String  @map("course_id") @db.Uuid
-  priceAtPurchase Int @map("price_at_purchase")
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String @map("order_id") @db.Uuid
+  courseId        String @map("course_id") @db.Uuid
+  priceAtPurchase Int    @map("price_at_purchase")
 
   order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id])

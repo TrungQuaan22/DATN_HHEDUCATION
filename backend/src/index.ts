@@ -11,6 +11,7 @@ import { errorHandler } from './common/error/error'
 import { adminChapterRoutes } from './modules/courses/routes/admin-chapters.routes'
 import { adminCourseRoutes } from './modules/courses/routes/admin-courses.routes'
 import { publicCourseRoutes } from './modules/courses/routes/public.routes'
+import { adminMediaRoutes } from './modules/media/routes/admin.routes'
 import { adminUserRoutes } from './modules/users/routes/admin.routes'
 import { userRoutes } from './modules/users/routes/user.routes'
 
@@ -36,6 +37,7 @@ app.use('/catalog', publicCourseRoutes)
 app.use('/admin', adminUserRoutes)
 app.use('/admin', adminCourseRoutes)
 app.use('/admin', adminChapterRoutes)
+app.use('/admin', adminMediaRoutes)
 
 //Error handling middleware
 app.use(errorHandler)

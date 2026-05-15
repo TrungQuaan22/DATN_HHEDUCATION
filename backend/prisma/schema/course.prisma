@@ -7,6 +7,23 @@ enum CourseStatus {
 enum LessonType {
   video
   quiz
+  document
+}
+
+enum VideoType {
+  system
+  youtube
+}
+
+enum Subject {
+  math
+  physics
+  chemistry
+  literature
+  english
+  biology
+  history
+  geography
 }
 
 enum EnrollmentSource {
@@ -15,28 +32,31 @@ enum EnrollmentSource {
 }
 
 model Course {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String       @db.VarChar(255)
-  slug         String       @db.VarChar(255)
-  description  String?
-  teacherId    String       @map("teacher_id") @db.Uuid
-  thumbnailUrl String?      @map("thumbnail_url")
-  price        Int          @default(0)
-  salePrice    Int?         @map("sale_price")
-  status       CourseStatus @default(draft)
-  allowPreview Boolean      @default(true) @map("allow_preview")
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
-  deletedAt    DateTime?    @map("deleted_at")
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String       @db.VarChar(255)
+  slug             String       @db.VarChar(255)
+  description      String?
+  subject          Subject
+  grade            Int
+  teacherId        String       @map("teacher_id") @db.Uuid
+  thumbnailMediaId String?      @map("thumbnail_media_id") @db.Uuid
+  price            Int          @default(0)
+  salePrice        Int?         @map("sale_price")
+  status           CourseStatus @default(draft)
+  allowPreview     Boolean      @default(true) @map("allow_preview")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  deletedAt        DateTime?    @map("deleted_at")
 
-  teacher          User              @relation("CourseTeacher", fields: [teacherId], references: [id])
-  chapters         Chapter[]
-  topics           Topic[]
-  assessments      Assessment[]
-  orderItems       OrderItem[]
-  enrollments      Enrollment[]
-  courseProgress   CourseProgress[]
-  practiceSessions PracticeSession[]
+  teacher           User               @relation("CourseTeacher", fields: [teacherId], references: [id])
+  thumbnailMedia    Media?             @relation("CourseThumbnailMedia", fields: [thumbnailMediaId], references: [id], onDelete: SetNull)
+  chapters          Chapter[]
+  topics            Topic[]
+  courseAssessments CourseAssessment[]
+  orderItems        OrderItem[]
+  enrollments       Enrollment[]
+  courseProgress    CourseProgress[]
+  practiceSessions  PracticeSession[]
 
   @@index([teacherId])
   @@map("courses")
@@ -59,20 +79,23 @@ model Chapter {
 }
 
 model Lesson {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chapterId   String     @map("chapter_id") @db.Uuid
-  title       String     @db.VarChar(255)
-  type        LessonType
-  videoUrl    String?    @map("video_url")
-  durationSec Int?       @map("duration_sec")
-  orderIndex  Int        @map("order_index")
-  resources   String?
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chapterId    String     @map("chapter_id") @db.Uuid
+  title        String     @db.VarChar(255)
+  type         LessonType
+  description  String?
+  videoType    VideoType? @map("video_type")
+  videoMediaId String?    @map("video_media_id") @db.Uuid
+  youtubeUrl   String?    @map("youtube_url")
+  durationSec  Int?       @map("duration_sec")
+  orderIndex   Int        @map("order_index")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  chapter     Chapter          @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  assessments Assessment[]
-  progress    LessonProgress[]
+  chapter           Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  videoMedia        Media?             @relation("LessonVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  lessonAssessments LessonAssessment[]
+  progress          LessonProgress[]
 
   @@unique([chapterId, orderIndex])
   @@index([chapterId])

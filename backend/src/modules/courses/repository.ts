@@ -1,6 +1,7 @@
-import { CourseStatus, UserRole, UserStatus, type Prisma } from '@prisma/client'
+import { CourseStatus, UserRole, UserStatus, type Prisma, type Subject } from '@prisma/client'
 
 import { prisma } from '~/config/db'
+import type { GradeValue } from '~/common/constant/taxonomy'
 
 export const courseRepository = {
   findActiveCourseBySlug(slug: string) {
@@ -42,6 +43,12 @@ export const courseRepository = {
             email: true,
             fullName: true
           }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
+          }
         }
       }
     })
@@ -59,6 +66,12 @@ export const courseRepository = {
             id: true,
             email: true,
             fullName: true
+          }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
           }
         },
         chapters: {
@@ -115,6 +128,12 @@ export const courseRepository = {
               email: true,
               fullName: true
             }
+          },
+          thumbnailMedia: {
+            select: {
+              id: true,
+              objectKey: true
+            }
           }
         }
       }),
@@ -128,7 +147,10 @@ export const courseRepository = {
     title: string
     slug: string
     description?: string
+    subject: Subject
+    grade: GradeValue
     teacherId: string
+    thumbnailMediaId?: string | null
     price: number
     salePrice?: number | null
     allowPreview?: boolean
@@ -138,7 +160,10 @@ export const courseRepository = {
         title: data.title,
         slug: data.slug,
         description: data.description,
+        subject: data.subject,
+        grade: data.grade,
         teacherId: data.teacherId,
+        thumbnailMediaId: data.thumbnailMediaId,
         price: data.price,
         salePrice: data.salePrice,
         allowPreview: data.allowPreview
@@ -150,6 +175,12 @@ export const courseRepository = {
             email: true,
             fullName: true
           }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
+          }
         }
       }
     })
@@ -159,8 +190,10 @@ export const courseRepository = {
     courseId: string
     title?: string
     description?: string | null
+    subject?: Subject
+    grade?: GradeValue
     teacherId?: string
-    thumbnailUrl?: string | null
+    thumbnailMediaId?: string | null
     price?: number
     salePrice?: number | null
     allowPreview?: boolean
@@ -172,8 +205,10 @@ export const courseRepository = {
       data: {
         title: data.title,
         description: data.description,
+        subject: data.subject,
+        grade: data.grade,
         teacherId: data.teacherId,
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailMediaId: data.thumbnailMediaId,
         price: data.price,
         salePrice: data.salePrice,
         allowPreview: data.allowPreview
@@ -184,6 +219,12 @@ export const courseRepository = {
             id: true,
             email: true,
             fullName: true
+          }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
           }
         }
       }
@@ -204,6 +245,12 @@ export const courseRepository = {
             id: true,
             email: true,
             fullName: true
+          }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
           }
         }
       }
@@ -250,46 +297,34 @@ export const courseRepository = {
     })
   },
 
-  async reorderChapters(courseId: string, chapterIds: string[]) {
-    await prisma.$transaction(
-      chapterIds.map((chapterId, index) =>
-        prisma.chapter.update({
-          where: {
-            id: chapterId
-          },
-          data: {
-            orderIndex: -(index + 1)
-          }
-        })
-      )
+async reorderChapters(courseId: string, chapterIds: string[]) {
+  const operations = [
+    // Chuỗi lệnh âm chạy tuần tự trước
+    ...chapterIds.map((chapterId, index) =>
+      prisma.chapter.update({
+        where: { id: chapterId },
+        data: { orderIndex: -(index + 1) }
+      })
+    ),
+    // Chuỗi lệnh dương chạy tuần tự sau
+    ...chapterIds.map((chapterId, index) =>
+      prisma.chapter.update({
+        where: { id: chapterId },
+        data: { orderIndex: index + 1 }
+      })
     )
+  ];
 
-    await prisma.$transaction(
-      chapterIds.map((chapterId, index) =>
-        prisma.chapter.update({
-          where: {
-            id: chapterId
-          },
-          data: {
-            orderIndex: index + 1
-          }
-        })
-      )
-    )
+  // Gửi toàn bộ mảng này sang DB chạy 1 lượt duy nhất trong transaction
+  await prisma.$transaction(operations);
 
-    return prisma.chapter.findMany({
-      where: {
-        courseId
-      },
-      orderBy: {
-        orderIndex: 'asc'
-      },
-      select: {
-        id: true,
-        orderIndex: true
-      }
-    })
-  },
+  // Trả về kết quả sau khi đã sắp xếp xong
+  return prisma.chapter.findMany({
+    where: { courseId },
+    orderBy: { orderIndex: 'asc' },
+    select: { id: true, orderIndex: true }
+  });
+},
 
   listCatalogCourses(data: { where: Prisma.CourseWhereInput; skip: number; take: number }) {
     return prisma.$transaction([
@@ -303,6 +338,12 @@ export const courseRepository = {
             select: {
               id: true,
               fullName: true
+            }
+          },
+          thumbnailMedia: {
+            select: {
+              id: true,
+              objectKey: true
             }
           }
         }
@@ -325,6 +366,12 @@ export const courseRepository = {
           select: {
             id: true,
             fullName: true
+          }
+        },
+        thumbnailMedia: {
+          select: {
+            id: true,
+            objectKey: true
           }
         },
         chapters: {

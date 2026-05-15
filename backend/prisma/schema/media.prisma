@@ -1,0 +1,46 @@
+enum MediaType {
+  image
+  video
+}
+
+enum MediaStatus {
+  pending_upload
+  uploaded
+  processing
+  ready
+  failed
+  deleted
+}
+
+enum MediaVisibility {
+  private
+  public
+}
+
+model Media {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type         MediaType
+  status       MediaStatus
+  visibility   MediaVisibility @default(private)
+  originalName String?         @map("original_name") @db.VarChar(255)
+  objectKey    String          @map("object_key") @db.VarChar(500)
+  mimeType     String          @map("mime_type") @db.VarChar(100)
+  sizeBytes    Int             @map("size_bytes")
+  etag         String?         @db.VarChar(255)
+  width        Int?
+  height       Int?
+  durationSec  Int?            @map("duration_sec")
+  uploadedById String?         @map("uploaded_by_id") @db.Uuid
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  uploadedBy       User?    @relation("UploadedMedia", fields: [uploadedById], references: [id], onDelete: SetNull)
+  courseThumbnails Course[] @relation("CourseThumbnailMedia")
+  lessonVideos     Lesson[] @relation("LessonVideoMedia")
+
+  @@unique([objectKey])
+  @@index([type])
+  @@index([status])
+  @@index([uploadedById])
+  @@map("media")
+}

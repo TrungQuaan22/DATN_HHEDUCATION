@@ -1,7 +1,7 @@
 import { CourseStatus } from '@prisma/client'
 import z from 'zod'
 
-
+import { GRADE_VALUES, SUBJECT_VALUES } from '~/common/constant/taxonomy'
 
 const courseIdParamSchema = z
   .object({
@@ -10,12 +10,21 @@ const courseIdParamSchema = z
   .strict()
 
 const coursePriceSchema = z.number().int().min(0)
+const gradeSchema = z
+  .number()
+  .int()
+  .refine((value) => GRADE_VALUES.includes(value as (typeof GRADE_VALUES)[number]), {
+    message: 'Grade must be one of from 1 to 12'
+  })
 
 export const createCourseBodySchema = z
   .object({
     title: z.string().trim().min(2).max(255),
     description: z.string().trim().max(5000).optional(),
+    subject: z.enum(SUBJECT_VALUES),
+    grade: gradeSchema,
     teacherId: z.string().uuid(),
+    thumbnailMediaId: z.string().uuid().optional().nullable(),
     price: coursePriceSchema,
     salePrice: coursePriceSchema.optional().nullable(),
     allowPreview: z.boolean().optional()
@@ -58,8 +67,10 @@ export const updateCourseBodySchema = z
   .object({
     title: z.string().trim().min(2).max(255).optional(),
     description: z.string().trim().max(5000).optional().nullable(),
+    subject: z.enum(SUBJECT_VALUES).optional(),
+    grade: gradeSchema.optional(),
     teacherId: z.string().uuid().optional(),
-    thumbnailUrl: z.string().trim().url().optional().nullable(),
+    thumbnailMediaId: z.string().uuid().optional().nullable(),
     price: coursePriceSchema.optional(),
     salePrice: coursePriceSchema.optional().nullable(),
     allowPreview: z.boolean().optional()

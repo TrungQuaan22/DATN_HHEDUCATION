@@ -1,6 +1,7 @@
-import type { CourseStatus } from '@prisma/client'
+import type { CourseStatus, Subject } from '@prisma/client'
 import z from 'zod'
 
+import type { GradeValue } from '~/common/constant/taxonomy'
 import {
   createCourseBodySchema,
   listAdminCoursesQuerySchema,
@@ -22,12 +23,15 @@ export type AdminCourseItemDto = {
   title: string
   slug: string
   description: string | null
+  subject: Subject
+  grade: GradeValue
   teacherId: string
   teacher: {
     id: string
     email: string
     fullName: string
   }
+  thumbnailMediaId: string | null
   thumbnailUrl: string | null
   price: number
   salePrice: number | null

@@ -1,8 +1,9 @@
-import { CourseStatus } from '@prisma/client'
+import { CourseStatus, MediaStatus, MediaType } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
+import { mediaRepository } from '~/modules/media/repository'
 
 import { courseRepository } from '../repository'
 
@@ -54,6 +55,24 @@ export const ensureCoursePriceIsValid = (data: { price: number; salePrice: numbe
   if (data.salePrice != null && data.salePrice >= data.price) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Sale price must be less than price')
   }
+}
+
+export const ensureReadyImageMedia = async (mediaId: string) => {
+  const media = await mediaRepository.findMediaById(mediaId)
+
+  if (!media || media.status === MediaStatus.deleted) {
+    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
+  }
+
+  if (media.type !== MediaType.image) {
+    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Thumbnail media must be an image')
+  }
+
+  if (media.status !== MediaStatus.ready) {
+    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Thumbnail media is not ready')
+  }
+
+  return media
 }
 
 export const ensureExactReorderIds = (expectedIds: string[], receivedIds: string[]) => {

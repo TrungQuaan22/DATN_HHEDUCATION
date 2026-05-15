@@ -3,6 +3,7 @@ import { CourseStatus, type Prisma } from '@prisma/client'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
+import { buildMediaPublicUrl } from '~/common/utils/media'
 
 import type {
   CatalogCourseDetailDto,
@@ -35,7 +36,10 @@ export const publicCourseService = {
     })
 
     return {
-      items,
+      items: items.map((item) => ({
+        ...item,
+        thumbnailUrl: buildMediaPublicUrl(item.thumbnailMedia?.objectKey)
+      })),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -54,6 +58,7 @@ export const publicCourseService = {
 
     return {
       ...course,
+      thumbnailUrl: buildMediaPublicUrl(course.thumbnailMedia?.objectKey),
       chapters: course.chapters.map((chapter) => ({
         id: chapter.id,
         title: chapter.title,

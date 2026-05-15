@@ -3,6 +3,7 @@ import { CourseStatus, type Prisma } from '@prisma/client'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
+import { buildMediaPublicUrl } from '~/common/utils/media'
 import { createSlugFromText } from '~/common/utils/slug'
 
 import type {
@@ -20,9 +21,17 @@ import {
   ensureCourseCanBeEdited,
   ensureCourseDetailExists,
   ensureCourseExists,
-  ensureCoursePriceIsValid
+  ensureCoursePriceIsValid,
+  ensureReadyImageMedia
 } from '../ensures/courses.ensure'
 import { applySearchCondition, normalizeText } from '~/common/utils/search'
+
+const mapCourseThumbnail = <T extends { thumbnailMediaId: string | null; thumbnailMedia: { objectKey: string } | null }>(
+  course: T
+): T & { thumbnailUrl: string | null } => ({
+  ...course,
+  thumbnailUrl: buildMediaPublicUrl(course.thumbnailMedia?.objectKey)
+})
 
 const createCourseSlug = async (title: string): Promise<string> => {
   const normalizedTitle = normalizeText(title)
@@ -46,6 +55,9 @@ const createCourseSlug = async (title: string): Promise<string> => {
 export const adminCourseService = {
   async createCourse(input: CreateCourseDto): Promise<AdminCourseResponseDto> {
     await ensureActiveTeacher(input.teacherId)
+    if (input.thumbnailMediaId) {
+      await ensureReadyImageMedia(input.thumbnailMediaId)
+    }
 
     const slug = await createCourseSlug(input.title)
     const course = await courseRepository.createCourse({
@@ -53,7 +65,7 @@ export const adminCourseService = {
       slug
     })
 
-    return course
+    return mapCourseThumbnail(course)
   },
 
   async listCourses(input: ListAdminCoursesDto): Promise<ListAdminCoursesResponseDto> {
@@ -77,7 +89,7 @@ export const adminCourseService = {
     })
 
     return {
-      items,
+      items: items.map(mapCourseThumbnail),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -89,7 +101,7 @@ export const adminCourseService = {
 
   async getCourse(input: CourseIdDto): Promise<AdminCourseDetailResponseDto> {
     const course = await ensureCourseDetailExists(input.courseId)
-    return course
+    return mapCourseThumbnail(course)
   },
 
   async updateCourse(input: UpdateCourseDto): Promise<AdminCourseResponseDto> {
@@ -97,6 +109,10 @@ export const adminCourseService = {
     ensureCourseCanBeEdited(course.status)
     if (input.teacherId) {
       await ensureActiveTeacher(input.teacherId)
+    }
+
+    if (input.thumbnailMediaId) {
+      await ensureReadyImageMedia(input.thumbnailMediaId)
     }
 
     const nextPrice = input.price ?? course.price
@@ -109,14 +125,14 @@ export const adminCourseService = {
 
     const updatedCourse = await courseRepository.updateCourse(input)
 
-    return updatedCourse
+    return mapCourseThumbnail(updatedCourse)
   },
 
   async publishCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
     const course = await ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.published) {
-      return course
+      return mapCourseThumbnail(course)
     }
 
     if (course.status !== CourseStatus.draft) {
@@ -128,14 +144,14 @@ export const adminCourseService = {
       CourseStatus.published
     )
 
-    return updatedCourse
+    return mapCourseThumbnail(updatedCourse)
   },
 
   async archiveCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
     const course = await ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.archived) {
-      return course
+      return mapCourseThumbnail(course)
     }
 
     const updatedCourse = await courseRepository.updateCourseStatus(
@@ -143,6 +159,6 @@ export const adminCourseService = {
       CourseStatus.archived
     )
 
-    return updatedCourse
+    return mapCourseThumbnail(updatedCourse)
   }
 }

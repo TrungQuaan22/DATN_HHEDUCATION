@@ -14,6 +14,8 @@ tags:
     description: User profile and user management
   - name: Courses
     description: Course catalog and course management
+  - name: Media
+    description: Upload media files to Cloudflare R2
 
 paths:
   /auth/register:
@@ -396,7 +398,10 @@ paths:
             example:
               title: Lap trinh C co ban
               description: Khoa hoc nhap mon lap trinh C
+              subject: math
+              grade: 10
               teacherId: 00000000-0000-0000-0000-000000000000
+              thumbnailMediaId: 11111111-1111-1111-1111-111111111111
               price: 500000
               salePrice: 399000
               allowPreview: true
@@ -470,7 +475,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateCourseSuccessResponse'
+                $ref: '#/components/schemas/AdminCourseDetailSuccessResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -496,7 +501,7 @@ paths:
       tags:
         - Courses
       summary: Update course metadata
-      description: Admin updates course metadata. Thumbnail URL is updated here after the future upload flow returns a URL.
+      description: Admin updates course metadata. Thumbnail media is updated here after upload complete returns a ready media id.
       operationId: updateCourse
       security:
         - bearerAuth: []
@@ -511,7 +516,9 @@ paths:
             example:
               title: Lap trinh C co ban update
               description: Mo ta moi
-              thumbnailUrl: https://cdn.example.com/courses/c-course.jpg
+              subject: physics
+              grade: 11
+              thumbnailMediaId: 11111111-1111-1111-1111-111111111111
               price: 500000
               salePrice: 399000
               allowPreview: true
@@ -629,6 +636,204 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /admin/courses/{courseId}/chapters:
+    post:
+      tags:
+        - Courses
+      summary: Create course chapter
+      description: Admin creates a chapter at the end of a draft or published course.
+      operationId: createChapter
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChapterRequest'
+            example:
+              title: Chuong 1 Nhap mon
+      responses:
+        '201':
+          description: Chapter created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminChapterSuccessResponse'
+        '400':
+          description: Validation failed or course status cannot be edited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/courses/{courseId}/chapters/reorder:
+    patch:
+      tags:
+        - Courses
+      summary: Reorder course chapters
+      description: Admin reorders all chapters in a course. The request must contain exactly all chapter ids in the target order.
+      operationId: reorderChapters
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderChaptersRequest'
+            example:
+              chapterIds:
+                - 00000000-0000-0000-0000-000000000003
+                - 00000000-0000-0000-0000-000000000001
+                - 00000000-0000-0000-0000-000000000002
+      responses:
+        '200':
+          description: Chapters reordered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReorderChaptersSuccessResponse'
+        '400':
+          description: Validation failed, invalid reorder payload, or course status cannot be edited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/chapters/{chapterId}:
+    patch:
+      tags:
+        - Courses
+      summary: Update chapter
+      description: Admin updates chapter metadata.
+      operationId: updateChapter
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChapterIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChapterRequest'
+            example:
+              title: Chuong 1 Co ban
+      responses:
+        '200':
+          description: Chapter updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminChapterSuccessResponse'
+        '400':
+          description: Validation failed or course status cannot be edited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Courses
+      summary: Delete chapter
+      description: Admin deletes a chapter. Related lessons are deleted by database cascade.
+      operationId: deleteChapter
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChapterIdPath'
+      responses:
+        '200':
+          description: Chapter deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteChapterSuccessResponse'
+        '400':
+          description: Course status cannot be edited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /catalog/courses:
     get:
       tags:
@@ -696,11 +901,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/uploads/presign:
+    post:
+      tags:
+        - Media
+      summary: Create presigned upload URL
+      description: Admin requests a temporary PUT URL so the client can upload an image or video directly to R2.
+      operationId: createPresignedUpload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePresignedUploadRequest'
+            example:
+              resourceType: image
+              fileName: course-thumbnail.png
+              contentType: image/png
+              fileSize: 336407
+      responses:
+        '201':
+          description: Presigned upload created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePresignedUploadSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/uploads/complete:
+    post:
+      tags:
+        - Media
+      summary: Complete upload
+      description: Admin confirms that a direct upload has finished. Backend checks object existence on R2 and updates media metadata.
+      operationId: completeUpload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequest'
+            example:
+              mediaId: 11111111-1111-1111-1111-111111111111
+      responses:
+        '200':
+          description: Upload completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteUploadSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Media or uploaded object not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     CourseIdPath:
       in: path
       name: courseId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ChapterIdPath:
+      in: path
+      name: chapterId
       required: true
       schema:
         type: string
@@ -980,6 +1279,8 @@ components:
       type: object
       required:
         - title
+        - subject
+        - grade
         - teacherId
         - price
       additionalProperties: false
@@ -991,9 +1292,22 @@ components:
         description:
           type: string
           maxLength: 5000
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+          enum:
+            - 9
+            - 10
+            - 11
+            - 12
         teacherId:
           type: string
           format: uuid
+        thumbnailMediaId:
+          type: string
+          format: uuid
+          nullable: true
         price:
           type: integer
           format: int64
@@ -1023,12 +1337,21 @@ components:
           type: string
           nullable: true
           maxLength: 5000
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+          enum:
+            - 9
+            - 10
+            - 11
+            - 12
         teacherId:
           type: string
           format: uuid
-        thumbnailUrl:
+        thumbnailMediaId:
           type: string
-          format: uri
+          format: uuid
           nullable: true
         price:
           type: integer
@@ -1070,11 +1393,24 @@ components:
         description:
           type: string
           nullable: true
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+          enum:
+            - 9
+            - 10
+            - 11
+            - 12
         teacherId:
           type: string
           format: uuid
         teacher:
           $ref: '#/components/schemas/AdminCourseTeacher'
+        thumbnailMediaId:
+          type: string
+          format: uuid
+          nullable: true
         thumbnailUrl:
           type: string
           nullable: true
@@ -1104,6 +1440,44 @@ components:
             data:
               $ref: '#/components/schemas/AdminCourseResponseData'
 
+    AdminCourseChapter:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        orderIndex:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminCourseDetailResponseData:
+      allOf:
+        - $ref: '#/components/schemas/AdminCourseResponseData'
+        - type: object
+          properties:
+            chapters:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminCourseChapter'
+
+    AdminCourseDetailSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminCourseDetailResponseData'
+
     ListAdminCoursesResponseData:
       type: object
       properties:
@@ -1121,6 +1495,108 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ListAdminCoursesResponseData'
+
+    CreateChapterRequest:
+      type: object
+      required:
+        - title
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 255
+
+    UpdateChapterRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateChapterRequest'
+
+    AdminChapterResponseData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        orderIndex:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminChapterSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminChapterResponseData'
+
+    DeleteChapterResponseData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deleted:
+          type: boolean
+          example: true
+
+    DeleteChapterSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DeleteChapterResponseData'
+
+    ReorderChaptersRequest:
+      type: object
+      required:
+        - chapterIds
+      additionalProperties: false
+      properties:
+        chapterIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+
+    ReorderChapterItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderIndex:
+          type: integer
+
+    ReorderChaptersResponseData:
+      type: object
+      properties:
+        courseId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReorderChapterItem'
+
+    ReorderChaptersSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ReorderChaptersResponseData'
 
     CatalogCourseTeacher:
       type: object
@@ -1197,13 +1673,25 @@ components:
           type: string
           enum:
             - video
-            - text
             - quiz
+            - document
         durationSec:
           type: integer
           nullable: true
         orderIndex:
           type: integer
+
+    Subject:
+      type: string
+      enum:
+        - math
+        - physics
+        - chemistry
+        - literature
+        - english
+        - biology
+        - history
+        - geography
 
     CatalogChapter:
       type: object
@@ -1237,6 +1725,94 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/CatalogCourseResponseData'
+
+    CreatePresignedUploadRequest:
+      type: object
+      required:
+        - resourceType
+        - fileName
+        - contentType
+        - fileSize
+      additionalProperties: false
+      properties:
+        resourceType:
+          type: string
+          enum:
+            - image
+            - video
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        contentType:
+          type: string
+          minLength: 1
+          maxLength: 100
+        fileSize:
+          type: integer
+          minimum: 1
+
+    CreatePresignedUploadResponseData:
+      type: object
+      properties:
+        mediaId:
+          type: string
+          format: uuid
+        uploadUrl:
+          type: string
+        objectKey:
+          type: string
+        method:
+          type: string
+          enum:
+            - PUT
+
+    CreatePresignedUploadSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/CreatePresignedUploadResponseData'
+
+    CompleteUploadRequest:
+      type: object
+      required:
+        - mediaId
+      additionalProperties: false
+      properties:
+        mediaId:
+          type: string
+          format: uuid
+
+    CompleteUploadResponseData:
+      type: object
+      properties:
+        mediaId:
+          type: string
+          format: uuid
+        objectKey:
+          type: string
+        contentType:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        etag:
+          type: string
+          nullable: true
+        publicUrl:
+          type: string
+          nullable: true
+
+    CompleteUploadSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/CompleteUploadResponseData'
 
     SuccessResponse:
       type: object
