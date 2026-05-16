@@ -21,12 +21,20 @@ export const authRepository = {
     })
   },
 
-  createTeacher(data: { fullName: string; email: string; passwordHash: string }) {
+  createTeacher(data: {
+    fullName: string
+    email: string
+    passwordHash: string
+    avatarMediaId?: string | null
+    avatarObjectKey?: string | null
+  }) {
     return prisma.user.create({
       data: {
         fullName: data.fullName,
         email: data.email,
         passwordHash: data.passwordHash,
+        avatarMediaId: data.avatarMediaId,
+        avatarObjectKey: data.avatarObjectKey,
         role: UserRole.teacher,
         status: UserStatus.active
       }
@@ -47,7 +55,9 @@ export const authRepository = {
   findSessionById(id: string) {
     return prisma.userSession.findUnique({
       where: { id },
-      include: { user: true }
+      include: {
+        user: true
+      }
     })
   },
 

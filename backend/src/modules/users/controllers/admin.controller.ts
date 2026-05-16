@@ -17,7 +17,10 @@ type UpdateUserStatusValidated = z.infer<typeof updateUserStatusSchema>
 
 export const createTeacherController = async (req: Request, res: Response) => {
   const validated = req.validated as CreateTeacherValidated
-  const dto: CreateTeacherDto = validated.body
+  const dto: CreateTeacherDto = {
+    ...validated.body,
+    actorId: req.user!.id
+  }
   const data = await adminService.createTeacher(dto)
 
   sendSuccess({ res, data, status: 201 })

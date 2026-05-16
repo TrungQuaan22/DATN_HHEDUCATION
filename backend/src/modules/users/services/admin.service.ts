@@ -6,6 +6,8 @@ import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 import { authRepository } from '~/modules/auth/repository'
 import { hashPassword } from '~/modules/auth/utils/password'
+import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { mapUserAvatar } from '~/modules/users/mappers/user.mapper'
 
 import type {
   CreateTeacherDto,
@@ -25,16 +27,29 @@ export const adminService = {
     }
 
     const passwordHash = await hashPassword(input.password)
+    const avatarMedia = input.avatarMediaId
+      ? await ensureActorCanUseImageMedia({
+          actor: { id: input.actorId, role: UserRole.admin },
+          mediaId: input.avatarMediaId,
+          label: 'Avatar media'
+        })
+      : null
+
     const user = await authRepository.createTeacher({
       fullName: input.fullName,
       email: input.email,
+      avatarMediaId: input.avatarMediaId,
+      avatarObjectKey: avatarMedia?.objectKey ?? null,
       passwordHash
     })
+    const mappedUser = mapUserAvatar(user)
 
     return {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
+      id: mappedUser.id,
+      email: mappedUser.email,
+      fullName: mappedUser.fullName,
+      avatarMediaId: mappedUser.avatarMediaId,
+      avatarUrl: mappedUser.avatarUrl,
       role: UserRole.teacher,
       status: UserStatus.active
     }
@@ -62,7 +77,7 @@ export const adminService = {
     })
 
     return {
-      items,
+      items: items.map(mapUserAvatar),
       pagination: {
         page: input.page,
         limit: input.limit,

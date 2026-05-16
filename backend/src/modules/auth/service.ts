@@ -16,6 +16,7 @@ import { createLoginTokens, isWithinRefreshTokenRetryGrace } from './utils/token
 import { UserRole, UserStatus } from '@prisma/client'
 import { verifyRefreshToken } from './utils/jwt'
 import { TokenType } from '~/common/constant/enums'
+import { mapUserAvatar } from '~/modules/users/mappers/user.mapper'
 
 export const authService = {
   async register(input: RegisterDto): Promise<RegisterResponseDto> {
@@ -31,11 +32,14 @@ export const authService = {
       email: input.email,
       passwordHash
     })
+    const mappedUser = mapUserAvatar(user)
 
     return {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
+      id: mappedUser.id,
+      email: mappedUser.email,
+      fullName: mappedUser.fullName,
+      avatarMediaId: mappedUser.avatarMediaId,
+      avatarUrl: mappedUser.avatarUrl,
       role: UserRole.student,
       status: UserStatus.active
     }
@@ -63,6 +67,7 @@ export const authService = {
     }
 
     const tokens = await createLoginTokens({ userId: user.id, role: user.role })
+    const mappedUser = mapUserAvatar(user)
 
     await authRepository.createSession({
       id: tokens.sessionId,
@@ -75,11 +80,13 @@ export const authService = {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        status: user.status
+        id: mappedUser.id,
+        email: mappedUser.email,
+        fullName: mappedUser.fullName,
+        avatarMediaId: mappedUser.avatarMediaId,
+        avatarUrl: mappedUser.avatarUrl,
+        role: mappedUser.role,
+        status: mappedUser.status
       }
     }
   },

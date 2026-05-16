@@ -11,6 +11,8 @@ export type LoginResponseDto = {
     id: string
     email: string
     fullName: string
+    avatarMediaId: string | null
+    avatarUrl: string | null
     role: UserRole
     status: UserStatus
   }
@@ -29,6 +31,8 @@ export type RegisterResponseDto = {
   id: string
   email: string
   fullName: string
+  avatarMediaId: string | null
+  avatarUrl: string | null
   role: 'student'
   status: 'active' // bypass pending verification for now
 }

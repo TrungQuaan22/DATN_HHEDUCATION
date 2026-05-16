@@ -11,15 +11,17 @@ enum UserStatus {
 }
 
 model User {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email        String     @unique @db.VarChar(255)
-  passwordHash String     @map("password_hash")
-  fullName     String     @map("full_name") @db.VarChar(255)
-  role         UserRole
-  status       UserStatus @default(pending_verification)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  deletedAt    DateTime?  @map("deleted_at")
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String     @unique @db.VarChar(255)
+  passwordHash    String     @map("password_hash")
+  fullName        String     @map("full_name") @db.VarChar(255)
+  avatarMediaId   String?    @map("avatar_media_id") @db.Uuid
+  avatarObjectKey String?    @map("avatar_object_key") @db.VarChar(500)
+  role            UserRole
+  status          UserStatus @default(pending_verification)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   sessions                 UserSession[]
   taughtCourses            Course[]                  @relation("CourseTeacher")
@@ -35,9 +37,11 @@ model User {
   auditLogs                AuditLog[]                @relation("AuditActor")
   orders                   Order[]
   uploadedMedia            Media[]                   @relation("UploadedMedia")
+  avatarMedia              Media?                    @relation("UserAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
 
   @@index([role])
   @@index([status])
+  @@index([avatarMediaId])
   @@map("users")
 }
 

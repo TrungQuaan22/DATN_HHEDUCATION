@@ -52,6 +52,12 @@ export const mediaRepository = {
         courseThumbnails: {
           none: {}
         },
+        blogThumbnails: {
+          none: {}
+        },
+        userAvatars: {
+          none: {}
+        },
         lessonVideos: {
           none: {}
         }

@@ -99,6 +99,7 @@ model AssessmentItem {
   difficulty     QuestionDifficulty?
   questionNumber Int                 @map("question_number")
   correctAnswer  Json?               @map("correct_answer")
+  explanation    Json?
   scoringConfig  Json?               @map("scoring_config")
   maxScore       Decimal             @default(1) @map("max_score") @db.Decimal(8, 2)
 

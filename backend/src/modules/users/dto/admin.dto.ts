@@ -3,12 +3,16 @@ import z from 'zod'
 
 import { createTeacherBodySchema, listUsersQuerySchema } from '../validators/admin.validator'
 
-export type CreateTeacherDto = z.infer<typeof createTeacherBodySchema>
+export type CreateTeacherDto = z.infer<typeof createTeacherBodySchema> & {
+  actorId: string
+}
 
 export type CreateTeacherResponseDto = {
   id: string
   email: string
   fullName: string
+  avatarMediaId: string | null
+  avatarUrl: string | null
   role: 'teacher'
   status: 'active' // teacher can be active immediately without verification for now
 }
@@ -19,6 +23,8 @@ export type AdminUserItemDto = {
   id: string
   email: string
   fullName: string
+  avatarMediaId: string | null
+  avatarUrl: string | null
   role: UserRole
   status: UserStatus
   createdAt: Date

@@ -29,10 +29,25 @@ CREATE TYPE "BlogPostStatus" AS ENUM ('draft', 'published');
 CREATE TYPE "CourseStatus" AS ENUM ('draft', 'published', 'archived');
 
 -- CreateEnum
-CREATE TYPE "LessonType" AS ENUM ('video', 'quiz');
+CREATE TYPE "LessonType" AS ENUM ('video', 'quiz', 'document');
+
+-- CreateEnum
+CREATE TYPE "VideoType" AS ENUM ('system', 'youtube');
+
+-- CreateEnum
+CREATE TYPE "Subject" AS ENUM ('math', 'physics', 'chemistry', 'literature', 'english', 'biology', 'history', 'geography');
 
 -- CreateEnum
 CREATE TYPE "EnrollmentSource" AS ENUM ('payment', 'manual');
+
+-- CreateEnum
+CREATE TYPE "MediaType" AS ENUM ('image', 'video');
+
+-- CreateEnum
+CREATE TYPE "MediaStatus" AS ENUM ('pending_upload', 'uploaded', 'processing', 'ready', 'failed', 'deleted');
+
+-- CreateEnum
+CREATE TYPE "MediaVisibility" AS ENUM ('private', 'public');
 
 -- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('pending', 'completed', 'cancelled', 'expired');
@@ -61,8 +76,8 @@ CREATE TYPE "NotificationType" AS ENUM ('new_lesson', 'graded', 'new_assignment'
 -- CreateTable
 CREATE TABLE "assessments" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "course_id" UUID NOT NULL,
-    "lesson_id" UUID,
+    "subject" "Subject" NOT NULL,
+    "grade" INTEGER NOT NULL,
     "type" "AssessmentType" NOT NULL,
     "title" TEXT NOT NULL,
     "grading_type" "GradingType" NOT NULL,
@@ -79,6 +94,28 @@ CREATE TABLE "assessments" (
 );
 
 -- CreateTable
+CREATE TABLE "course_assessments" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "course_id" UUID NOT NULL,
+    "assessment_id" UUID NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "course_assessments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "lesson_assessments" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "lesson_id" UUID NOT NULL,
+    "assessment_id" UUID NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "lesson_assessments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "assessment_items" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "assessment_id" UUID NOT NULL,
@@ -88,6 +125,7 @@ CREATE TABLE "assessment_items" (
     "difficulty" "QuestionDifficulty",
     "question_number" INTEGER NOT NULL,
     "correct_answer" JSONB,
+    "explanation" JSONB,
     "scoring_config" JSONB,
     "max_score" DECIMAL(8,2) NOT NULL DEFAULT 1,
 
@@ -171,6 +209,8 @@ CREATE TABLE "users" (
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
+    "avatar_media_id" UUID,
+    "avatar_object_key" VARCHAR(500),
     "role" "UserRole" NOT NULL,
     "status" "UserStatus" NOT NULL DEFAULT 'pending_verification',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -200,10 +240,15 @@ CREATE TABLE "blog_posts" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(255) NOT NULL,
+    "excerpt" VARCHAR(500),
+    "category" VARCHAR(100),
+    "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "content" JSONB NOT NULL,
     "author_id" UUID NOT NULL,
-    "thumbnail_url" TEXT,
+    "thumbnail_media_id" UUID,
+    "thumbnail_object_key" VARCHAR(500),
     "status" "BlogPostStatus" NOT NULL DEFAULT 'draft',
+    "is_featured" BOOLEAN NOT NULL DEFAULT false,
     "published_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -218,11 +263,15 @@ CREATE TABLE "courses" (
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(255) NOT NULL,
     "description" TEXT,
+    "subject" "Subject" NOT NULL,
+    "grade" INTEGER NOT NULL,
     "teacher_id" UUID NOT NULL,
-    "thumbnail_url" TEXT,
-    "price" DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "thumbnail_media_id" UUID,
+    "thumbnail_object_key" VARCHAR(500),
+    "price" INTEGER NOT NULL DEFAULT 0,
+    "sale_price" INTEGER,
     "status" "CourseStatus" NOT NULL DEFAULT 'draft',
-    "allow_preview" BOOLEAN NOT NULL DEFAULT true,
+    "is_featured" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -248,10 +297,13 @@ CREATE TABLE "lessons" (
     "chapter_id" UUID NOT NULL,
     "title" VARCHAR(255) NOT NULL,
     "type" "LessonType" NOT NULL,
-    "video_url" TEXT,
+    "description" TEXT,
+    "video_type" "VideoType",
+    "video_media_id" UUID,
+    "youtube_url" TEXT,
     "duration_sec" INTEGER,
+    "allow_preview" BOOLEAN NOT NULL DEFAULT false,
     "order_index" INTEGER NOT NULL,
-    "resources" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -271,12 +323,33 @@ CREATE TABLE "enrollments" (
 );
 
 -- CreateTable
+CREATE TABLE "media" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "type" "MediaType" NOT NULL,
+    "status" "MediaStatus" NOT NULL,
+    "visibility" "MediaVisibility" NOT NULL DEFAULT 'private',
+    "original_name" VARCHAR(255),
+    "object_key" VARCHAR(500) NOT NULL,
+    "mime_type" VARCHAR(100) NOT NULL,
+    "size_bytes" INTEGER NOT NULL,
+    "etag" VARCHAR(255),
+    "width" INTEGER,
+    "height" INTEGER,
+    "duration_sec" INTEGER,
+    "uploaded_by_id" UUID,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "media_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "orders" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "user_id" UUID NOT NULL,
     "idempotency_key" VARCHAR(255) NOT NULL,
     "order_invoice_number" VARCHAR(50) NOT NULL,
-    "total_amount" DECIMAL(12,2) NOT NULL,
+    "total_amount" INTEGER NOT NULL,
     "currency" VARCHAR(3) NOT NULL DEFAULT 'VND',
     "status" "OrderStatus" NOT NULL DEFAULT 'pending',
     "expires_at" TIMESTAMP(3) NOT NULL,
@@ -291,7 +364,7 @@ CREATE TABLE "order_items" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "order_id" UUID NOT NULL,
     "course_id" UUID NOT NULL,
-    "price_at_purchase" DECIMAL(12,2) NOT NULL,
+    "price_at_purchase" INTEGER NOT NULL,
 
     CONSTRAINT "order_items_pkey" PRIMARY KEY ("id")
 );
@@ -301,10 +374,10 @@ CREATE TABLE "payments" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "order_id" UUID NOT NULL,
     "provider" VARCHAR(50) NOT NULL,
-    "amount" DECIMAL(12,2) NOT NULL,
+    "amount" INTEGER NOT NULL,
     "currency" VARCHAR(3) NOT NULL DEFAULT 'VND',
     "raw_payload" JSONB,
-    "transaction_ref" VARCHAR(255) NOT NULL,
+    "transaction_ref" VARCHAR(255),
     "status" "PaymentStatus" NOT NULL DEFAULT 'pending',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "paid_at" TIMESTAMP(3),
@@ -467,7 +540,19 @@ CREATE TABLE "notifications" (
 );
 
 -- CreateIndex
-CREATE INDEX "assessments_course_id_visibility_idx" ON "assessments"("course_id", "visibility");
+CREATE INDEX "course_assessments_course_id_idx" ON "course_assessments"("course_id");
+
+-- CreateIndex
+CREATE INDEX "course_assessments_assessment_id_idx" ON "course_assessments"("assessment_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "course_assessments_course_id_assessment_id_key" ON "course_assessments"("course_id", "assessment_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "lesson_assessments_lesson_id_key" ON "lesson_assessments"("lesson_id");
+
+-- CreateIndex
+CREATE INDEX "lesson_assessments_assessment_id_idx" ON "lesson_assessments"("assessment_id");
 
 -- CreateIndex
 CREATE INDEX "assessment_items_assessment_id_idx" ON "assessment_items"("assessment_id");
@@ -530,28 +615,22 @@ CREATE INDEX "users_role_idx" ON "users"("role");
 CREATE INDEX "users_status_idx" ON "users"("status");
 
 -- CreateIndex
-CREATE INDEX "user_sessions_user_id_idx" ON "user_sessions"("user_id");
+CREATE INDEX "users_avatar_media_id_idx" ON "users"("avatar_media_id");
 
 -- CreateIndex
-CREATE INDEX "user_sessions_user_id_expires_at_idx" ON "user_sessions"("user_id", "expires_at");
+CREATE INDEX "user_sessions_user_id_idx" ON "user_sessions"("user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "blog_posts_slug_key" ON "blog_posts"("slug");
 
 -- CreateIndex
-CREATE INDEX "blog_posts_status_idx" ON "blog_posts"("status");
-
--- CreateIndex
 CREATE INDEX "blog_posts_author_id_idx" ON "blog_posts"("author_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "courses_slug_key" ON "courses"("slug");
+CREATE INDEX "blog_posts_thumbnail_media_id_idx" ON "blog_posts"("thumbnail_media_id");
 
 -- CreateIndex
 CREATE INDEX "courses_teacher_id_idx" ON "courses"("teacher_id");
-
--- CreateIndex
-CREATE INDEX "courses_status_idx" ON "courses"("status");
 
 -- CreateIndex
 CREATE INDEX "chapters_course_id_idx" ON "chapters"("course_id");
@@ -573,6 +652,18 @@ CREATE INDEX "enrollments_user_id_course_id_idx" ON "enrollments"("user_id", "co
 
 -- CreateIndex
 CREATE UNIQUE INDEX "enrollments_user_id_course_id_key" ON "enrollments"("user_id", "course_id");
+
+-- CreateIndex
+CREATE INDEX "media_type_idx" ON "media"("type");
+
+-- CreateIndex
+CREATE INDEX "media_status_idx" ON "media"("status");
+
+-- CreateIndex
+CREATE INDEX "media_uploaded_by_id_idx" ON "media"("uploaded_by_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "media_object_key_key" ON "media"("object_key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "orders_order_invoice_number_key" ON "orders"("order_invoice_number");
@@ -671,10 +762,16 @@ CREATE INDEX "audit_logs_action_created_at_idx" ON "audit_logs"("action", "creat
 CREATE INDEX "notifications_user_id_is_read_created_at_idx" ON "notifications"("user_id", "is_read", "created_at");
 
 -- AddForeignKey
-ALTER TABLE "assessments" ADD CONSTRAINT "assessments_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "course_assessments" ADD CONSTRAINT "course_assessments_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "assessments" ADD CONSTRAINT "assessments_lesson_id_fkey" FOREIGN KEY ("lesson_id") REFERENCES "lessons"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "course_assessments" ADD CONSTRAINT "course_assessments_assessment_id_fkey" FOREIGN KEY ("assessment_id") REFERENCES "assessments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "lesson_assessments" ADD CONSTRAINT "lesson_assessments_lesson_id_fkey" FOREIGN KEY ("lesson_id") REFERENCES "lessons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "lesson_assessments" ADD CONSTRAINT "lesson_assessments_assessment_id_fkey" FOREIGN KEY ("assessment_id") REFERENCES "assessments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "assessment_items" ADD CONSTRAINT "assessment_items_assessment_id_fkey" FOREIGN KEY ("assessment_id") REFERENCES "assessments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -725,19 +822,31 @@ ALTER TABLE "submission_essay_answers" ADD CONSTRAINT "submission_essay_answers_
 ALTER TABLE "submission_essay_answers" ADD CONSTRAINT "submission_essay_answers_graded_by_fkey" FOREIGN KEY ("graded_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_avatar_media_id_fkey" FOREIGN KEY ("avatar_media_id") REFERENCES "media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "user_sessions" ADD CONSTRAINT "user_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "blog_posts" ADD CONSTRAINT "blog_posts_thumbnail_media_id_fkey" FOREIGN KEY ("thumbnail_media_id") REFERENCES "media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "courses" ADD CONSTRAINT "courses_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "courses" ADD CONSTRAINT "courses_thumbnail_media_id_fkey" FOREIGN KEY ("thumbnail_media_id") REFERENCES "media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "chapters" ADD CONSTRAINT "chapters_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "lessons" ADD CONSTRAINT "lessons_chapter_id_fkey" FOREIGN KEY ("chapter_id") REFERENCES "chapters"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "lessons" ADD CONSTRAINT "lessons_video_media_id_fkey" FOREIGN KEY ("video_media_id") REFERENCES "media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -747,6 +856,9 @@ ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_course_id_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "media" ADD CONSTRAINT "media_uploaded_by_id_fkey" FOREIGN KEY ("uploaded_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

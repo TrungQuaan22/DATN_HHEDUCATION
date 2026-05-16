@@ -22,6 +22,8 @@ export const ERROR_MESSAGE = {
   [ERROR_CODE.USER_NOT_FOUND]: 'User not found. The specified user does not exist.',
   [ERROR_CODE.COURSE_SLUG_ALREADY_EXISTS]:
     'Course slug already exists. Please use a different slug.',
+  [ERROR_CODE.BLOG_SLUG_ALREADY_EXISTS]: 'Blog slug already exists. Please use a different slug.',
+  [ERROR_CODE.BLOG_POST_NOT_FOUND]: 'Blog post not found. The specified post does not exist.',
   [ERROR_CODE.INVALID_COURSE_TEACHER]:
     'Teacher does not exist, is not active, or is not a teacher account.',
   [ERROR_CODE.COURSE_NOT_FOUND]: 'Course not found. The specified course does not exist.',

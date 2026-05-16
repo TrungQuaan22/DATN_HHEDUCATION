@@ -5,6 +5,7 @@ export const createTeacherBodySchema = z
   .object({
     fullName: z.string().trim().min(2).max(100),
     email: z.string().trim().toLowerCase().email(),
+    avatarMediaId: z.string().uuid().optional().nullable(),
     password: z
       .string()
       .trim()

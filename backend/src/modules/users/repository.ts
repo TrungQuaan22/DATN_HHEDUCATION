@@ -6,6 +6,8 @@ const userListSelect = {
   id: true,
   email: true,
   fullName: true,
+  avatarMediaId: true,
+  avatarObjectKey: true,
   role: true,
   status: true,
   createdAt: true,
@@ -39,6 +41,23 @@ export const userRepository = {
     return prisma.user.update({
       where: { id: data.userId },
       data: { status: data.status }
+    })
+  },
+
+  updateUserProfile(data: {
+    userId: string
+    fullName?: string
+    avatarMediaId?: string | null
+    avatarObjectKey?: string | null
+  }) {
+    return prisma.user.update({
+      where: { id: data.userId },
+      data: {
+        fullName: data.fullName,
+        avatarMediaId: data.avatarMediaId,
+        avatarObjectKey: data.avatarObjectKey
+      },
+      select: userListSelect
     })
   }
 }

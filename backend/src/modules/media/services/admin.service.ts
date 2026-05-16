@@ -1,4 +1,4 @@
-import { MediaStatus, MediaType } from '@prisma/client'
+import { MediaStatus, MediaType, UserRole } from '@prisma/client'
 import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { extname } from 'path'
@@ -117,5 +117,37 @@ export const adminMediaService = {
       etag: updatedMedia.etag ?? null,
       publicUrl: buildMediaPublicUrl(updatedMedia.objectKey)
     }
+  },
+
+  async createAuthenticatedUpload(
+    user: { id: string; role: UserRole },
+    input: CreatePresignedUploadDto
+  ): Promise<CreatePresignedUploadResponseDto> {
+    if (input.resourceType === 'video' && user.role === UserRole.student) {
+      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Student accounts cannot upload videos')
+    }
+
+    return this.createPresignedUpload(user.id, input)
+  },
+
+  async completeAuthenticatedUpload(
+    user: { id: string; role: UserRole },
+    input: CompleteUploadDto
+  ): Promise<CompleteUploadResponseDto> {
+    const media = await mediaRepository.findMediaById(input.mediaId)
+
+    if (!media || media.status === MediaStatus.deleted) {
+      throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
+    }
+
+    if (user.role !== UserRole.admin && media.uploadedById !== user.id) {
+      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only complete your own upload')
+    }
+
+    if (media.type === MediaType.video && user.role === UserRole.student) {
+      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Student accounts cannot upload videos')
+    }
+
+    return this.completeUpload(input)
   }
 }
