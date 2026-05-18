@@ -6,34 +6,62 @@ import type {
   ReorderChaptersResponseDto,
   UpdateChapterDto
 } from '../dto/admin-chapters.dto'
+import { ERROR_CODE } from '~/common/constant/error-code'
+import { AppError } from '~/common/error/app-error'
+
 import {
+  type CourseActor,
+  ensureCanManageCourse,
   ensureChapterExists,
-  ensureCourseCanBeEdited,
   ensureCourseExists,
+  ensureCourseStructureCanBeAdded,
+  ensureCourseStructureCanBeMutated,
   ensureExactReorderIds
 } from '../ensures/courses.ensure'
 import { courseRepository } from '../repository'
 
 export const adminChapterService = {
-  async createChapter(input: CreateChapterDto): Promise<AdminChapterResponseDto> {
+  async createChapter(
+    actor: CourseActor,
+    input: CreateChapterDto
+  ): Promise<AdminChapterResponseDto> {
     const course = await ensureCourseExists(input.courseId)
-    ensureCourseCanBeEdited(course.status)
+    ensureCanManageCourse({ actor, course })
+    ensureCourseStructureCanBeAdded(course.status)
 
     return courseRepository.createChapter(input)
   },
 
-  async updateChapter(input: UpdateChapterDto): Promise<AdminChapterResponseDto> {
+  async updateChapter(
+    actor: CourseActor,
+    input: UpdateChapterDto
+  ): Promise<AdminChapterResponseDto> {
     const chapter = await ensureChapterExists(input.chapterId)
-    ensureCourseCanBeEdited(chapter.course.status)
+    ensureCanManageCourse({ actor, course: chapter.course })
+    ensureCourseStructureCanBeMutated(chapter.course.status)
 
     return courseRepository.updateChapter(input)
   },
 
-  async deleteChapter(input: DeleteChapterDto): Promise<{ id: string; deleted: true }> {
+  async deleteChapter(
+    actor: CourseActor,
+    input: DeleteChapterDto
+  ): Promise<{ id: string; deleted: true }> {
     const chapter = await ensureChapterExists(input.chapterId)
-    ensureCourseCanBeEdited(chapter.course.status)
+    ensureCanManageCourse({ actor, course: chapter.course })
+    ensureCourseStructureCanBeMutated(chapter.course.status)
 
-    await courseRepository.deleteChapter(input.chapterId)
+    const activeLessonsCount = await courseRepository.countActiveLessonsByChapter(input.chapterId)
+
+    if (activeLessonsCount > 0) {
+      throw new AppError(
+        400,
+        ERROR_CODE.BAD_REQUEST,
+        'Cannot delete chapter while it still has lessons'
+      )
+    }
+
+    await courseRepository.softDeleteChapter(input.chapterId)
 
     return {
       id: input.chapterId,
@@ -41,9 +69,13 @@ export const adminChapterService = {
     }
   },
 
-  async reorderChapters(input: ReorderChaptersDto): Promise<ReorderChaptersResponseDto> {
+  async reorderChapters(
+    actor: CourseActor,
+    input: ReorderChaptersDto
+  ): Promise<ReorderChaptersResponseDto> {
     const course = await ensureCourseExists(input.courseId)
-    ensureCourseCanBeEdited(course.status)
+    ensureCanManageCourse({ actor, course })
+    ensureCourseStructureCanBeMutated(course.status)
 
     const currentChapters = await courseRepository.listCourseChapterIds(input.courseId)
     ensureExactReorderIds(

@@ -27,7 +27,7 @@ type ChangeCourseStatusValidated = z.infer<typeof changeCourseStatusSchema>
 export const createCourseController = async (req: Request, res: Response) => {
   const validated = req.validated as CreateCourseValidated
   const dto: CreateCourseDto = validated.body
-  const data = await adminCourseService.createCourse(dto)
+  const data = await adminCourseService.createCourse(req.user!, dto)
 
   sendSuccess({ res, data, status: 201 })
 }
@@ -35,7 +35,7 @@ export const createCourseController = async (req: Request, res: Response) => {
 export const listAdminCoursesController = async (req: Request, res: Response) => {
   const validated = req.validated as ListAdminCoursesValidated
   const dto: ListAdminCoursesDto = validated.query
-  const data = await adminCourseService.listCourses(dto)
+  const data = await adminCourseService.listCourses(req.user!, dto)
 
   sendSuccess({ res, data })
 }
@@ -46,7 +46,7 @@ export const getAdminCourseController = async (req: Request, res: Response) => {
   const dto: CourseIdDto = {
     courseId: validated.params.courseId
   }
-  const data = await adminCourseService.getCourse(dto)
+  const data = await adminCourseService.getCourse(req.user!, dto)
 
   sendSuccess({ res, data })
 }
@@ -58,7 +58,7 @@ export const updateCourseController = async (req: Request, res: Response) => {
     courseId: validated.params.courseId,
     ...validated.body
   }
-  const data = await adminCourseService.updateCourse(dto)
+  const data = await adminCourseService.updateCourse(req.user!, dto)
 
   sendSuccess({ res, data })
 }

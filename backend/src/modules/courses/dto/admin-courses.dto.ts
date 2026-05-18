@@ -30,13 +30,15 @@ export type AdminCourseItemDto = {
     id: string
     email: string
     fullName: string
+    avatarMediaId: string | null
+    avatarUrl: string | null
   }
   thumbnailMediaId: string | null
   thumbnailUrl: string | null
   price: number
   salePrice: number | null
   status: CourseStatus
-  allowPreview: boolean
+  isFeatured: boolean
   createdAt: Date
   updatedAt: Date
 }

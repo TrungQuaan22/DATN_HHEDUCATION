@@ -3,8 +3,9 @@ import { CourseStatus, type Prisma } from '@prisma/client'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { buildMediaPublicUrl } from '~/common/utils/media'
+import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
 import { createSlugFromText } from '~/common/utils/slug'
+import { mapAdminCourseResponse } from '../mappers/course.mapper'
 
 import type {
   AdminCourseDetailResponseDto,
@@ -17,21 +18,15 @@ import type {
 } from '../dto/admin-courses.dto'
 import { courseRepository } from '../repository'
 import {
+  type CourseActor,
+  ensureCanManageCourse,
   ensureActiveTeacher,
   ensureCourseCanBeEdited,
   ensureCourseDetailExists,
   ensureCourseExists,
-  ensureCoursePriceIsValid,
-  ensureReadyImageMedia
+  ensureCoursePriceIsValid
 } from '../ensures/courses.ensure'
 import { applySearchCondition, normalizeText } from '~/common/utils/search'
-
-const mapCourseThumbnail = <T extends { thumbnailMediaId: string | null; thumbnailMedia: { objectKey: string } | null }>(
-  course: T
-): T & { thumbnailUrl: string | null } => ({
-  ...course,
-  thumbnailUrl: buildMediaPublicUrl(course.thumbnailMedia?.objectKey)
-})
 
 const createCourseSlug = async (title: string): Promise<string> => {
   const normalizedTitle = normalizeText(title)
@@ -53,26 +48,39 @@ const createCourseSlug = async (title: string): Promise<string> => {
 }
 
 export const adminCourseService = {
-  async createCourse(input: CreateCourseDto): Promise<AdminCourseResponseDto> {
-    await ensureActiveTeacher(input.teacherId)
-    if (input.thumbnailMediaId) {
-      await ensureReadyImageMedia(input.thumbnailMediaId)
+  async createCourse(actor: CourseActor, input: CreateCourseDto): Promise<AdminCourseResponseDto> {
+    if (actor.role !== 'admin' && input.teacherId !== actor.id) {
+      throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
     }
+
+    await ensureActiveTeacher(input.teacherId)
+    const thumbnailMedia = input.thumbnailMediaId
+      ? await ensureActorCanUseImageMedia({
+          actor,
+          mediaId: input.thumbnailMediaId,
+          label: 'Thumbnail media'
+        })
+      : null
 
     const slug = await createCourseSlug(input.title)
     const course = await courseRepository.createCourse({
       ...input,
-      slug
+      slug,
+      thumbnailObjectKey: thumbnailMedia?.objectKey ?? null
     })
 
-    return mapCourseThumbnail(course)
+    return mapAdminCourseResponse(course)
   },
 
-  async listCourses(input: ListAdminCoursesDto): Promise<ListAdminCoursesResponseDto> {
+  async listCourses(
+    actor: CourseActor,
+    input: ListAdminCoursesDto
+  ): Promise<ListAdminCoursesResponseDto> {
     let where: Prisma.CourseWhereInput = {
       deletedAt: null,
       status: input.status,
-      teacherId: input.teacherId
+      teacherId: actor.role === 'admin' ? input.teacherId : actor.id,
+      isFeatured: input.isFeatured
     }
     where = applySearchCondition({
       where,
@@ -89,7 +97,7 @@ export const adminCourseService = {
     })
 
     return {
-      items: items.map(mapCourseThumbnail),
+      items: items.map(mapAdminCourseResponse),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -99,21 +107,33 @@ export const adminCourseService = {
     }
   },
 
-  async getCourse(input: CourseIdDto): Promise<AdminCourseDetailResponseDto> {
+  async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponseDto> {
     const course = await ensureCourseDetailExists(input.courseId)
-    return mapCourseThumbnail(course)
+    ensureCanManageCourse({ actor, course })
+
+    return mapAdminCourseResponse(course)
   },
 
-  async updateCourse(input: UpdateCourseDto): Promise<AdminCourseResponseDto> {
+  async updateCourse(actor: CourseActor, input: UpdateCourseDto): Promise<AdminCourseResponseDto> {
     const course = await ensureCourseExists(input.courseId)
+    ensureCanManageCourse({ actor, course })
     ensureCourseCanBeEdited(course.status)
+
+    if (actor.role !== 'admin' && input.teacherId && input.teacherId !== actor.id) {
+      throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
+    }
+
     if (input.teacherId) {
       await ensureActiveTeacher(input.teacherId)
     }
 
-    if (input.thumbnailMediaId) {
-      await ensureReadyImageMedia(input.thumbnailMediaId)
-    }
+    const thumbnailMedia = input.thumbnailMediaId
+      ? await ensureActorCanUseImageMedia({
+          actor,
+          mediaId: input.thumbnailMediaId,
+          label: 'Thumbnail media'
+        })
+      : null
 
     const nextPrice = input.price ?? course.price
     const nextSalePrice = input.salePrice !== undefined ? input.salePrice : course.salePrice
@@ -123,16 +143,20 @@ export const adminCourseService = {
       salePrice: nextSalePrice
     })
 
-    const updatedCourse = await courseRepository.updateCourse(input)
+    const updatedCourse = await courseRepository.updateCourse({
+      ...input,
+      thumbnailObjectKey:
+        input.thumbnailMediaId === undefined ? undefined : thumbnailMedia?.objectKey ?? null
+    })
 
-    return mapCourseThumbnail(updatedCourse)
+    return mapAdminCourseResponse(updatedCourse)
   },
 
   async publishCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
     const course = await ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.published) {
-      return mapCourseThumbnail(course)
+      return mapAdminCourseResponse(course)
     }
 
     if (course.status !== CourseStatus.draft) {
@@ -144,14 +168,14 @@ export const adminCourseService = {
       CourseStatus.published
     )
 
-    return mapCourseThumbnail(updatedCourse)
+    return mapAdminCourseResponse(updatedCourse)
   },
 
   async archiveCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
     const course = await ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.archived) {
-      return mapCourseThumbnail(course)
+      return mapAdminCourseResponse(course)
     }
 
     const updatedCourse = await courseRepository.updateCourseStatus(
@@ -159,6 +183,6 @@ export const adminCourseService = {
       CourseStatus.archived
     )
 
-    return mapCourseThumbnail(updatedCourse)
+    return mapAdminCourseResponse(updatedCourse)
   }
 }

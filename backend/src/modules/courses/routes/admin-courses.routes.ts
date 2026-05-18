@@ -27,7 +27,7 @@ export const adminCourseRoutes = Router()
 adminCourseRoutes.post(
   '/courses',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(createCourseSchema),
   asyncHandler(createCourseController)
 )
@@ -35,7 +35,7 @@ adminCourseRoutes.post(
 adminCourseRoutes.get(
   '/courses',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminCoursesSchema),
   asyncHandler(listAdminCoursesController)
 )
@@ -43,7 +43,7 @@ adminCourseRoutes.get(
 adminCourseRoutes.get(
   '/courses/:courseId',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(getAdminCourseSchema),
   asyncHandler(getAdminCourseController)
 )
@@ -51,7 +51,7 @@ adminCourseRoutes.get(
 adminCourseRoutes.patch(
   '/courses/:courseId',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(updateCourseSchema),
   asyncHandler(updateCourseController)
 )

@@ -1,11 +1,15 @@
-import { CourseStatus, MediaStatus, MediaType } from '@prisma/client'
+import { CourseStatus, LessonType, UserRole, VideoType } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { mediaRepository } from '~/modules/media/repository'
 
 import { courseRepository } from '../repository'
+
+export type CourseActor = {
+  id: string
+  role: UserRole
+}
 
 export const ensureCourseExists = async (courseId: string) => {
   const course = await courseRepository.findCourseById(courseId)
@@ -45,10 +49,66 @@ export const ensureChapterExists = async (chapterId: string) => {
   return chapter
 }
 
+export const ensureLessonExists = async (lessonId: string) => {
+  const lesson = await courseRepository.findLessonById(lessonId)
+
+  if (!lesson) {
+    throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
+  }
+
+  return lesson
+}
+
+export const ensureAssessmentExists = async (assessmentId: string) => {
+  const assessment = await courseRepository.findAssessmentById(assessmentId)
+
+  if (!assessment) {
+    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
+  }
+
+  return assessment
+}
+
 export const ensureCourseCanBeEdited = (status: CourseStatus) => {
   if (status === CourseStatus.archived) {
     throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
   }
+}
+
+// Cho phep them noi dung vao course draft/published, nhung archived thi khoa hoan toan.
+export const ensureCourseStructureCanBeAdded = (status: CourseStatus) => {
+  if (status === CourseStatus.archived) {
+    throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
+  }
+}
+
+// Chi course draft moi duoc sua/xoa/reorder cau truc de khong lam roi tien do hoc sinh.
+export const ensureCourseStructureCanBeMutated = (status: CourseStatus) => {
+  if (status !== CourseStatus.draft) {
+    throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
+  }
+}
+
+export const ensureCanManageCourse = ({
+  actor,
+  course
+}: {
+  actor: CourseActor
+  course: { teacherId: string; deletedAt?: Date | null }
+}) => {
+  if (course.deletedAt) {
+    throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
+  }
+
+  if (actor.role === UserRole.admin) {
+    return
+  }
+
+  if (actor.role === UserRole.teacher && course.teacherId === actor.id) {
+    return
+  }
+
+  throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
 }
 
 export const ensureCoursePriceIsValid = (data: { price: number; salePrice: number | null }) => {
@@ -57,22 +117,39 @@ export const ensureCoursePriceIsValid = (data: { price: number; salePrice: numbe
   }
 }
 
-export const ensureReadyImageMedia = async (mediaId: string) => {
-  const media = await mediaRepository.findMediaById(mediaId)
-
-  if (!media || media.status === MediaStatus.deleted) {
-    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
+export const ensureLessonPayloadMatchesType = (data: {
+  type: LessonType
+  description?: string | null
+  videoType?: VideoType | null
+  videoMediaId?: string | null
+  youtubeUrl?: string | null
+  assessmentId?: string | null
+}) => {
+  if (data.type === LessonType.document) {
+    if (!data.description?.trim()) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Document lesson must have description')
+    }
+    return
   }
 
-  if (media.type !== MediaType.image) {
-    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Thumbnail media must be an image')
+  if (data.type === LessonType.quiz) {
+    if (!data.assessmentId) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Quiz lesson must have assessmentId')
+    }
+    return
   }
 
-  if (media.status !== MediaStatus.ready) {
-    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Thumbnail media is not ready')
+  if (!data.videoType) {
+    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Video lesson must have videoType')
   }
 
-  return media
+  if (data.videoType === VideoType.system && !data.videoMediaId) {
+    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'System video lesson must have videoMediaId')
+  }
+
+  if (data.videoType === VideoType.youtube && !data.youtubeUrl) {
+    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'YouTube video lesson must have youtubeUrl')
+  }
 }
 
 export const ensureExactReorderIds = (expectedIds: string[], receivedIds: string[]) => {

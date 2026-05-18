@@ -10,6 +10,11 @@ const courseIdParamSchema = z
   .strict()
 
 const coursePriceSchema = z.number().int().min(0)
+const queryBooleanSchema = z.preprocess((value) => {
+  if (value === 'true') return true
+  if (value === 'false') return false
+  return value
+}, z.boolean())
 const gradeSchema = z
   .number()
   .int()
@@ -27,7 +32,7 @@ export const createCourseBodySchema = z
     thumbnailMediaId: z.string().uuid().optional().nullable(),
     price: coursePriceSchema,
     salePrice: coursePriceSchema.optional().nullable(),
-    allowPreview: z.boolean().optional()
+    isFeatured: z.boolean().optional()
   })
   .strict()
   .refine((data) => data.salePrice == null || data.salePrice < data.price, {
@@ -47,6 +52,7 @@ export const listAdminCoursesQuerySchema = z
     limit: z.coerce.number().int().min(1).max(100).default(20),
     status: z.nativeEnum(CourseStatus).optional(),
     teacherId: z.string().uuid().optional(),
+    isFeatured: queryBooleanSchema.optional(),
     search: z.string().trim().min(1).max(100).optional()
   })
   .strict()
@@ -73,7 +79,7 @@ export const updateCourseBodySchema = z
     thumbnailMediaId: z.string().uuid().optional().nullable(),
     price: coursePriceSchema.optional(),
     salePrice: coursePriceSchema.optional().nullable(),
-    allowPreview: z.boolean().optional()
+    isFeatured: z.boolean().optional()
   })
   .strict()
   .refine((data) => Object.values(data).some((value) => value !== undefined), {

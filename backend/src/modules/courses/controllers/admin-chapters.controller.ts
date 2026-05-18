@@ -28,7 +28,7 @@ export const createChapterController = async (req: Request, res: Response) => {
     courseId: validated.params.courseId,
     ...validated.body
   }
-  const data = await adminChapterService.createChapter(dto)
+  const data = await adminChapterService.createChapter(req.user!, dto)
 
   sendSuccess({ res, data, status: 201 })
 }
@@ -39,7 +39,7 @@ export const updateChapterController = async (req: Request, res: Response) => {
     chapterId: validated.params.chapterId,
     ...validated.body
   }
-  const data = await adminChapterService.updateChapter(dto)
+  const data = await adminChapterService.updateChapter(req.user!, dto)
 
   sendSuccess({ res, data })
 }
@@ -49,7 +49,7 @@ export const deleteChapterController = async (req: Request, res: Response) => {
   const dto: DeleteChapterDto = {
     chapterId: validated.params.chapterId
   }
-  const data = await adminChapterService.deleteChapter(dto)
+  const data = await adminChapterService.deleteChapter(req.user!, dto)
 
   sendSuccess({ res, data })
 }
@@ -60,7 +60,7 @@ export const reorderChaptersController = async (req: Request, res: Response) => 
     courseId: validated.params.courseId,
     ...validated.body
   }
-  const data = await adminChapterService.reorderChapters(dto)
+  const data = await adminChapterService.reorderChapters(req.user!, dto)
 
   sendSuccess({ res, data })
 }

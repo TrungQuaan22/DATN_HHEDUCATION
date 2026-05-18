@@ -24,7 +24,7 @@ export const adminChapterRoutes = Router()
 adminChapterRoutes.post(
   '/courses/:courseId/chapters',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(createChapterSchema),
   asyncHandler(createChapterController)
 )
@@ -32,7 +32,7 @@ adminChapterRoutes.post(
 adminChapterRoutes.patch(
   '/chapters/:chapterId',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(updateChapterSchema),
   asyncHandler(updateChapterController)
 )
@@ -40,7 +40,7 @@ adminChapterRoutes.patch(
 adminChapterRoutes.delete(
   '/chapters/:chapterId',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(deleteChapterSchema),
   asyncHandler(deleteChapterController)
 )
@@ -48,7 +48,7 @@ adminChapterRoutes.delete(
 adminChapterRoutes.patch(
   '/courses/:courseId/chapters/reorder',
   requireAuth,
-  requireRole(UserRole.admin),
+  requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(reorderChaptersSchema),
   asyncHandler(reorderChaptersController)
 )
