@@ -1,4 +1,4 @@
-import type { CourseStatus, LessonType } from '@prisma/client'
+import type { CourseStatus, LessonType, Subject } from '@prisma/client'
 import z from 'zod'
 
 import { listCatalogCoursesQuerySchema } from '../validators/public.validator'
@@ -10,15 +10,19 @@ export type CatalogCourseItemDto = {
   title: string
   slug: string
   description: string | null
+  subject: Subject
+  grade: number
   teacher: {
     id: string
     fullName: string
+    avatarUrl: string | null
   }
   thumbnailUrl: string | null
   price: number
   salePrice: number | null
   status: CourseStatus
-  allowPreview: boolean
+  isFeatured: boolean
+  lessonsCount: number
   createdAt: Date
   updatedAt: Date
 }
@@ -43,7 +47,9 @@ export type CatalogCourseDetailDto = CatalogCourseItemDto & {
       title: string
       type: LessonType
       durationSec: number | null
+      allowPreview: boolean
       orderIndex: number
     }>
   }>
+  relatedCourses: CatalogCourseItemDto[]
 }
