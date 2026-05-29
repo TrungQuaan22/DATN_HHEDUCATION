@@ -10,24 +10,99 @@ import { authRepository } from './repository'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { jwtConfig } from '~/config/jwt_config'
-import { hashPassword, verifyPassword } from './utils/password'
-import { createLoginTokens, isWithinRefreshTokenRetryGrace } from './utils/token'
-import { UserRole, UserStatus } from '@prisma/client'
-import { verifyRefreshToken } from './utils/jwt'
+import { isWithinRefreshTokenRetryGrace, type RefreshTokenPayload } from './utils'
 import { TokenType } from '~/common/constant/enums'
-import { mapUserAvatar } from '~/modules/users/mappers/user.mapper'
+import { UserRole, UserStatus } from '@prisma/client'
+import { mapUserAvatar } from '~/modules/users/mappers'
+import type {
+  AuthRepositoryPort,
+  AuthSessionWithUserRecord
+} from './ports/auth-repository.port'
+import type { PasswordHasherPort } from './ports/password-hasher.port'
+import type { TokenServicePort } from './ports/token-service.port'
+import { BcryptPasswordHasherAdapter } from './adapters/bcrypt-password-hasher.adapter'
+import { JwtTokenServiceAdapter } from './adapters/jwt-token-service.adapter'
 
-export const authService = {
+export class AuthService {
+  constructor(
+    private readonly repository: AuthRepositoryPort,
+    private readonly passwordHasher: PasswordHasherPort,
+    private readonly tokenService: TokenServicePort
+  ) {}
+
+  private async verifyRefreshPayload(refreshToken: string): Promise<RefreshTokenPayload> {
+    let payload: RefreshTokenPayload
+    try {
+      payload = await this.tokenService.verifyRefreshToken(refreshToken)
+    } catch {
+      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
+    }
+
+    if (payload.tokenType !== TokenType.REFRESH) {
+      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
+    }
+
+    return payload
+  }
+
+  private async ensureSessionValid(
+    session: AuthSessionWithUserRecord | null,
+    payload: RefreshTokenPayload
+  ): Promise<AuthSessionWithUserRecord> {
+    if (!session || session.userId !== payload.userId) {
+      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
+    }
+
+    if (session.isRevoked || session.expiresAt <= new Date()) {
+      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
+    }
+
+    if (session.user.status === UserStatus.banned) {
+      await this.repository.revokeSession(session.id)
+      throw new AppError(403, ERROR_CODE.ACCOUNT_BANNED, ERROR_MESSAGE.ACCOUNT_BANNED)
+    }
+
+    return session
+  }
+
+  private async ensureRefreshTokenCanRotate(
+    refreshToken: string,
+    session: AuthSessionWithUserRecord
+  ): Promise<void> {
+    const isCurrentRefreshToken = await this.passwordHasher.verifyPassword(
+      refreshToken,
+      session.refreshTokenHash
+    )
+
+    if (!isCurrentRefreshToken) {
+      const isPreviousRefreshToken =
+        session.previousRefreshTokenHash !== null &&
+        (await this.passwordHasher.verifyPassword(refreshToken, session.previousRefreshTokenHash))
+
+      if (!isPreviousRefreshToken) {
+        throw new AppError(
+          401,
+          ERROR_CODE.INVALID_REFRESH_TOKEN,
+          ERROR_MESSAGE.INVALID_REFRESH_TOKEN
+        )
+      }
+
+      if (!isWithinRefreshTokenRetryGrace(session.previousTokenRotatedAt)) {
+        await this.repository.revokeSession(session.id)
+        throw new AppError(401, ERROR_CODE.REFRESH_TOKEN_REUSED, ERROR_MESSAGE.REFRESH_TOKEN_REUSED)
+      }
+    }
+  }
+
   async register(input: RegisterDto): Promise<RegisterResponseDto> {
-    const existed = await authRepository.findUserByEmail(input.email)
+    const existed = await this.repository.findUserByEmail(input.email)
 
     if (existed) {
       throw new AppError(409, ERROR_CODE.EMAIL_ALREADY_EXISTS, ERROR_MESSAGE.EMAIL_ALREADY_EXISTS)
     }
 
-    const passwordHash = await hashPassword(input.password)
-    const user = await authRepository.createStudent({
+    const passwordHash = await this.passwordHasher.hashPassword(input.password)
+    const user = await this.repository.createStudent({
       fullName: input.fullName,
       email: input.email,
       passwordHash
@@ -43,16 +118,19 @@ export const authService = {
       role: UserRole.student,
       status: UserStatus.active
     }
-  },
+  }
 
   async login(input: LoginDto): Promise<LoginResponseDto> {
-    const user = await authRepository.findUserByEmail(input.email)
+    const user = await this.repository.findUserByEmail(input.email)
 
     if (!user) {
       throw new AppError(401, ERROR_CODE.INVALID_CREDENTIALS, ERROR_MESSAGE.INVALID_CREDENTIALS)
     }
 
-    const isPasswordValid = await verifyPassword(input.password, user.passwordHash)
+    const isPasswordValid = await this.passwordHasher.verifyPassword(
+      input.password,
+      user.passwordHash
+    )
 
     if (!isPasswordValid) {
       throw new AppError(401, ERROR_CODE.INVALID_CREDENTIALS, ERROR_MESSAGE.INVALID_CREDENTIALS)
@@ -66,10 +144,10 @@ export const authService = {
       throw new AppError(403, ERROR_CODE.ACCOUNT_NOT_VERIFIED, ERROR_MESSAGE.ACCOUNT_NOT_VERIFIED)
     }
 
-    const tokens = await createLoginTokens({ userId: user.id, role: user.role })
+    const tokens = await this.tokenService.createLoginTokens({ userId: user.id, role: user.role })
     const mappedUser = mapUserAvatar(user)
 
-    await authRepository.createSession({
+    await this.repository.createSession({
       id: tokens.sessionId,
       userId: user.id,
       refreshTokenHash: tokens.refreshTokenHash,
@@ -89,7 +167,7 @@ export const authService = {
         status: mappedUser.status
       }
     }
-  },
+  }
 
   /**
    * Refreshes the access token using a valid refresh token
@@ -106,65 +184,20 @@ export const authService = {
    * @throws AppError with appropriate status code and error message for various failure scenarios (e.g., invalid token, account banned, token reuse)
    */
   async refreshToken(input: RefreshTokenDto): Promise<RefreshTokenResponseDto> {
-    let payload
-    // Verify and decode token and get payload
-    try {
-      payload = await verifyRefreshToken({
-        token: input.refreshToken,
-        privateKey: jwtConfig.refreshToken.privateKey
-      })
-    } catch {
-      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
-    }
-    //Check token type
-    if (payload.tokenType !== TokenType.REFRESH) {
-      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
-    }
+    const payload = await this.verifyRefreshPayload(input.refreshToken)
 
-    //get session from db using sessionId in payload
-    const session = await authRepository.findSessionById(payload.sessionId)
+    const rawSession = await this.repository.findSessionById(payload.sessionId)
+    const session = await this.ensureSessionValid(rawSession, payload)
 
-    if (!session || session.userId !== payload.userId) {
-      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
-    }
+    await this.ensureRefreshTokenCanRotate(input.refreshToken, session)
 
-    if (session.isRevoked || session.expiresAt <= new Date()) {
-      throw new AppError(401, ERROR_CODE.INVALID_REFRESH_TOKEN, ERROR_MESSAGE.INVALID_REFRESH_TOKEN)
-    }
-
-    if (session.user.status === UserStatus.banned) {
-      await authRepository.revokeSession(session.id)
-      throw new AppError(403, ERROR_CODE.ACCOUNT_BANNED, ERROR_MESSAGE.ACCOUNT_BANNED)
-    }
-
-    const isCurrentRefreshToken = await verifyPassword(input.refreshToken, session.refreshTokenHash)
-
-    if (!isCurrentRefreshToken) {
-      const isPreviousRefreshToken =
-        session.previousRefreshTokenHash !== null &&
-        (await verifyPassword(input.refreshToken, session.previousRefreshTokenHash))
-
-      if (!isPreviousRefreshToken) {
-        throw new AppError(
-          401,
-          ERROR_CODE.INVALID_REFRESH_TOKEN,
-          ERROR_MESSAGE.INVALID_REFRESH_TOKEN
-        )
-      }
-
-      if (!isWithinRefreshTokenRetryGrace(session.previousTokenRotatedAt)) {
-        await authRepository.revokeSession(session.id)
-        throw new AppError(401, ERROR_CODE.REFRESH_TOKEN_REUSED, ERROR_MESSAGE.REFRESH_TOKEN_REUSED)
-      }
-    }
-
-    const tokens = await createLoginTokens({
+    const tokens = await this.tokenService.createLoginTokens({
       userId: session.user.id,
       role: session.user.role,
       sessionId: session.id
     })
 
-    await authRepository.rotateSessionRefreshToken({
+    await this.repository.rotateSessionRefreshToken({
       id: session.id,
       refreshTokenHash: tokens.refreshTokenHash,
       previousRefreshTokenHash: session.refreshTokenHash,
@@ -177,3 +210,9 @@ export const authService = {
     }
   }
 }
+
+export const authService = new AuthService(
+  authRepository,
+  new BcryptPasswordHasherAdapter(),
+  new JwtTokenServiceAdapter()
+)

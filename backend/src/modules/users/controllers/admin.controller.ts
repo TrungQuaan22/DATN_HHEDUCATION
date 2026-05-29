@@ -3,45 +3,71 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import type { CreateTeacherDto, ListUsersDto, UpdateUserStatusDto } from '../dto/admin.dto'
-import { adminService } from '../services/admin.service'
+import type {
+  CreateTeacherDto,
+  ListTeacherOptionsDto,
+  ListUsersDto,
+  UpdateUserStatusDto
+} from '../dto'
+import { AdminUserService, adminService } from '../services/admin.service'
 import {
-  updateUserStatusSchema,
   createTeacherSchema,
-  listUsersSchema
+  listTeacherOptionsSchema,
+  listUsersSchema,
+  updateUserStatusSchema
 } from '../validators/admin.validator'
 
 type CreateTeacherValidated = z.infer<typeof createTeacherSchema>
+type ListTeacherOptionsValidated = z.infer<typeof listTeacherOptionsSchema>
 type ListUsersValidated = z.infer<typeof listUsersSchema>
 type UpdateUserStatusValidated = z.infer<typeof updateUserStatusSchema>
 
-export const createTeacherController = async (req: Request, res: Response) => {
-  const validated = req.validated as CreateTeacherValidated
-  const dto: CreateTeacherDto = {
-    ...validated.body,
-    actorId: req.user!.id
-  }
-  const data = await adminService.createTeacher(dto)
+export class AdminUserController {
+  constructor(private readonly service: AdminUserService) {}
 
-  sendSuccess({ res, data, status: 201 })
-}
+  createTeacher = async (req: Request, res: Response) => {
+    const validated = req.validated as CreateTeacherValidated
+    const dto: CreateTeacherDto = {
+      ...validated.body,
+      actorId: req.user!.id
+    }
+    const data = await this.service.createTeacher(dto)
 
-export const getAllUsersController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListUsersValidated
-  const dto: ListUsersDto = validated.query
-  const data = await adminService.getAllUsers(dto)
-
-  sendSuccess({ res, data })
-}
-
-export const updateUserStatusController = async (req: Request, res: Response) => {
-  const validated = req.validated as UpdateUserStatusValidated
-  const dto: UpdateUserStatusDto = {
-    userId: validated.params.userId,
-    status: validated.body.status
+    sendSuccess({ res, data, status: 201 })
   }
 
-  await adminService.updateUserStatus(dto)
+  getAllUsers = async (req: Request, res: Response) => {
+    const validated = req.validated as ListUsersValidated
+    const dto: ListUsersDto = validated.query
+    const data = await this.service.getAllUsers(dto)
 
-  sendSuccess({ res, data: null })
+    sendSuccess({ res, data })
+  }
+
+  listTeacherOptions = async (req: Request, res: Response) => {
+    const validated = req.validated as ListTeacherOptionsValidated
+    const dto: ListTeacherOptionsDto = validated.query
+    const data = await this.service.listTeacherOptions(dto)
+
+    sendSuccess({ res, data })
+  }
+
+  updateUserStatus = async (req: Request, res: Response) => {
+    const validated = req.validated as UpdateUserStatusValidated
+    const dto: UpdateUserStatusDto = {
+      userId: validated.params.userId,
+      status: validated.body.status
+    }
+
+    await this.service.updateUserStatus(dto)
+
+    sendSuccess({ res, data: null })
+  }
 }
+
+export const adminUserController = new AdminUserController(adminService)
+
+export const createTeacherController = adminUserController.createTeacher
+export const getAllUsersController = adminUserController.getAllUsers
+export const listTeacherOptionsController = adminUserController.listTeacherOptions
+export const updateUserStatusController = adminUserController.updateUserStatus

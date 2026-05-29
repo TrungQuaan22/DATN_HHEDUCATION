@@ -3,35 +3,45 @@ import { loginSchema, refreshTokenSchema, registerSchema } from './validator'
 import { LoginDto, RefreshTokenDto, RegisterDto } from './dto'
 import z from 'zod'
 import { sendSuccess } from '~/common/http/response'
-import { authService } from './service'
+import { AuthService, authService } from './service'
 
 type LoginValidated = z.infer<typeof loginSchema>
 type RegisterValidated = z.infer<typeof registerSchema>
 type RefreshTokenValidated = z.infer<typeof refreshTokenSchema>
 
-export const loginController = async (req: Request, res: Response) => {
-  const validated = req.validated as LoginValidated
+export class AuthController {
+  constructor(private readonly service: AuthService) {}
 
-  const dto: LoginDto = validated.body
-  const data = await authService.login(dto)
+  login = async (req: Request, res: Response) => {
+    const validated = req.validated as LoginValidated
 
-  sendSuccess({ res, data })
+    const dto: LoginDto = validated.body
+    const data = await this.service.login(dto)
+
+    sendSuccess({ res, data })
+  }
+
+  register = async (req: Request, res: Response) => {
+    const validated = req.validated as RegisterValidated
+
+    const dto: RegisterDto = validated.body
+    const data = await this.service.register(dto)
+
+    sendSuccess({ res, data, status: 201 })
+  }
+
+  refreshToken = async (req: Request, res: Response) => {
+    const validated = req.validated as RefreshTokenValidated
+
+    const dto: RefreshTokenDto = validated.body
+    const data = await this.service.refreshToken(dto)
+
+    sendSuccess({ res, data })
+  }
 }
 
-export const registerController = async (req: Request, res: Response) => {
-  const validated = req.validated as RegisterValidated
+export const authController = new AuthController(authService)
 
-  const dto: RegisterDto = validated.body
-  const data = await authService.register(dto)
-
-  sendSuccess({ res, data, status: 201 })
-}
-
-export const refreshTokenController = async (req: Request, res: Response) => {
-  const validated = req.validated as RefreshTokenValidated
-
-  const dto: RefreshTokenDto = validated.body
-  const data = await authService.refreshToken(dto)
-
-  sendSuccess({ res, data })
-}
+export const loginController = authController.login
+export const registerController = authController.register
+export const refreshTokenController = authController.refreshToken

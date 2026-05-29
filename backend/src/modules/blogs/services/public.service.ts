@@ -14,12 +14,11 @@ import type {
   ListPublicBlogTagsResponseDto,
   ListPublicBlogPostsDto,
   ListPublicBlogPostsResponseDto
-} from '../dto/public.dto'
-import { blogRepository } from '../repository'
-import { mapBlogPostMedia } from '../mappers/blog.mapper'
-import { createExcerptFromContent, getReadingMinutes } from '../utils/rich-content'
-
-type PublishedBlogPost = NonNullable<Awaited<ReturnType<typeof blogRepository.findPublishedPostBySlug>>>
+} from '../dto'
+import { blogRepository, type PublishedBlogPost } from '../repository'
+import type { BlogRepositoryPort } from '../ports/blog-repository.port'
+import { mapBlogPostMedia } from '../mappers'
+import { createExcerptFromContent, getReadingMinutes, countTags, countCategories } from '../utils'
 
 const mapPublishedPostSummary = (post: PublishedBlogPost): BlogPostSummaryDto => ({
   ...mapBlogPostMedia({
@@ -44,39 +43,9 @@ const mapPublishedPostDetail = (post: PublishedBlogPost): BlogPostDetailDto => (
   relatedPosts: []
 })
 
-const countTags = (tagSources: Array<{ tags: string[] }>, limit: number) => {
-  const counts = new Map<string, number>()
+export class PublicBlogService {
+  constructor(private readonly repository: BlogRepositoryPort) {}
 
-  for (const post of tagSources) {
-    for (const rawTag of post.tags) {
-      const tag = rawTag.trim()
-      if (!tag) continue
-      counts.set(tag, (counts.get(tag) ?? 0) + 1)
-    }
-  }
-
-  return Array.from(counts.entries())
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'vi'))
-    .slice(0, limit)
-    .map(([name, count]) => ({ name, count }))
-}
-
-const countCategories = (categorySources: Array<{ category: string | null }>, limit: number) => {
-  const counts = new Map<string, number>()
-
-  for (const post of categorySources) {
-    const category = post.category?.trim()
-    if (!category) continue
-    counts.set(category, (counts.get(category) ?? 0) + 1)
-  }
-
-  return Array.from(counts.entries())
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'vi'))
-    .slice(0, limit)
-    .map(([name, count]) => ({ name, count }))
-}
-
-export const publicBlogService = {
   async listPosts(input: ListPublicBlogPostsDto): Promise<ListPublicBlogPostsResponseDto> {
     let where: Prisma.BlogPostWhereInput = {
       status: BlogPostStatus.published,
@@ -92,12 +61,12 @@ export const publicBlogService = {
     where = applySearchCondition({
       where,
       search: input.search,
-      titleField: 'title',
-      slugField: 'slug'
+      field: 'title',
+      tokenField: 'slug'
     })
 
     const skip = (input.page - 1) * input.limit
-    const [items, totalItems] = await blogRepository.listPublishedPosts({
+    const [items, totalItems] = await this.repository.listPublishedPosts({
       where,
       skip,
       take: input.limit
@@ -112,10 +81,10 @@ export const publicBlogService = {
         totalPages: Math.ceil(totalItems / input.limit)
       }
     }
-  },
+  }
 
   async listTags(input: ListPublicBlogTagsDto): Promise<ListPublicBlogTagsResponseDto> {
-    const tagSources = await blogRepository.listTagSources({
+    const tagSources = await this.repository.listTagSources({
       status: BlogPostStatus.published,
       deletedAt: null,
       publishedAt: {
@@ -126,12 +95,12 @@ export const publicBlogService = {
     return {
       items: countTags(tagSources, input.limit)
     }
-  },
+  }
 
   async listCategories(
     input: ListPublicBlogCategoriesDto
   ): Promise<ListPublicBlogCategoriesResponseDto> {
-    const categorySources = await blogRepository.listCategorySources({
+    const categorySources = await this.repository.listCategorySources({
       status: BlogPostStatus.published,
       deletedAt: null,
       publishedAt: {
@@ -142,10 +111,10 @@ export const publicBlogService = {
     return {
       items: countCategories(categorySources, input.limit)
     }
-  },
+  }
 
   async getPost(slug: string): Promise<BlogPostDetailDto> {
-    const post = await blogRepository.findPublishedPostBySlug(slug)
+    const post = await this.repository.findPublishedPostBySlug(slug)
 
     if (!post) {
       throw new AppError(404, ERROR_CODE.BLOG_POST_NOT_FOUND, ERROR_MESSAGE.BLOG_POST_NOT_FOUND)
@@ -167,7 +136,7 @@ export const publicBlogService = {
       })
     }
 
-    const relatedPosts = await blogRepository.listPublishedPostSummaries({
+    const relatedPosts = await this.repository.listPublishedPostSummaries({
       where: {
         id: {
           not: post.id
@@ -188,3 +157,5 @@ export const publicBlogService = {
     }
   }
 }
+
+export const publicBlogService = new PublicBlogService(blogRepository)

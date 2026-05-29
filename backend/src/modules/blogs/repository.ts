@@ -1,6 +1,11 @@
 import { BlogPostStatus, type Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
+import type {
+  BlogRepositoryPort,
+  CreateBlogPostRecordInput,
+  UpdateBlogPostRecordInput
+} from './ports/blog-repository.port'
 
 const blogAuthorSelect = {
   id: true,
@@ -9,7 +14,7 @@ const blogAuthorSelect = {
   avatarObjectKey: true
 } satisfies Prisma.UserSelect
 
-export const blogRepository = {
+export class PrismaBlogRepository implements BlogRepositoryPort {
   findActivePostBySlug(slug: string) {
     return prisma.blogPost.findFirst({
       where: {
@@ -20,7 +25,7 @@ export const blogRepository = {
         id: true
       }
     })
-  },
+  }
 
   findActivePostById(blogPostId: string) {
     return prisma.blogPost.findFirst({
@@ -34,7 +39,7 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
   findPublishedPostBySlug(slug: string) {
     return prisma.blogPost.findFirst({
@@ -52,7 +57,7 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
   listPublishedPostSummaries(data: { where: Prisma.BlogPostWhereInput; take: number }) {
     return prisma.blogPost.findMany({
@@ -65,7 +70,7 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
   listAdminPosts(data: { where: Prisma.BlogPostWhereInput; skip: number; take: number }) {
     return prisma.$transaction([
@@ -84,7 +89,7 @@ export const blogRepository = {
         where: data.where
       })
     ])
-  },
+  }
 
   listPublishedPosts(data: { where: Prisma.BlogPostWhereInput; skip: number; take: number }) {
     return prisma.$transaction([
@@ -103,7 +108,7 @@ export const blogRepository = {
         where: data.where
       })
     ])
-  },
+  }
 
   listTagSources(where: Prisma.BlogPostWhereInput) {
     return prisma.blogPost.findMany({
@@ -112,7 +117,7 @@ export const blogRepository = {
         tags: true
       }
     })
-  },
+  }
 
   listCategorySources(where: Prisma.BlogPostWhereInput) {
     return prisma.blogPost.findMany({
@@ -121,20 +126,9 @@ export const blogRepository = {
         category: true
       }
     })
-  },
+  }
 
-  createPost(data: {
-    title: string
-    slug: string
-    excerpt?: string | null
-    category?: string | null
-    tags?: string[]
-    content: Prisma.InputJsonValue
-    authorId: string
-    thumbnailMediaId?: string | null
-    thumbnailObjectKey?: string | null
-    isFeatured?: boolean
-  }) {
+  createPost(data: CreateBlogPostRecordInput) {
     return prisma.blogPost.create({
       data: {
         title: data.title,
@@ -154,20 +148,9 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
-  updatePost(data: {
-    blogPostId: string
-    title?: string
-    slug?: string
-    excerpt?: string | null
-    category?: string | null
-    tags?: string[]
-    content?: Prisma.InputJsonValue
-    thumbnailMediaId?: string | null
-    thumbnailObjectKey?: string | null
-    isFeatured?: boolean
-  }) {
+  updatePost(data: UpdateBlogPostRecordInput) {
     return prisma.blogPost.update({
       where: {
         id: data.blogPostId
@@ -189,7 +172,7 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
   updateStatus(data: {
     blogPostId: string
@@ -210,7 +193,7 @@ export const blogRepository = {
         }
       }
     })
-  },
+  }
 
   softDeletePost(blogPostId: string) {
     return prisma.blogPost.update({
@@ -226,3 +209,11 @@ export const blogRepository = {
     })
   }
 }
+
+export const blogRepository = new PrismaBlogRepository()
+
+export type {
+  BlogPostWithAuthor,
+  PublishedBlogPost
+} from './ports/blog-repository.port'
+

@@ -2,14 +2,23 @@ import { UserRole, UserStatus } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
-export const authRepository = {
+import type {
+  AuthRepositoryPort,
+  CreateSessionInput,
+  CreateStudentInput,
+  CreateTeacherInput,
+  RotateSessionRefreshTokenInput
+} from './ports/auth-repository.port'
+
+export class PrismaAuthRepository implements AuthRepositoryPort {
   findUserByEmail(email: string) {
     return prisma.user.findUnique({
       where: { email }
     })
-  },
+  }
+
   //Bypass email verification for now, create active student directly
-  createStudent(data: { fullName: string; email: string; passwordHash: string }) {
+  createStudent(data: CreateStudentInput) {
     return prisma.user.create({
       data: {
         fullName: data.fullName,
@@ -19,15 +28,9 @@ export const authRepository = {
         status: UserStatus.active
       }
     })
-  },
+  }
 
-  createTeacher(data: {
-    fullName: string
-    email: string
-    passwordHash: string
-    avatarMediaId?: string | null
-    avatarObjectKey?: string | null
-  }) {
+  createTeacher(data: CreateTeacherInput) {
     return prisma.user.create({
       data: {
         fullName: data.fullName,
@@ -39,9 +42,9 @@ export const authRepository = {
         status: UserStatus.active
       }
     })
-  },
+  }
 
-  createSession(data: { id: string; userId: string; refreshTokenHash: string; expiresAt: Date }) {
+  createSession(data: CreateSessionInput) {
     return prisma.userSession.create({
       data: {
         id: data.id,
@@ -50,7 +53,7 @@ export const authRepository = {
         expiresAt: data.expiresAt
       }
     })
-  },
+  }
 
   findSessionById(id: string) {
     return prisma.userSession.findUnique({
@@ -59,14 +62,9 @@ export const authRepository = {
         user: true
       }
     })
-  },
+  }
 
-  rotateSessionRefreshToken(data: {
-    id: string
-    refreshTokenHash: string
-    previousRefreshTokenHash: string
-    expiresAt: Date
-  }) {
+  rotateSessionRefreshToken(data: RotateSessionRefreshTokenInput) {
     return prisma.userSession.update({
       where: { id: data.id },
       data: {
@@ -76,7 +74,7 @@ export const authRepository = {
         expiresAt: data.expiresAt
       }
     })
-  },
+  }
 
   revokeSession(id: string) {
     return prisma.userSession.update({
@@ -88,3 +86,5 @@ export const authRepository = {
     })
   }
 }
+
+export const authRepository = new PrismaAuthRepository()

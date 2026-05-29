@@ -25,8 +25,10 @@ export type RefreshTokenResponseDto = {
   refreshToken: string
 }
 
+// Dữ liệu gửi lên khi đăng ký tài khoản mới
 export type RegisterDto = z.infer<typeof registerBodySchema>
 
+// Dữ liệu trả về sau khi đăng ký thành công
 export type RegisterResponseDto = {
   id: string
   email: string

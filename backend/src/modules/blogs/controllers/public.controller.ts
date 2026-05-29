@@ -3,8 +3,8 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import type { ListPublicBlogPostsDto } from '../dto/public.dto'
-import { publicBlogService } from '../services/public.service'
+import type { ListPublicBlogPostsDto } from '../dto'
+import { PublicBlogService, publicBlogService } from '../services/public.service'
 import {
   getPublicBlogPostSchema,
   listPublicBlogCategoriesSchema,
@@ -17,31 +17,42 @@ type ListPublicBlogTagsValidated = z.infer<typeof listPublicBlogTagsSchema>
 type ListPublicBlogCategoriesValidated = z.infer<typeof listPublicBlogCategoriesSchema>
 type GetPublicBlogPostValidated = z.infer<typeof getPublicBlogPostSchema>
 
-export const listPublicBlogPostsController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListPublicBlogPostsValidated
-  const dto: ListPublicBlogPostsDto = validated.query
-  const data = await publicBlogService.listPosts(dto)
+export class PublicBlogController {
+  constructor(private readonly service: PublicBlogService) {}
 
-  sendSuccess({ res, data })
+  listPosts = async (req: Request, res: Response) => {
+    const validated = req.validated as ListPublicBlogPostsValidated
+    const dto: ListPublicBlogPostsDto = validated.query
+    const data = await this.service.listPosts(dto)
+
+    sendSuccess({ res, data })
+  }
+
+  listTags = async (req: Request, res: Response) => {
+    const validated = req.validated as ListPublicBlogTagsValidated
+    const data = await this.service.listTags(validated.query)
+
+    sendSuccess({ res, data })
+  }
+
+  listCategories = async (req: Request, res: Response) => {
+    const validated = req.validated as ListPublicBlogCategoriesValidated
+    const data = await this.service.listCategories(validated.query)
+
+    sendSuccess({ res, data })
+  }
+
+  getPost = async (req: Request, res: Response) => {
+    const validated = req.validated as GetPublicBlogPostValidated
+    const data = await this.service.getPost(validated.params.slug)
+
+    sendSuccess({ res, data })
+  }
 }
 
-export const listPublicBlogTagsController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListPublicBlogTagsValidated
-  const data = await publicBlogService.listTags(validated.query)
+export const publicBlogController = new PublicBlogController(publicBlogService)
 
-  sendSuccess({ res, data })
-}
-
-export const listPublicBlogCategoriesController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListPublicBlogCategoriesValidated
-  const data = await publicBlogService.listCategories(validated.query)
-
-  sendSuccess({ res, data })
-}
-
-export const getPublicBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as GetPublicBlogPostValidated
-  const data = await publicBlogService.getPost(validated.params.slug)
-
-  sendSuccess({ res, data })
-}
+export const listPublicBlogPostsController = publicBlogController.listPosts
+export const listPublicBlogTagsController = publicBlogController.listTags
+export const listPublicBlogCategoriesController = publicBlogController.listCategories
+export const getPublicBlogPostController = publicBlogController.getPost

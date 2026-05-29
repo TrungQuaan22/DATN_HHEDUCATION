@@ -3,24 +3,33 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import { userService } from '../services/user.service'
+import { UserService, userService } from '../services/user.service'
 import { updateMeSchema } from '../validators/user.validator'
 
 type UpdateMeValidated = z.infer<typeof updateMeSchema>
 
-export const getMeController = async (req: Request, res: Response) => {
-  const { id } = req.user!
-  const data = await userService.getMe(id)
+export class UserController {
+  constructor(private readonly service: UserService) {}
 
-  sendSuccess({ res, data })
+  getMe = async (req: Request, res: Response) => {
+    const { id } = req.user!
+    const data = await this.service.getMe(id)
+
+    sendSuccess({ res, data })
+  }
+
+  updateMe = async (req: Request, res: Response) => {
+    const validated = req.validated as UpdateMeValidated
+    const data = await this.service.updateMe({
+      userId: req.user!.id,
+      ...validated.body
+    })
+
+    sendSuccess({ res, data })
+  }
 }
 
-export const updateMeController = async (req: Request, res: Response) => {
-  const validated = req.validated as UpdateMeValidated
-  const data = await userService.updateMe({
-    userId: req.user!.id,
-    ...validated.body
-  })
+export const userController = new UserController(userService)
 
-  sendSuccess({ res, data })
-}
+export const getMeController = userController.getMe
+export const updateMeController = userController.updateMe

@@ -1,5 +1,5 @@
 import { mapMediaUrl } from '~/common/mappers/media.mapper'
-import { mapUserAvatar } from '~/modules/users/mappers/user.mapper'
+import { mapUserAvatar } from '~/modules/users/mappers'
 
 export const mapBlogPostMedia = <
   T extends {

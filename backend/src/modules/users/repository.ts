@@ -1,6 +1,13 @@
+import { UserRole } from '@prisma/client'
 import type { Prisma, UserStatus } from '@prisma/client'
 
 import { prisma } from '~/config/db'
+import type {
+  ListTeacherOptionsInput,
+  ListUsersInput,
+  UpdateUserProfileInput,
+  UserRepositoryPort
+} from './ports/user-repository.port'
 
 const userListSelect = {
   id: true,
@@ -14,15 +21,22 @@ const userListSelect = {
   updatedAt: true
 } satisfies Prisma.UserSelect
 
-export const userRepository = {
+const teacherOptionSelect = {
+  id: true,
+  email: true,
+  fullName: true,
+  avatarObjectKey: true
+} satisfies Prisma.UserSelect
+
+export class PrismaUserRepository implements UserRepositoryPort {
   findUserProfileById(id: string) {
     return prisma.user.findUnique({
       where: { id },
       select: userListSelect
     })
-  },
+  }
 
-  listUsers(data: { where: Prisma.UserWhereInput; skip: number; take: number }) {
+  listUsers(data: ListUsersInput) {
     return prisma.$transaction([
       prisma.user.findMany({
         where: data.where,
@@ -35,21 +49,55 @@ export const userRepository = {
         where: data.where
       })
     ])
-  },
+  }
+
+  getUserStats(data: { newUsersFrom: Date }) {
+    return prisma.$transaction([
+      prisma.user.count({
+        where: {
+          deletedAt: null
+        }
+      }),
+      prisma.user.count({
+        where: {
+          role: UserRole.teacher,
+          deletedAt: null
+        }
+      }),
+      prisma.user.count({
+        where: {
+          createdAt: {
+            gte: data.newUsersFrom
+          },
+          deletedAt: null
+        }
+      })
+    ])
+  }
+
+  listTeacherOptions(data: ListTeacherOptionsInput) {
+    return prisma.$transaction([
+      prisma.user.findMany({
+        where: data.where,
+        skip: data.skip,
+        take: data.take,
+        orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
+        select: teacherOptionSelect
+      }),
+      prisma.user.count({
+        where: data.where
+      })
+    ])
+  }
 
   updateUserStatus(data: { userId: string; status: UserStatus }) {
     return prisma.user.update({
       where: { id: data.userId },
       data: { status: data.status }
     })
-  },
+  }
 
-  updateUserProfile(data: {
-    userId: string
-    fullName?: string
-    avatarMediaId?: string | null
-    avatarObjectKey?: string | null
-  }) {
+  updateUserProfile(data: UpdateUserProfileInput) {
     return prisma.user.update({
       where: { id: data.userId },
       data: {
@@ -61,3 +109,5 @@ export const userRepository = {
     })
   }
 }
+
+export const userRepository = new PrismaUserRepository()

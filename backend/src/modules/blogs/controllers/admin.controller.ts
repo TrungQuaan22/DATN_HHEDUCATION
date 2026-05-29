@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express'
 import z from 'zod'
 
+import { ERROR_CODE } from '~/common/constant/error-code'
+import { ERROR_MESSAGE } from '~/common/constant/error-message'
+import { AppError } from '~/common/error/app-error'
 import { sendSuccess } from '~/common/http/response'
 
 import type {
@@ -8,8 +11,8 @@ import type {
   CreateBlogPostDto,
   ListAdminBlogPostsDto,
   UpdateBlogPostDto
-} from '../dto/admin.dto'
-import { adminBlogService } from '../services/admin.service'
+} from '../dto'
+import { AdminBlogService, adminBlogService } from '../services/admin.service'
 import {
   changeBlogPostStatusSchema,
   createBlogPostSchema,
@@ -32,121 +35,137 @@ type DeleteBlogPostValidated = z.infer<typeof deleteBlogPostSchema>
 
 const getActor = (req: Request) => {
   if (!req.user) {
-    throw new Error('Authenticated user is required')
+    throw new AppError(401, ERROR_CODE.UNAUTHORIZED, ERROR_MESSAGE.UNAUTHORIZED)
   }
 
   return req.user
 }
 
-export const createBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as CreateBlogPostValidated
-  const actor = getActor(req)
-  const dto: CreateBlogPostDto = {
-    ...validated.body,
-    authorId: actor.id,
-    actorRole: actor.role
+export class AdminBlogController {
+  constructor(private readonly service: AdminBlogService) {}
+
+  createPost = async (req: Request, res: Response) => {
+    const validated = req.validated as CreateBlogPostValidated
+    const actor = getActor(req)
+    const dto: CreateBlogPostDto = {
+      ...validated.body,
+      authorId: actor.id,
+      actorRole: actor.role
+    }
+    const data = await this.service.createPost(dto)
+
+    sendSuccess({ res, data, status: 201 })
   }
-  const data = await adminBlogService.createPost(dto)
 
-  sendSuccess({ res, data, status: 201 })
-}
+  listPosts = async (req: Request, res: Response) => {
+    const validated = req.validated as ListAdminBlogPostsValidated
+    const actor = getActor(req)
+    const dto: ListAdminBlogPostsDto = {
+      ...validated.query,
+      actorId: actor.id,
+      actorRole: actor.role
+    }
+    const data = await this.service.listPosts(dto)
 
-export const listAdminBlogPostsController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListAdminBlogPostsValidated
-  const actor = getActor(req)
-  const dto: ListAdminBlogPostsDto = {
-    ...validated.query,
-    actorId: actor.id,
-    actorRole: actor.role
+    sendSuccess({ res, data })
   }
-  const data = await adminBlogService.listPosts(dto)
 
-  sendSuccess({ res, data })
-}
+  listTags = async (req: Request, res: Response) => {
+    const validated = req.validated as ListAdminBlogTagsValidated
+    const actor = getActor(req)
+    const data = await this.service.listTags({
+      ...validated.query,
+      actorId: actor.id,
+      actorRole: actor.role
+    })
 
-export const listAdminBlogTagsController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListAdminBlogTagsValidated
-  const actor = getActor(req)
-  const data = await adminBlogService.listTags({
-    ...validated.query,
-    actorId: actor.id,
-    actorRole: actor.role
-  })
-
-  sendSuccess({ res, data })
-}
-
-export const listAdminBlogCategoriesController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListAdminBlogCategoriesValidated
-  const actor = getActor(req)
-  const data = await adminBlogService.listCategories({
-    ...validated.query,
-    actorId: actor.id,
-    actorRole: actor.role
-  })
-
-  sendSuccess({ res, data })
-}
-
-export const getAdminBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as GetAdminBlogPostValidated
-  const actor = getActor(req)
-  const dto: BlogPostIdDto = {
-    blogPostId: validated.params.blogPostId,
-    actorId: actor.id,
-    actorRole: actor.role
+    sendSuccess({ res, data })
   }
-  const data = await adminBlogService.getPost(dto)
 
-  sendSuccess({ res, data })
-}
+  listCategories = async (req: Request, res: Response) => {
+    const validated = req.validated as ListAdminBlogCategoriesValidated
+    const actor = getActor(req)
+    const data = await this.service.listCategories({
+      ...validated.query,
+      actorId: actor.id,
+      actorRole: actor.role
+    })
 
-export const updateBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as UpdateBlogPostValidated
-  const actor = getActor(req)
-  const dto: UpdateBlogPostDto = {
-    blogPostId: validated.params.blogPostId,
-    actorId: actor.id,
-    actorRole: actor.role,
-    ...validated.body
+    sendSuccess({ res, data })
   }
-  const data = await adminBlogService.updatePost(dto)
 
-  sendSuccess({ res, data })
+  getPost = async (req: Request, res: Response) => {
+    const validated = req.validated as GetAdminBlogPostValidated
+    const actor = getActor(req)
+    const dto: BlogPostIdDto = {
+      blogPostId: validated.params.blogPostId,
+      actorId: actor.id,
+      actorRole: actor.role
+    }
+    const data = await this.service.getPost(dto)
+
+    sendSuccess({ res, data })
+  }
+
+  updatePost = async (req: Request, res: Response) => {
+    const validated = req.validated as UpdateBlogPostValidated
+    const actor = getActor(req)
+    const dto: UpdateBlogPostDto = {
+      blogPostId: validated.params.blogPostId,
+      actorId: actor.id,
+      actorRole: actor.role,
+      ...validated.body
+    }
+    const data = await this.service.updatePost(dto)
+
+    sendSuccess({ res, data })
+  }
+
+  publishPost = async (req: Request, res: Response) => {
+    const validated = req.validated as ChangeBlogPostStatusValidated
+    const actor = getActor(req)
+    const data = await this.service.publishPost({
+      blogPostId: validated.params.blogPostId,
+      actorId: actor.id,
+      actorRole: actor.role
+    })
+
+    sendSuccess({ res, data })
+  }
+
+  unpublishPost = async (req: Request, res: Response) => {
+    const validated = req.validated as ChangeBlogPostStatusValidated
+    const actor = getActor(req)
+    const data = await this.service.unpublishPost({
+      blogPostId: validated.params.blogPostId,
+      actorId: actor.id,
+      actorRole: actor.role
+    })
+
+    sendSuccess({ res, data })
+  }
+
+  deletePost = async (req: Request, res: Response) => {
+    const validated = req.validated as DeleteBlogPostValidated
+    const actor = getActor(req)
+    const data = await this.service.deletePost({
+      blogPostId: validated.params.blogPostId,
+      actorId: actor.id,
+      actorRole: actor.role
+    })
+
+    sendSuccess({ res, data })
+  }
 }
 
-export const publishBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as ChangeBlogPostStatusValidated
-  const actor = getActor(req)
-  const data = await adminBlogService.publishPost({
-    blogPostId: validated.params.blogPostId,
-    actorId: actor.id,
-    actorRole: actor.role
-  })
+export const adminBlogController = new AdminBlogController(adminBlogService)
 
-  sendSuccess({ res, data })
-}
-
-export const unpublishBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as ChangeBlogPostStatusValidated
-  const actor = getActor(req)
-  const data = await adminBlogService.unpublishPost({
-    blogPostId: validated.params.blogPostId,
-    actorId: actor.id,
-    actorRole: actor.role
-  })
-
-  sendSuccess({ res, data })
-}
-
-export const deleteBlogPostController = async (req: Request, res: Response) => {
-  const validated = req.validated as DeleteBlogPostValidated
-  const actor = getActor(req)
-  const data = await adminBlogService.deletePost({
-    blogPostId: validated.params.blogPostId,
-    actorId: actor.id,
-    actorRole: actor.role
-  })
-
-  sendSuccess({ res, data })
-}
+export const createBlogPostController = adminBlogController.createPost
+export const listAdminBlogPostsController = adminBlogController.listPosts
+export const listAdminBlogTagsController = adminBlogController.listTags
+export const listAdminBlogCategoriesController = adminBlogController.listCategories
+export const getAdminBlogPostController = adminBlogController.getPost
+export const updateBlogPostController = adminBlogController.updatePost
+export const publishBlogPostController = adminBlogController.publishPost
+export const unpublishBlogPostController = adminBlogController.unpublishPost
+export const deleteBlogPostController = adminBlogController.deletePost

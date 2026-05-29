@@ -36,6 +36,7 @@ model User {
   notifications            Notification[]
   auditLogs                AuditLog[]                @relation("AuditActor")
   orders                   Order[]
+  idempotencyKeys          IdempotencyKey[]
   uploadedMedia            Media[]                   @relation("UploadedMedia")
   avatarMedia              Media?                    @relation("UserAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
 

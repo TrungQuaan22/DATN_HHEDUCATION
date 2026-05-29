@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client'
 import { Router } from 'express'
 
 import { asyncHandler } from '~/common/middlewares/async-handler'
+import { requireActiveSession } from '~/common/middlewares/require-active-session'
 import { requireAuth } from '~/common/middlewares/require-auth'
 import { requireRole } from '~/common/middlewares/require-role'
 import { validateRequest } from '~/common/middlewares/validate-request'
@@ -33,6 +34,7 @@ export const adminBlogRoutes = Router()
 adminBlogRoutes.post(
   '/blog-posts',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(createBlogPostSchema),
   asyncHandler(createBlogPostController)
@@ -41,6 +43,7 @@ adminBlogRoutes.post(
 adminBlogRoutes.get(
   '/blog-posts',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminBlogPostsSchema),
   asyncHandler(listAdminBlogPostsController)
@@ -49,6 +52,7 @@ adminBlogRoutes.get(
 adminBlogRoutes.get(
   '/blog-posts/categories',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminBlogCategoriesSchema),
   asyncHandler(listAdminBlogCategoriesController)
@@ -57,6 +61,7 @@ adminBlogRoutes.get(
 adminBlogRoutes.get(
   '/blog-posts/tags',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminBlogTagsSchema),
   asyncHandler(listAdminBlogTagsController)
@@ -65,6 +70,7 @@ adminBlogRoutes.get(
 adminBlogRoutes.get(
   '/blog-posts/:blogPostId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(getAdminBlogPostSchema),
   asyncHandler(getAdminBlogPostController)
@@ -73,6 +79,7 @@ adminBlogRoutes.get(
 adminBlogRoutes.patch(
   '/blog-posts/:blogPostId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(updateBlogPostSchema),
   asyncHandler(updateBlogPostController)
@@ -81,6 +88,7 @@ adminBlogRoutes.patch(
 adminBlogRoutes.patch(
   '/blog-posts/:blogPostId/publish',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(changeBlogPostStatusSchema),
   asyncHandler(publishBlogPostController)
@@ -89,6 +97,7 @@ adminBlogRoutes.patch(
 adminBlogRoutes.patch(
   '/blog-posts/:blogPostId/unpublish',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(changeBlogPostStatusSchema),
   asyncHandler(unpublishBlogPostController)
@@ -97,6 +106,7 @@ adminBlogRoutes.patch(
 adminBlogRoutes.delete(
   '/blog-posts/:blogPostId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(deleteBlogPostSchema),
   asyncHandler(deleteBlogPostController)
