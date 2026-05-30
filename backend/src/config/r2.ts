@@ -26,5 +26,7 @@ export const r2Client = new S3Client({
   credentials: {
     accessKeyId,
     secretAccessKey
-  }
+  },
+  requestChecksumCalculation: 'WHEN_REQUIRED',
+  responseChecksumValidation: 'WHEN_REQUIRED'
 })

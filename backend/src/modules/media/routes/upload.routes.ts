@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { asyncHandler } from '~/common/middlewares/async-handler'
+import { requireActiveSession } from '~/common/middlewares/require-active-session'
 import { requireAuth } from '~/common/middlewares/require-auth'
 import { validateRequest } from '~/common/middlewares/validate-request'
 
@@ -11,13 +12,14 @@ import {
 import {
   completeUploadSchema,
   createPresignedUploadSchema
-} from '../validators/admin.validator'
+} from '../validators/upload.validator'
 
 export const uploadRoutes = Router()
 
 uploadRoutes.post(
   '/presign',
   requireAuth,
+  requireActiveSession,
   validateRequest(createPresignedUploadSchema),
   asyncHandler(createUploadController)
 )
@@ -25,6 +27,7 @@ uploadRoutes.post(
 uploadRoutes.post(
   '/complete',
   requireAuth,
+  requireActiveSession,
   validateRequest(completeUploadSchema),
   asyncHandler(completeUploadController)
 )

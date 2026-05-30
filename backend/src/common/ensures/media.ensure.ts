@@ -65,7 +65,11 @@ export const ensureActorCanUseVideoMedia = async ({
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} must be a video`)
   }
 
-  if (media.status !== MediaStatus.uploaded && media.status !== MediaStatus.ready) {
+  if (
+    media.status !== MediaStatus.uploaded &&
+    media.status !== MediaStatus.processing &&
+    media.status !== MediaStatus.ready
+  ) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} is not ready to use`)
   }
 
