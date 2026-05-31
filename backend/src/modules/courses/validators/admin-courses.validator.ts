@@ -35,7 +35,12 @@ export const createCourseBodySchema = z
     isFeatured: z.boolean().optional()
   })
   .strict()
-  .refine((data) => data.salePrice == null || data.salePrice < data.price, {
+  .refine((data) => {
+    if (data.price === 0) {
+      return data.salePrice == null || data.salePrice === 0
+    }
+    return data.salePrice == null || data.salePrice < data.price
+  }, {
     message: 'Sale price must be less than price',
     path: ['salePrice']
   })
@@ -85,7 +90,15 @@ export const updateCourseBodySchema = z
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     message: 'At least one field is required'
   })
-  .refine((data) => data.price == null || data.salePrice == null || data.salePrice < data.price, {
+  .refine((data) => {
+    if (data.price === 0) {
+      return data.salePrice == null || data.salePrice === 0
+    }
+    if (data.price != null && data.salePrice != null) {
+      return data.salePrice < data.price
+    }
+    return true
+  }, {
     message: 'Sale price must be less than price',
     path: ['salePrice']
   })

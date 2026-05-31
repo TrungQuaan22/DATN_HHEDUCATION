@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client'
 import { Router } from 'express'
 
 import { asyncHandler } from '~/common/middlewares/async-handler'
+import { requireActiveSession } from '~/common/middlewares/require-active-session'
 import { requireAuth } from '~/common/middlewares/require-auth'
 import { requireRole } from '~/common/middlewares/require-role'
 import { validateRequest } from '~/common/middlewares/validate-request'
@@ -27,6 +28,7 @@ export const adminCourseRoutes = Router()
 adminCourseRoutes.post(
   '/courses',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(createCourseSchema),
   asyncHandler(createCourseController)
@@ -35,6 +37,7 @@ adminCourseRoutes.post(
 adminCourseRoutes.get(
   '/courses',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminCoursesSchema),
   asyncHandler(listAdminCoursesController)
@@ -43,6 +46,7 @@ adminCourseRoutes.get(
 adminCourseRoutes.get(
   '/courses/:courseId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(getAdminCourseSchema),
   asyncHandler(getAdminCourseController)
@@ -51,6 +55,7 @@ adminCourseRoutes.get(
 adminCourseRoutes.patch(
   '/courses/:courseId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(updateCourseSchema),
   asyncHandler(updateCourseController)
@@ -59,6 +64,7 @@ adminCourseRoutes.patch(
 adminCourseRoutes.patch(
   '/courses/:courseId/publish',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin),
   validateRequest(changeCourseStatusSchema),
   asyncHandler(publishCourseController)
@@ -67,6 +73,7 @@ adminCourseRoutes.patch(
 adminCourseRoutes.patch(
   '/courses/:courseId/archive',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin),
   validateRequest(changeCourseStatusSchema),
   asyncHandler(archiveCourseController)

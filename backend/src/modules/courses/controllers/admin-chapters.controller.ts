@@ -8,7 +8,7 @@ import type {
   DeleteChapterDto,
   ReorderChaptersDto,
   UpdateChapterDto
-} from '../dto/admin-chapters.dto'
+} from '../dto'
 import { adminChapterService } from '../services/admin-chapters.service'
 import {
   createChapterSchema,
@@ -22,45 +22,56 @@ type UpdateChapterValidated = z.infer<typeof updateChapterSchema>
 type DeleteChapterValidated = z.infer<typeof deleteChapterSchema>
 type ReorderChaptersValidated = z.infer<typeof reorderChaptersSchema>
 
-export const createChapterController = async (req: Request, res: Response) => {
-  const validated = req.validated as CreateChapterValidated
-  const dto: CreateChapterDto = {
-    courseId: validated.params.courseId,
-    ...validated.body
-  }
-  const data = await adminChapterService.createChapter(req.user!, dto)
+export class AdminChapterController {
+  constructor(private readonly service = adminChapterService) {}
 
-  sendSuccess({ res, data, status: 201 })
+  createChapter = async (req: Request, res: Response) => {
+    const validated = req.validated as CreateChapterValidated
+    const dto: CreateChapterDto = {
+      courseId: validated.params.courseId,
+      ...validated.body
+    }
+    const data = await this.service.createChapter(req.user!, dto)
+
+    sendSuccess({ res, data, status: 201 })
+  }
+
+  updateChapter = async (req: Request, res: Response) => {
+    const validated = req.validated as UpdateChapterValidated
+    const dto: UpdateChapterDto = {
+      chapterId: validated.params.chapterId,
+      ...validated.body
+    }
+    const data = await this.service.updateChapter(req.user!, dto)
+
+    sendSuccess({ res, data })
+  }
+
+  deleteChapter = async (req: Request, res: Response) => {
+    const validated = req.validated as DeleteChapterValidated
+    const dto: DeleteChapterDto = {
+      chapterId: validated.params.chapterId
+    }
+    const data = await this.service.deleteChapter(req.user!, dto)
+
+    sendSuccess({ res, data })
+  }
+
+  reorderChapters = async (req: Request, res: Response) => {
+    const validated = req.validated as ReorderChaptersValidated
+    const dto: ReorderChaptersDto = {
+      courseId: validated.params.courseId,
+      ...validated.body
+    }
+    const data = await this.service.reorderChapters(req.user!, dto)
+
+    sendSuccess({ res, data })
+  }
 }
 
-export const updateChapterController = async (req: Request, res: Response) => {
-  const validated = req.validated as UpdateChapterValidated
-  const dto: UpdateChapterDto = {
-    chapterId: validated.params.chapterId,
-    ...validated.body
-  }
-  const data = await adminChapterService.updateChapter(req.user!, dto)
+export const adminChapterController = new AdminChapterController(adminChapterService)
 
-  sendSuccess({ res, data })
-}
-
-export const deleteChapterController = async (req: Request, res: Response) => {
-  const validated = req.validated as DeleteChapterValidated
-  const dto: DeleteChapterDto = {
-    chapterId: validated.params.chapterId
-  }
-  const data = await adminChapterService.deleteChapter(req.user!, dto)
-
-  sendSuccess({ res, data })
-}
-
-export const reorderChaptersController = async (req: Request, res: Response) => {
-  const validated = req.validated as ReorderChaptersValidated
-  const dto: ReorderChaptersDto = {
-    courseId: validated.params.courseId,
-    ...validated.body
-  }
-  const data = await adminChapterService.reorderChapters(req.user!, dto)
-
-  sendSuccess({ res, data })
-}
+export const createChapterController = adminChapterController.createChapter
+export const updateChapterController = adminChapterController.updateChapter
+export const deleteChapterController = adminChapterController.deleteChapter
+export const reorderChaptersController = adminChapterController.reorderChapters

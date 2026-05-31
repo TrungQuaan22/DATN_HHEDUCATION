@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client'
 import { Router } from 'express'
 
 import { asyncHandler } from '~/common/middlewares/async-handler'
+import { requireActiveSession } from '~/common/middlewares/require-active-session'
 import { requireAuth } from '~/common/middlewares/require-auth'
 import { requireRole } from '~/common/middlewares/require-role'
 import { validateRequest } from '~/common/middlewares/validate-request'
@@ -24,6 +25,7 @@ export const adminLessonRoutes = Router()
 adminLessonRoutes.post(
   '/chapters/:chapterId/lessons',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(createLessonSchema),
   asyncHandler(createLessonController)
@@ -32,6 +34,7 @@ adminLessonRoutes.post(
 adminLessonRoutes.patch(
   '/lessons/:lessonId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(updateLessonSchema),
   asyncHandler(updateLessonController)
@@ -40,6 +43,7 @@ adminLessonRoutes.patch(
 adminLessonRoutes.delete(
   '/lessons/:lessonId',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(deleteLessonSchema),
   asyncHandler(deleteLessonController)
@@ -48,6 +52,7 @@ adminLessonRoutes.delete(
 adminLessonRoutes.patch(
   '/chapters/:chapterId/lessons/reorder',
   requireAuth,
+  requireActiveSession,
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(reorderLessonsSchema),
   asyncHandler(reorderLessonsController)

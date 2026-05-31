@@ -5,7 +5,7 @@ import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
 import { createSlugFromText } from '~/common/utils/slug'
-import { mapAdminCourseResponse } from '../mappers/course.mapper'
+import { mapAdminCourseDetailResponse, mapAdminCourseResponse } from '../mappers'
 
 import type {
   AdminCourseDetailResponseDto,
@@ -15,45 +15,81 @@ import type {
   ListAdminCoursesDto,
   ListAdminCoursesResponseDto,
   UpdateCourseDto
-} from '../dto/admin-courses.dto'
-import { courseRepository } from '../repository'
+} from '../dto'
+import { adminCourseRepository as courseRepository } from '../repositories'
+import type {
+  AdminCourseDetailRecord,
+  AdminCourseRecord,
+  AdminCourseRepositoryPort
+} from '../ports/admin-course-repository.port'
 import {
   type CourseActor,
   ensureCanManageCourse,
-  ensureActiveTeacher,
   ensureCourseCanBeEdited,
-  ensureCourseDetailExists,
-  ensureCourseExists,
   ensureCoursePriceIsValid
 } from '../ensures/courses.ensure'
 import { applySearchCondition, normalizeText } from '~/common/utils/search'
 
-const createCourseSlug = async (title: string): Promise<string> => {
-  const normalizedTitle = normalizeText(title)
-  const baseSlug = createSlugFromText(normalizedTitle)
-  const timestampSuffix = Date.now().toString().slice(-7)
-  const slug = `${baseSlug}-${timestampSuffix}`
+export class AdminCourseService {
+  constructor(private readonly courseRepository: AdminCourseRepositoryPort) {}
 
-  const existedCourse = await courseRepository.findActiveCourseBySlug(slug)
+  private async createCourseSlug(title: string): Promise<string> {
+    const normalizedTitle = normalizeText(title)
+    const baseSlug = createSlugFromText(normalizedTitle)
+    const timestampSuffix = Date.now().toString().slice(-7)
+    const slug = `${baseSlug}-${timestampSuffix}`
 
-  if (existedCourse) {
-    throw new AppError(
-      409,
-      ERROR_CODE.COURSE_SLUG_ALREADY_EXISTS,
-      ERROR_MESSAGE.COURSE_SLUG_ALREADY_EXISTS
-    )
+    const existedCourse = await this.courseRepository.findActiveCourseBySlug(slug)
+
+    if (existedCourse) {
+      throw new AppError(
+        409,
+        ERROR_CODE.COURSE_SLUG_ALREADY_EXISTS,
+        ERROR_MESSAGE.COURSE_SLUG_ALREADY_EXISTS
+      )
+    }
+
+    return slug
   }
 
-  return slug
-}
+  private async ensureActiveTeacher(teacherId: string): Promise<void> {
+    const teacher = await this.courseRepository.findActiveTeacherById(teacherId)
 
-export const adminCourseService = {
+    if (!teacher) {
+      throw new AppError(
+        400,
+        ERROR_CODE.INVALID_COURSE_TEACHER,
+        ERROR_MESSAGE.INVALID_COURSE_TEACHER
+      )
+    }
+  }
+
+  private async ensureCourseExists(courseId: string): Promise<AdminCourseRecord> {
+    const course = await this.courseRepository.findCourseById(courseId)
+
+    if (!course) {
+      throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
+    }
+
+    return course
+  }
+
+  private async ensureCourseDetailExists(courseId: string): Promise<AdminCourseDetailRecord> {
+    const course = await this.courseRepository.findCourseDetailById(courseId)
+
+    if (!course) {
+      throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
+    }
+
+    return course
+  }
+
   async createCourse(actor: CourseActor, input: CreateCourseDto): Promise<AdminCourseResponseDto> {
     if (actor.role !== 'admin' && input.teacherId !== actor.id) {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
     }
 
-    await ensureActiveTeacher(input.teacherId)
+    await this.ensureActiveTeacher(input.teacherId)
     const thumbnailMedia = input.thumbnailMediaId
       ? await ensureActorCanUseImageMedia({
           actor,
@@ -62,15 +98,15 @@ export const adminCourseService = {
         })
       : null
 
-    const slug = await createCourseSlug(input.title)
-    const course = await courseRepository.createCourse({
+    const slug = await this.createCourseSlug(input.title)
+    const course = await this.courseRepository.createCourse({
       ...input,
       slug,
       thumbnailObjectKey: thumbnailMedia?.objectKey ?? null
     })
 
     return mapAdminCourseResponse(course)
-  },
+  }
 
   async listCourses(
     actor: CourseActor,
@@ -85,12 +121,12 @@ export const adminCourseService = {
     where = applySearchCondition({
       where,
       search: input.search,
-      titleField: 'title',
-      slugField: 'slug'
+      field: 'title',
+      tokenField: 'slug'
     })
 
     const skip = (input.page - 1) * input.limit
-    const [items, totalItems] = await courseRepository.listAdminCourses({
+    const [items, totalItems] = await this.courseRepository.listAdminCourses({
       where,
       skip,
       take: input.limit
@@ -105,17 +141,17 @@ export const adminCourseService = {
         totalPages: Math.ceil(totalItems / input.limit)
       }
     }
-  },
+  }
 
   async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponseDto> {
-    const course = await ensureCourseDetailExists(input.courseId)
+    const course = await this.ensureCourseDetailExists(input.courseId)
     ensureCanManageCourse({ actor, course })
 
-    return mapAdminCourseResponse(course)
-  },
+    return mapAdminCourseDetailResponse(course)
+  }
 
   async updateCourse(actor: CourseActor, input: UpdateCourseDto): Promise<AdminCourseResponseDto> {
-    const course = await ensureCourseExists(input.courseId)
+    const course = await this.ensureCourseExists(input.courseId)
     ensureCanManageCourse({ actor, course })
     ensureCourseCanBeEdited(course.status)
 
@@ -124,7 +160,7 @@ export const adminCourseService = {
     }
 
     if (input.teacherId) {
-      await ensureActiveTeacher(input.teacherId)
+      await this.ensureActiveTeacher(input.teacherId)
     }
 
     const thumbnailMedia = input.thumbnailMediaId
@@ -136,24 +172,29 @@ export const adminCourseService = {
       : null
 
     const nextPrice = input.price ?? course.price
-    const nextSalePrice = input.salePrice !== undefined ? input.salePrice : course.salePrice
+    let nextSalePrice = input.salePrice !== undefined ? input.salePrice : course.salePrice
+
+    if (nextPrice === 0) {
+      input.salePrice = null
+      nextSalePrice = null
+    }
 
     ensureCoursePriceIsValid({
       price: nextPrice,
       salePrice: nextSalePrice
     })
 
-    const updatedCourse = await courseRepository.updateCourse({
+    const updatedCourse = await this.courseRepository.updateCourse({
       ...input,
       thumbnailObjectKey:
         input.thumbnailMediaId === undefined ? undefined : thumbnailMedia?.objectKey ?? null
     })
 
     return mapAdminCourseResponse(updatedCourse)
-  },
+  }
 
   async publishCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
-    const course = await ensureCourseExists(input.courseId)
+    const course = await this.ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.published) {
       return mapAdminCourseResponse(course)
@@ -163,22 +204,22 @@ export const adminCourseService = {
       throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
     }
 
-    const updatedCourse = await courseRepository.updateCourseStatus(
+    const updatedCourse = await this.courseRepository.updateCourseStatus(
       input.courseId,
       CourseStatus.published
     )
 
     return mapAdminCourseResponse(updatedCourse)
-  },
+  }
 
   async archiveCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
-    const course = await ensureCourseExists(input.courseId)
+    const course = await this.ensureCourseExists(input.courseId)
 
     if (course.status === CourseStatus.archived) {
       return mapAdminCourseResponse(course)
     }
 
-    const updatedCourse = await courseRepository.updateCourseStatus(
+    const updatedCourse = await this.courseRepository.updateCourseStatus(
       input.courseId,
       CourseStatus.archived
     )
@@ -186,3 +227,5 @@ export const adminCourseService = {
     return mapAdminCourseResponse(updatedCourse)
   }
 }
+
+export const adminCourseService = new AdminCourseService(courseRepository)

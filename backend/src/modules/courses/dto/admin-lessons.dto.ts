@@ -1,4 +1,4 @@
-import type { LessonType, VideoType } from '@prisma/client'
+import type { LessonType, MediaStatus, VideoType } from '@prisma/client'
 import z from 'zod'
 
 import {
@@ -31,7 +31,13 @@ export type AdminLessonResponseDto = {
   description: string | null
   videoType: VideoType | null
   videoMediaId: string | null
-  videoUrl: string | null
+  videoMedia: {
+    id: string
+    url: string | null
+    originalName: string | null
+    status: MediaStatus
+    durationSec: number | null
+  } | null
   youtubeUrl: string | null
   durationSec: number | null
   allowPreview: boolean

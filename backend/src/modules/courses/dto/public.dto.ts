@@ -1,55 +1,23 @@
-import type { CourseStatus, LessonType, Subject } from '@prisma/client'
 import z from 'zod'
 
 import { listCatalogCoursesQuerySchema } from '../validators/public.validator'
+import type {
+  CourseChapterPublic,
+  CourseSummary,
+  PaginatedResponseShape
+} from './course-shared.types'
 
+// Request DTO for GET /courses
 export type ListCatalogCoursesDto = z.infer<typeof listCatalogCoursesQuerySchema>
 
-export type CatalogCourseItemDto = {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  subject: Subject
-  grade: number
-  teacher: {
-    id: string
-    fullName: string
-    avatarUrl: string | null
-  }
-  thumbnailUrl: string | null
-  price: number
-  salePrice: number | null
-  status: CourseStatus
-  isFeatured: boolean
-  lessonsCount: number
-  createdAt: Date
-  updatedAt: Date
-}
+// Response item for public course summary APIs.
+export type CatalogCourseItemDto = CourseSummary
 
-export type ListCatalogCoursesResponseDto = {
-  items: CatalogCourseItemDto[]
-  pagination: {
-    page: number
-    limit: number
-    totalItems: number
-    totalPages: number
-  }
-}
+// Response DTO for GET /courses
+export type ListCatalogCoursesResponseDto = PaginatedResponseShape<CatalogCourseItemDto>
 
+// Response DTO for GET /courses/:courseSlug
 export type CatalogCourseDetailDto = CatalogCourseItemDto & {
-  chapters: Array<{
-    id: string
-    title: string
-    orderIndex: number
-    lessons: Array<{
-      id: string
-      title: string
-      type: LessonType
-      durationSec: number | null
-      allowPreview: boolean
-      orderIndex: number
-    }>
-  }>
+  chapters: CourseChapterPublic[]
   relatedCourses: CatalogCourseItemDto[]
 }

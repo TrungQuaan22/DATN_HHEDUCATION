@@ -8,7 +8,7 @@ import type {
   CreateCourseDto,
   ListAdminCoursesDto,
   UpdateCourseDto
-} from '../dto/admin-courses.dto'
+} from '../dto'
 import { adminCourseService } from '../services/admin-courses.service'
 import {
   changeCourseStatusSchema,
@@ -24,61 +24,70 @@ type GetAdminCourseValidated = z.infer<typeof getAdminCourseSchema>
 type UpdateCourseValidated = z.infer<typeof updateCourseSchema>
 type ChangeCourseStatusValidated = z.infer<typeof changeCourseStatusSchema>
 
-export const createCourseController = async (req: Request, res: Response) => {
-  const validated = req.validated as CreateCourseValidated
-  const dto: CreateCourseDto = validated.body
-  const data = await adminCourseService.createCourse(req.user!, dto)
+export class AdminCourseController {
+  constructor(private readonly service = adminCourseService) {}
 
-  sendSuccess({ res, data, status: 201 })
-}
-//list courses for admin, includes unpublished and archived courses
-export const listAdminCoursesController = async (req: Request, res: Response) => {
-  const validated = req.validated as ListAdminCoursesValidated
-  const dto: ListAdminCoursesDto = validated.query
-  const data = await adminCourseService.listCourses(req.user!, dto)
+  createCourse = async (req: Request, res: Response) => {
+    const validated = req.validated as CreateCourseValidated
+    const dto: CreateCourseDto = validated.body
+    const data = await this.service.createCourse(req.user!, dto)
 
-  sendSuccess({ res, data })
-}
-
-//get course for admin, includes unpublished and archived courses
-export const getAdminCourseController = async (req: Request, res: Response) => {
-  const validated = req.validated as GetAdminCourseValidated
-  const dto: CourseIdDto = {
-    courseId: validated.params.courseId
+    sendSuccess({ res, data, status: 201 })
   }
-  const data = await adminCourseService.getCourse(req.user!, dto)
 
-  sendSuccess({ res, data })
-}
+  listAdminCourses = async (req: Request, res: Response) => {
+    const validated = req.validated as ListAdminCoursesValidated
+    const dto: ListAdminCoursesDto = validated.query
+    const data = await this.service.listCourses(req.user!, dto)
 
-//update metadata and content of a course, does not update the status of the course
-export const updateCourseController = async (req: Request, res: Response) => {
-  const validated = req.validated as UpdateCourseValidated
-  const dto: UpdateCourseDto = {
-    courseId: validated.params.courseId,
-    ...validated.body
+    sendSuccess({ res, data })
   }
-  const data = await adminCourseService.updateCourse(req.user!, dto)
 
-  sendSuccess({ res, data })
+  getAdminCourse = async (req: Request, res: Response) => {
+    const validated = req.validated as GetAdminCourseValidated
+    const dto: CourseIdDto = {
+      courseId: validated.params.courseId
+    }
+    const data = await this.service.getCourse(req.user!, dto)
+
+    sendSuccess({ res, data })
+  }
+
+  updateCourse = async (req: Request, res: Response) => {
+    const validated = req.validated as UpdateCourseValidated
+    const dto: UpdateCourseDto = {
+      courseId: validated.params.courseId,
+      ...validated.body
+    }
+    const data = await this.service.updateCourse(req.user!, dto)
+
+    sendSuccess({ res, data })
+  }
+
+  publishCourse = async (req: Request, res: Response) => {
+    const validated = req.validated as ChangeCourseStatusValidated
+    const data = await this.service.publishCourse({
+      courseId: validated.params.courseId
+    })
+
+    sendSuccess({ res, data })
+  }
+
+  archiveCourse = async (req: Request, res: Response) => {
+    const validated = req.validated as ChangeCourseStatusValidated
+    const data = await this.service.archiveCourse({
+      courseId: validated.params.courseId
+    })
+
+    sendSuccess({ res, data })
+  }
 }
 
-//publish a course, changes the status of the course to published
-export const publishCourseController = async (req: Request, res: Response) => {
-  const validated = req.validated as ChangeCourseStatusValidated
-  const data = await adminCourseService.publishCourse({
-    courseId: validated.params.courseId
-  })
+export const adminCourseController = new AdminCourseController(adminCourseService)
 
-  sendSuccess({ res, data })
-}
-
-//archive a course, changes the status of the course to archived
-export const archiveCourseController = async (req: Request, res: Response) => {
-  const validated = req.validated as ChangeCourseStatusValidated
-  const data = await adminCourseService.archiveCourse({
-    courseId: validated.params.courseId
-  })
-
-  sendSuccess({ res, data })
-}
+export const createCourseController = adminCourseController.createCourse
+export const listAdminCoursesController = adminCourseController.listAdminCourses
+export const getAdminCourseController = adminCourseController.getAdminCourse
+export const updateCourseController = adminCourseController.updateCourse
+export const publishCourseController = adminCourseController.publishCourse
+export const archiveCourseController = adminCourseController.archiveCourse

@@ -29,6 +29,7 @@ enum Subject {
 enum EnrollmentSource {
   payment
   manual
+  free
 }
 
 model Course {
@@ -111,12 +112,13 @@ model Lesson {
 }
 
 model Enrollment {
-  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
-  courseId   String           @map("course_id") @db.Uuid
-  orderId    String?          @map("order_id") @db.Uuid
-  source     EnrollmentSource @default(payment)
-  enrolledAt DateTime         @default(now()) @map("enrolled_at")
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  courseId     String           @map("course_id") @db.Uuid
+  orderId      String?          @map("order_id") @db.Uuid
+  source       EnrollmentSource @default(payment)
+  manualReason String?          @map("manual_reason") @db.VarChar(500)
+  enrolledAt   DateTime         @default(now()) @map("enrolled_at")
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])

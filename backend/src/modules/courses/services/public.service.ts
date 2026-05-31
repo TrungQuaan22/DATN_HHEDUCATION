@@ -8,10 +8,11 @@ import type {
   CatalogCourseDetailDto,
   ListCatalogCoursesDto,
   ListCatalogCoursesResponseDto
-} from '../dto/public.dto'
-import { courseRepository } from '../repository'
+} from '../dto'
+import { publicCourseRepository as courseRepository } from '../repositories'
+import type { PublicCourseRepositoryPort } from '../ports/public-course-repository.port'
 import { applySearchCondition } from '~/common/utils/search'
-import { mapCatalogCourseResponse } from '../mappers/course.mapper'
+import { mapCatalogCourseResponse } from '../mappers'
 
 const buildCatalogCourseOrderBy = (
   sort: ListCatalogCoursesDto['sort']
@@ -29,7 +30,9 @@ const buildCatalogCourseOrderBy = (
   }
 }
 
-export const publicCourseService = {
+export class PublicCourseService {
+  constructor(private readonly courseRepository: PublicCourseRepositoryPort) {}
+
   async listCatalogCourses(input: ListCatalogCoursesDto): Promise<ListCatalogCoursesResponseDto> {
     let where: Prisma.CourseWhereInput = {
       status: CourseStatus.published,
@@ -46,12 +49,12 @@ export const publicCourseService = {
     where = applySearchCondition({
       where,
       search: input.search,
-      titleField: 'title',
-      slugField: 'slug'
+      field: 'title',
+      tokenField: 'slug'
     })
 
     const skip = (input.page - 1) * input.limit
-    const [items, totalItems] = await courseRepository.listCatalogCourses({
+    const [items, totalItems] = await this.courseRepository.listCatalogCourses({
       where,
       skip,
       take: input.limit,
@@ -67,10 +70,10 @@ export const publicCourseService = {
         totalPages: Math.ceil(totalItems / input.limit)
       }
     }
-  },
+  }
 
   async getCatalogCourse(courseSlug: string): Promise<CatalogCourseDetailDto> {
-    const course = await courseRepository.findPublishedCourseBySlug(courseSlug)
+    const course = await this.courseRepository.findPublishedCourseBySlug(courseSlug)
 
     if (!course) {
       throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
@@ -82,7 +85,7 @@ export const publicCourseService = {
       orderIndex: chapter.orderIndex,
       lessons: chapter.lessons
     }))
-    const relatedCourses = await courseRepository.listRelatedCatalogCourses({
+    const relatedCourses = await this.courseRepository.listRelatedCatalogCourses({
       courseId: course.id,
       grade: course.grade,
       take: 3
@@ -95,3 +98,5 @@ export const publicCourseService = {
     }
   }
 }
+
+export const publicCourseService = new PublicCourseService(courseRepository)

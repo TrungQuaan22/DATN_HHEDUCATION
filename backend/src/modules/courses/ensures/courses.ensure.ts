@@ -4,7 +4,11 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 
-import { courseRepository } from '../repository'
+import {
+  adminChapterRepository,
+  adminCourseRepository,
+  adminLessonRepository
+} from '../repositories'
 
 export type CourseActor = {
   id: string
@@ -12,7 +16,7 @@ export type CourseActor = {
 }
 
 export const ensureCourseExists = async (courseId: string) => {
-  const course = await courseRepository.findCourseById(courseId)
+  const course = await adminCourseRepository.findCourseById(courseId)
 
   if (!course) {
     throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
@@ -22,7 +26,7 @@ export const ensureCourseExists = async (courseId: string) => {
 }
 
 export const ensureCourseDetailExists = async (courseId: string) => {
-  const course = await courseRepository.findCourseDetailById(courseId)
+  const course = await adminCourseRepository.findCourseDetailById(courseId)
 
   if (!course) {
     throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
@@ -32,7 +36,7 @@ export const ensureCourseDetailExists = async (courseId: string) => {
 }
 
 export const ensureActiveTeacher = async (teacherId: string) => {
-  const teacher = await courseRepository.findActiveTeacherById(teacherId)
+  const teacher = await adminCourseRepository.findActiveTeacherById(teacherId)
 
   if (!teacher) {
     throw new AppError(400, ERROR_CODE.INVALID_COURSE_TEACHER, ERROR_MESSAGE.INVALID_COURSE_TEACHER)
@@ -40,7 +44,7 @@ export const ensureActiveTeacher = async (teacherId: string) => {
 }
 
 export const ensureChapterExists = async (chapterId: string) => {
-  const chapter = await courseRepository.findChapterById(chapterId)
+  const chapter = await adminChapterRepository.findChapterById(chapterId)
 
   if (!chapter) {
     throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
@@ -50,7 +54,7 @@ export const ensureChapterExists = async (chapterId: string) => {
 }
 
 export const ensureLessonExists = async (lessonId: string) => {
-  const lesson = await courseRepository.findLessonById(lessonId)
+  const lesson = await adminLessonRepository.findLessonById(lessonId)
 
   if (!lesson) {
     throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
@@ -60,7 +64,7 @@ export const ensureLessonExists = async (lessonId: string) => {
 }
 
 export const ensureAssessmentExists = async (assessmentId: string) => {
-  const assessment = await courseRepository.findAssessmentById(assessmentId)
+  const assessment = await adminLessonRepository.findAssessmentById(assessmentId)
 
   if (!assessment) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
@@ -75,15 +79,13 @@ export const ensureCourseCanBeEdited = (status: CourseStatus) => {
   }
 }
 
-// Cho phep them noi dung vao course draft/published, nhung archived thi khoa hoan toan.
-export const ensureCourseStructureCanBeAdded = (status: CourseStatus) => {
-  if (status === CourseStatus.archived) {
+export const ensureCourseIsPublished = (status: CourseStatus) => {
+  if (status !== CourseStatus.published) {
     throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
   }
 }
 
-// Chi course draft moi duoc sua/xoa/reorder cau truc de khong lam roi tien do hoc sinh.
-export const ensureCourseStructureCanBeMutated = (status: CourseStatus) => {
+export const ensureCourseCanBeReordered = (status: CourseStatus) => {
   if (status !== CourseStatus.draft) {
     throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
   }
@@ -112,12 +114,18 @@ export const ensureCanManageCourse = ({
 }
 
 export const ensureCoursePriceIsValid = (data: { price: number; salePrice: number | null }) => {
+  if (data.price === 0) {
+    if (data.salePrice !== null && data.salePrice !== 0) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Free course cannot have a sale price')
+    }
+    return
+  }
   if (data.salePrice != null && data.salePrice >= data.price) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Sale price must be less than price')
   }
 }
 
-export const ensureLessonPayloadMatchesType = (data: {
+export const ensureCreateLessonPayloadIsValid = (data: {
   type: LessonType
   description?: string | null
   videoType?: VideoType | null
