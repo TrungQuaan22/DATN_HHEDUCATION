@@ -20,6 +20,8 @@ export const ERROR_MESSAGE = {
   [ERROR_CODE.INVALID_REFRESH_TOKEN]: 'Invalid refresh token. Please log in again.',
   [ERROR_CODE.REFRESH_TOKEN_REUSED]: 'Refresh token reuse detected. Please log in again.',
   [ERROR_CODE.USER_NOT_FOUND]: 'User not found. The specified user does not exist.',
+  [ERROR_CODE.COURSE_TITLE_ALREADY_EXISTS]:
+    'Course title already exists in a draft or published course. Please use a different title.',
   [ERROR_CODE.COURSE_SLUG_ALREADY_EXISTS]:
     'Course slug already exists. Please use a different slug.',
   [ERROR_CODE.BLOG_SLUG_ALREADY_EXISTS]: 'Blog slug already exists. Please use a different slug.',

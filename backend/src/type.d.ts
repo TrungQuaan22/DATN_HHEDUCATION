@@ -4,6 +4,7 @@ declare global {
   namespace Express {
     interface Request {
       requestId?: string
+      rawBody?: Buffer
       validated?: {
         body?: unknown
         query?: unknown
@@ -13,6 +14,11 @@ declare global {
         id: string
         role: UserRole
         sessionId: string
+      }
+      idempotency?: {
+        scope: string
+        key: string
+        requestHash: string
       }
     }
   }

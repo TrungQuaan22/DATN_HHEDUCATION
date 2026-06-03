@@ -1,83 +1,80 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type SearchWhere = {
+  AND?: unknown
+}
 
-type SearchWhere = Record<string, any>;
-
-interface ApplySearchConditionConfig<TWhere extends SearchWhere> {
-  where: TWhere;
-  search?: string;
-  titleField?: string;
-  slugField?: string;
+interface ApplySearchConditionOptions<TWhere extends SearchWhere> {
+  where: TWhere
+  search?: string
+  field?: string
+  tokenField?: string
 }
 
 export function normalizeText(text: string): string {
-  return text
-    ?.toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/[_-]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ') ?? '';
+  return (
+    text
+      .toLowerCase()
+      .normalize('NFD')   // Tách các ký tự có dấu thành ký tự cơ bản + dấu
+      .replace(/[\u0300-\u036f]/g, '') // Loại bỏ các ký tự dấu đã tách ra
+      .replace(/đ/g, 'd') // Thay thế đ bằng d vì đ không có dạng tách dấu
+      .replace(/[_-]+/g, ' ') // Thay thế các ký tự đặc biệt như _ và - bằng khoảng trắng
+      .trim()
+      .replace(/\s+/g, ' ')
+  )
 }
 
-/**
- * Convert search text into tokens
- *
- * Example:
- * "Ngữ văn 11" -> ["ngu", "van", "11"]
- */
 export function tokenizeSearch(text: string): string[] {
-  return [
-    ...new Set(
-      normalizeText(text)
-        .split(/\s+/)
-        .filter(Boolean),
-    ),
-  ];
-}
+  const normalizedText = normalizeText(text)
+  const tokens = normalizedText.split(/\s+/).filter(Boolean)
 
-/**
- * Apply smart search condition (Title raw match OR Slug token-based AND match)
+  return [...new Set(tokens)]
+}
+/*
+  Chiến lược tìm kiếm:
+  - Chuẩn hóa chuỗi tìm kiếm: Loại bỏ dấu, chuyển về chữ thường, thay thế các ký tự đặc biệt bằng khoảng trắng.
+  - Tách chuỗi thành các token riêng biệt dựa trên khoảng trắng.
+  - Tìm kiếm theo OR 1 [field] (default: 'title') chứa toàn bộ input và OR 2 [tokenField](default: 'slug') chứa từng token riêng lẻ (AND giữa các token). 
  */
 export function applySearchCondition<TWhere extends SearchWhere>({
   where,
   search,
-  titleField = 'title',
-  slugField = 'slug',
-}: ApplySearchConditionConfig<TWhere>): TWhere & { AND?: any[] } {
-  const rawSearch = search?.trim();
+  field = 'title',
+  tokenField = 'slug'
+}: ApplySearchConditionOptions<TWhere>) {
+  const keyword = search?.trim()
 
-  // Nếu không nhập chuỗi search hoặc chỉ nhập khoảng trắng, trả về nguyên vẹn where cũ
-  if (!rawSearch) {
-    return where;
+  if (!keyword) {
+    return where
   }
 
-  const tokens = tokenizeSearch(rawSearch);
+  const tokens = tokenizeSearch(keyword)
 
-  // Tạo điều kiện cho Slug: Bắt buộc phải chứa đầy đủ các tokens sau khi đã lọc dấu (AND)
-  const slugConditions = tokens.map((token) => ({
-    [slugField]: {
-      contains: token,
-      mode: 'insensitive' as const,
-    },
-  }));
-
-  // Tạo khối tổ hợp logic bảo hiểm: Match nguyên cụm Title gốc HOẶC Match toàn bộ từ trong Slug
-  const searchClause = {
+  const searchCondition: { OR: unknown[] } = {
     OR: [
       {
-        [titleField]: { contains: rawSearch, mode: 'insensitive' as const },
-      },
-      ...(slugConditions.length > 0 ? [{ AND: slugConditions }] : []),
-    ],
-  };
+        [field]: {
+          contains: keyword,
+          mode: 'insensitive' as const
+        }
+      }
+    ]
+  }
 
-  // Trả về object where mới, đẩy searchClause vào mảng AND hiện tại để bảo toàn các điều kiện cũ khác
+  if (tokens.length > 0) {
+    searchCondition.OR.push({
+      AND: tokens.map((token) => ({
+        [tokenField]: {
+          contains: token,
+          mode: 'insensitive' as const
+        }
+      }))
+    })
+  }
+
   return {
     ...where,
     AND: [
-      ...(Array.isArray(where.AND) ? where.AND : []),
-      searchClause,
-    ],
-  };
+      ...(Array.isArray(where.AND) ? where.AND : []), //spread existing AND conditions if any and add the new search condition
+      searchCondition
+    ]
+  }
 }
