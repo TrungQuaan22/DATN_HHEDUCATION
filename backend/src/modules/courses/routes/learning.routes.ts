@@ -8,9 +8,18 @@ import { validateRequest } from '~/common/middlewares/validate-request'
 
 import {
   getLearningCourseController,
-  listMyLearningCoursesController
+  getLearningLessonController,
+  listMyLearningCoursesController,
+  streamLearningLessonHlsController,
+  updateLessonProgressController
 } from '../controllers/learning.controller'
-import { getLearningCourseSchema } from '../validators/learning.validator'
+import {
+  getLearningCourseSchema,
+  getLearningLessonHlsSchema,
+  getLearningLessonSchema,
+  updateLessonProgressSchema,
+  listMyCoursesSchema
+} from '../validators/learning.validator'
 
 export const learningCourseRoutes = Router()
 
@@ -18,6 +27,7 @@ learningCourseRoutes.get(
   '/courses',
   requireAuth,
   requireRole(UserRole.student),
+  validateRequest(listMyCoursesSchema),
   asyncHandler(listMyLearningCoursesController)
 )
 
@@ -27,4 +37,28 @@ learningCourseRoutes.get(
   requireRole(UserRole.student),
   validateRequest(getLearningCourseSchema),
   asyncHandler(getLearningCourseController)
+)
+
+learningCourseRoutes.get(
+  '/lessons/:lessonId/hls/:fileName',
+  requireAuth,
+  requireRole(UserRole.student),
+  validateRequest(getLearningLessonHlsSchema),
+  asyncHandler(streamLearningLessonHlsController)
+)
+
+learningCourseRoutes.get(
+  '/lessons/:lessonId',
+  requireAuth,
+  requireRole(UserRole.student),
+  validateRequest(getLearningLessonSchema),
+  asyncHandler(getLearningLessonController)
+)
+
+learningCourseRoutes.post(
+  '/lessons/:lessonId/progress',
+  requireAuth,
+  requireRole(UserRole.student),
+  validateRequest(updateLessonProgressSchema),
+  asyncHandler(updateLessonProgressController)
 )

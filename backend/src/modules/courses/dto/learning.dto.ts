@@ -1,4 +1,4 @@
-import type { LessonType, Subject, VideoType } from '@prisma/client'
+import type { LessonType, MediaStatus, Subject, VideoType } from '@prisma/client'
 
 export type LearningCourseItemDto = {
   id: string
@@ -24,9 +24,15 @@ export type LearningCourseItemDto = {
 
 export type ListLearningCoursesResponseDto = {
   items: LearningCourseItemDto[]
+  pagination: {
+    page: number
+    limit: number
+    totalItems: number
+    totalPages: number
+  }
 }
 
-export type LearningCourseDetailDto = LearningCourseItemDto & {
+export type LearningCourseOverviewDto = LearningCourseItemDto & {
   chapters: Array<{
     id: string
     title: string
@@ -35,16 +41,10 @@ export type LearningCourseDetailDto = LearningCourseItemDto & {
       id: string
       title: string
       type: LessonType
-      description: string | null
-      videoType: VideoType | null
-      youtubeUrl: string | null
       durationSec: number | null
-      allowPreview: boolean
-      assessmentId: string | null
       orderIndex: number
       videoMedia: {
-        id: string
-        url: string | null
+        status: MediaStatus
       } | null
       progress: {
         watchedSeconds: number
@@ -53,4 +53,41 @@ export type LearningCourseDetailDto = LearningCourseItemDto & {
       }
     }>
   }>
+}
+
+export type LearningLessonDetailDto = {
+  id: string
+  title: string
+  type: LessonType
+  description: string | null
+  videoType: VideoType | null
+  youtubeUrl: string | null
+  durationSec: number | null
+  allowPreview: boolean
+  assessmentId: string | null
+  orderIndex: number
+  videoMedia: {
+    id: string
+    url: string | null
+    originalName: string | null
+    status: MediaStatus
+    durationSec: number | null
+  } | null
+  materials: Array<never>
+  progress: {
+    watchedSeconds: number
+    lastPositionSec: number
+    isCompleted: boolean
+  }
+}
+
+export type UpdateLessonProgressResponseDto = {
+  lessonId: string
+  courseId: string
+  watchedSeconds: number
+  lastPositionSec: number
+  durationSec: number
+  isCompleted: boolean
+  completedLessons: number
+  totalLessons: number
 }
