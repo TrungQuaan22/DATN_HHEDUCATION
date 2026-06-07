@@ -1,11 +1,11 @@
-import HeroSection from '@/features/landing/components/hero-section';
-import TeachersSection from '@/features/landing/components/teachers-section';
-import FeaturedCoursesSection from '@/features/landing/components/featured-courses-section';
-import ReviewsSection from '@/features/landing/components/reviews-section';
-import BlogPreviewSection from '@/features/landing/components/blog-preview-section';
-import AboutSection from '@/features/landing/components/about-section';
-import FinalCTA from '@/features/landing/components/final-cta';
-import { ScrollReveal } from '@/components/layout/scroll-reveal';
+import HeroSection from "@/features/landing/components/hero-section";
+import TeachersSection from "@/features/landing/components/teachers-section";
+import FeaturedCoursesSection from "@/features/landing/components/featured-courses-section";
+import ReviewsSection from "@/features/landing/components/reviews-section";
+import BlogPreviewSection from "@/features/landing/components/blog-preview-section";
+import AboutSection from "@/features/landing/components/about-section";
+import FinalCTA from "@/features/landing/components/final-cta";
+import { ScrollReveal } from "@/components/layout/scroll-reveal";
 
 export default function LandingPage() {
   return (
@@ -14,9 +14,7 @@ export default function LandingPage() {
       <HeroSection />
 
       {/* 2. Teacher Profile Slider Section */}
-      <ScrollReveal>
-        <TeachersSection />
-      </ScrollReveal>
+      <TeachersSection />
 
       {/* 3. Featured Courses Section */}
       <ScrollReveal>

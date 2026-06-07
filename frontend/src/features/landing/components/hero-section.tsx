@@ -50,7 +50,7 @@ export default function HeroSection() {
   const typedHighlight = typingText.substring(current.prefix.length);
 
   return (
-    <section className="relative overflow-hidden pt-20 min-h-[85vh] flex items-center bg-brand-dark">
+    <section className="relative overflow-hidden pt-20 min-h-[90vh] flex items-center bg-brand-dark">
       {/* Background Video */}
       <video
         autoPlay
@@ -60,7 +60,7 @@ export default function HeroSection() {
         className="absolute inset-0 w-full h-full object-cover z-0 opacity-25 pointer-events-none"
       >
         <source
-          src="https://assets.mixkit.co/videos/preview/mixkit-drawing-with-a-fountain-pen-on-paper-close-up-40019-large.mp4"
+          src="https://www.youtube.com/watch?v=5swpG8a8BPg"
           type="video/mp4"
         />
       </video>
@@ -77,7 +77,7 @@ export default function HeroSection() {
 
           <h1 className="text-[40px] md:text-[64px] font-[800] leading-[1.15] text-cream min-h-[6.2em] sm:min-h-[4.8em] md:min-h-[3.6em]">
             <span className="text-cream">{typedPrefix}</span>
-            <span className="text-gradient typing-cursor font-[800]">
+            <span className="text-brand-pink typing-cursor font-[800]">
               {typedHighlight}
             </span>
           </h1>
@@ -105,7 +105,7 @@ export default function HeroSection() {
 
         {/* Path details card on the right */}
         <div className="hidden lg:block lg:col-span-4">
-          <div className="relative p-8 rounded-xl border border-border-dark bg-deep-black/60 backdrop-blur-md space-y-6">
+          <div className="relative p-8 rounded border border-border-dark bg-deep-black/60 backdrop-blur-md space-y-6">
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-pink/5 rounded-full filter blur-xl pointer-events-none" />
 
             <h3 className="text-[18px] font-bold text-cream border-b border-border-dark pb-3">
@@ -161,4 +161,3 @@ export default function HeroSection() {
     </section>
   );
 }
-

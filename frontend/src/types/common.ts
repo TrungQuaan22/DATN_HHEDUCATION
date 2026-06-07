@@ -52,76 +52,7 @@ export type TeacherSummary = {
   achievements: TeacherAchievement[];
 };
 
-export type CourseSummary = {
-  id: string;
-  title: string;
-  slug: string;
-  description: string | null;
-  subject: Subject;
-  grade: Grade;
-  teacher: {
-    id: string;
-    fullName: string;
-    avatarMediaId?: string | null;
-    avatarUrl: string | null;
-  };
-  thumbnailMediaId?: string | null;
-  thumbnailUrl: string | null;
-  price: number;
-  salePrice: number | null;
-  status: "draft" | "published" | "archived";
-  isFeatured: boolean;
-  lessonsCount: number;
-  createdAt: string;
-  updatedAt: string;
-};
 
-export type CourseDetail = CourseSummary & {
-  chapters: CourseChapter[];
-  relatedCourses: CourseSummary[];
-};
-
-export type CourseChapter = {
-  id: string;
-  title: string;
-  orderIndex: number;
-  lessons: CourseLessonPreview[];
-};
-
-export type CourseLessonPreview = {
-  id: string;
-  title: string;
-  type: "video" | "quiz" | "document";
-  videoType?: "system" | "youtube" | null;
-  durationSec: number | null;
-  orderIndex: number;
-  allowPreview: boolean;
-};
-
-export type BlogPostSummary = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  category?: string | null;
-  thumbnailMediaId?: string | null;
-  thumbnailUrl: string | null;
-  author: {
-    id: string;
-    fullName: string;
-    avatarMediaId?: string | null;
-    avatarUrl?: string | null;
-  };
-  publishedAt: string;
-  readingMinutes: number;
-  tags: string[];
-  isFeatured?: boolean;
-};
-
-export type BlogPostDetail = BlogPostSummary & {
-  content: RichContent;
-  relatedPosts: BlogPostSummary[];
-};
 
 export type RichContent = {
   type: "doc";
@@ -147,4 +78,18 @@ export type RichNode =
   | { type: "orderedList"; content?: RichNode[] }
   | { type: "listItem"; content?: RichNode[] }
   | { type: "blockquote"; content?: RichNode[] }
-  | { type: "codeBlock"; attrs?: { language?: string }; content?: RichNode[] };
+  | { type: "codeBlock"; attrs?: { language?: string }; content?: RichNode[] }
+  | { type: "html"; attrs?: { html?: string } };
+
+export type PaginationResponseFields = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type PaginatedResponseShape<TItem> = {
+  items: TItem[];
+  pagination: PaginationResponseFields;
+};
+

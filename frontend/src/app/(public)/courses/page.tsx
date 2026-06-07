@@ -1,6 +1,7 @@
 import CourseCatalog from '@/features/courses/components/course-catalog';
-import { mockCourses } from '@/data/mock-data';
+import { getCatalogCourses } from '@/features/courses/api';
 import { Metadata } from 'next';
+import { CourseSummary } from '@/features/courses/types';
 
 export const metadata: Metadata = {
   title: 'Danh sách Khóa học | HH Education',
@@ -8,7 +9,15 @@ export const metadata: Metadata = {
   keywords: 'khóa học toán, khóa học lý, khóa học hóa, ôn thi thpt quốc gia, học trực tuyến',
 };
 
-export default function CoursesPage() {
+export default async function CoursesPage() {
+  let courses: CourseSummary[] = [];
+  try {
+    const data = await getCatalogCourses({ limit: 100 });
+    courses = data.items;
+  } catch (error) {
+    console.error('Error loading courses from API:', error);
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -35,7 +44,7 @@ export default function CoursesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="w-full">
-        <CourseCatalog initialCourses={mockCourses} />
+        <CourseCatalog initialCourses={courses} />
       </div>
     </>
   );

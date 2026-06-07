@@ -1,90 +1,54 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   /* Default Dark Theme (Cozy Forest Library - Moss & Amber) */
-  --brand-dark: #0E1412;        /* Deep Forest Black */
-  --deep-black: #080C0A;        /* Even deeper dark */
+  --brand-dark: #0e1412; /* Deep Forest Black */
+  --deep-black: #080c0a; /* Even deeper dark */
   --off-black: #060908;
-  --brand-pink: #34D399;        /* Brand Mint Green (Primary Accent) */
-  --accent-orange: #F59E0B;     /* Amber Gold (Secondary Accent) */
-  --sky-blue: #0EA5E9;          /* Info Accent */
-  --cream: #F4F7F5;             /* Cream Alabaster Text */
-  --muted-text: #8E9A95;        /* Muted Sage Gray */
-  --muted-taupe: #8E9A95;
-  --surface-input: #0A0F0D;
-  --border-dark: #202B27;       /* Deep Moss Border */
+  --brand-pink: #34d399; /* Brand Mint Green (Primary Accent) */
+  --accent-orange: #f59e0b; /* Amber Gold (Secondary Accent) */
+  --sky-blue: #0ea5e9; /* Info Accent */
+  --cream: #f4f7f5; /* Cream Alabaster Text */
+  --muted-text: #8e9a95; /* Muted Sage Gray */
+  --muted-taupe: #8e9a95;
+  --surface-input: #0a0f0d;
+  --border-dark: #202b27; /* Deep Moss Border */
 
   /* Admin Theme (Cozy Forest - matching public pages) */
-  --admin-bg: #0E1412;
-  --admin-deep-black: #080C0A;
+  --admin-bg: #0e1412;
+  --admin-deep-black: #080c0a;
   --admin-off-black: #060908;
-  --admin-pink: #34D399;
-  --admin-muted-text: #8E9A95;
-  --admin-surface-low: #0A0F0D;
+  --admin-pink: #34d399;
+  --admin-muted-text: #8e9a95;
+  --admin-surface-low: #0a0f0d;
   --admin-border-dark: rgba(52, 211, 153, 0.15);
-  --admin-cream: #F4F7F5;
+  --admin-cream: #f4f7f5;
 }
 
 html.light {
   /* Light Theme (Organic Academic Style) */
-  --brand-dark: #F1FCF7;
-  --deep-black: #FFFFFF;
-  --off-black: #E5F0EB;
-  --brand-pink: #14422D;        /* Forest Green */
-  --accent-orange: #D97706;     /* Amber orange */
-  --sky-blue: #3D6751;          /* Dark green accent */
-  --cream: #141E1B;             /* Charcoal Ink Text */
+  --brand-dark: #f1fcf7;
+  --deep-black: #ffffff;
+  --off-black: #e5f0eb;
+  --brand-pink: #14422d; /* Forest Green */
+  --accent-orange: #d97706; /* Amber orange */
+  --sky-blue: #3d6751; /* Dark green accent */
+  --cream: #141e1b; /* Charcoal Ink Text */
   --muted-text: #414943;
   --muted-taupe: #414943;
-  --surface-input: #FFFFFF;
-  --border-dark: #DAE5E0;
+  --surface-input: #ffffff;
+  --border-dark: #dae5e0;
   /* Admin Theme in Light Mode (Moss & Cream) */
-  --admin-bg: #F1FCF7;
-  --admin-deep-black: #FFFFFF;
-  --admin-off-black: #E5F0EB;
-  --admin-pink: #14422D;
-  --admin-muted-text: #5A6E65;
-  --admin-surface-low: #EBF5F0;
-  --admin-border-dark: #DAE5E0;
-  --admin-cream: #141E1B;
-}
-
-@theme {
-  --color-brand-dark: var(--brand-dark);
-  --color-deep-black: var(--deep-black);
-  --color-off-black: var(--off-black);
-  --color-brand-pink: var(--brand-pink);
-  --color-accent-orange: var(--accent-orange);
-  --color-sky-blue: var(--sky-blue);
-  --color-cream: var(--cream);
-  --color-muted-text: var(--muted-text);
-  --color-muted-taupe: var(--muted-taupe);
-  --color-surface-input: var(--surface-input);
-  --color-border-dark: var(--border-dark);
-
-  /* Admin colors mapping */
-  --color-admin-bg: var(--admin-bg);
-  --color-admin-deep: var(--admin-deep-black);
-  --color-admin-off: var(--admin-off-black);
-  --color-admin-pink: var(--admin-pink);
-  --color-admin-muted: var(--admin-muted-text);
-  --color-admin-surface-low: var(--admin-surface-low);
-  --color-admin-border: var(--admin-border-dark);
-  --color-admin-cream: var(--admin-cream);
-
-  --font-serif: var(--font-quicksand), sans-serif;
-  --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 6px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-
-  --shadow-l1: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
-  --shadow-l2: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-l3: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-l4: 0px 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --admin-bg: #f1fcf7;
+  --admin-deep-black: #ffffff;
+  --admin-off-black: #e5f0eb;
+  --admin-pink: #14422d;
+  --admin-muted-text: #5a6e65;
+  --admin-surface-low: #ebf5f0;
+  --admin-border-dark: #dae5e0;
+  --admin-cream: #141e1b;
 }
 
 /* Custom scrollbar */
@@ -108,40 +72,38 @@ body {
   color: var(--cream);
   font-family: var(--font-sans);
   min-height: 100vh;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
-h1, h2, .font-serif {
-  font-family: var(--font-serif) !important;
+h1,
+h2,
+.font-serif {
+  font-family: var(--font-quicksand) !important;
   font-weight: 700;
   letter-spacing: -0.01em;
-}
-
-/* Rounded title gradient support */
-.text-gradient {
-  background: linear-gradient(135deg, var(--brand-pink) 0%, var(--accent-orange) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Poetic scroll reveals & animations */
 .reveal-item {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 800ms cubic-bezier(0.25, 1, 0.5, 1),
-              transform 800ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 800ms cubic-bezier(0.25, 1, 0.5, 1),
+    transform 800ms cubic-bezier(0.25, 1, 0.5, 1);
   will-change: opacity, transform;
 }
 
 .reveal-item.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 /* Typing cursor animation */
 .typing-cursor::after {
-  content: '|';
+  content: "|";
   display: inline-block;
   margin-left: 6px;
   animation: blink 0.8s step-end infinite;
@@ -150,8 +112,13 @@ h1, h2, .font-serif {
 }
 
 @keyframes blink {
-  from, to { opacity: 0 }
-  50% { opacity: 1 }
+  from,
+  to {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -161,4 +128,18 @@ h1, h2, .font-serif {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Slide panels slide smoothly using transform, avoiding layout width transitions */
+.learning-slide-panel {
+  transition-property: transform !important;
+  transition-duration: 420ms !important;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+
+.learning-fade-backdrop {
+  transition-property: opacity, backdrop-filter !important;
+  transition-duration: 420ms !important;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
 }

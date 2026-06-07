@@ -1,9 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { CourseSummary, SUBJECT_LABELS } from "@/types/common";
+import Image from "next/image";
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { SUBJECT_LABELS } from "@/types/common";
+import { CourseSummary } from "../types";
 import { formatVND } from "@/lib/utils/format-money";
 import { Star, ShoppingCart } from "lucide-react";
+import { getCatalogCourse } from "@/features/courses/api";
+import { useCartStore } from "@/stores/cart-store";
+import { toast } from "@/stores/toast-store";
+import {
+  isQueryFresh,
+  PREFETCH_STALE_TIME_MS,
+  useIntentPrefetch,
+} from "@/lib/utils/prefetch";
+
+const prefetchedCatalogCourseSlugs = new Set<string>();
 
 type CourseCardProps = {
   course: CourseSummary;
@@ -14,6 +29,24 @@ export default function CourseCard({
   course,
   aspectRatio = "video",
 }: CourseCardProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const addItem = useCartStore((state) => state.addItem);
+  const items = useCartStore((state) => state.items);
+  const isAlreadyInCart = items.some((item) => item.id === course.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isAlreadyInCart) {
+      toast.info("Khóa học đã có trong giỏ hàng!");
+      return;
+    }
+    addItem(course);
+    toast.success("Đã thêm khóa học vào giỏ hàng!");
+  };
+
   // Safe parsing of subject uppercase labels
   const subjectLabel =
     SUBJECT_LABELS[course.subject] || course.subject.toUpperCase();
@@ -28,31 +61,56 @@ export default function CourseCard({
   const rating = 4.8;
 
   const aspectClass = aspectRatio === "video" ? "aspect-video" : "aspect-[3/4]";
+  const courseHref = `/courses/${course.slug}`;
+
+  const prefetchCourse = useCallback(async () => {
+    if (!course.slug) {
+      return;
+    }
+
+    const queryKey = ["catalog-course-detail", course.slug] as const;
+    router.prefetch(courseHref);
+
+    if (!isQueryFresh(queryClient, queryKey, PREFETCH_STALE_TIME_MS)) {
+      await queryClient.prefetchQuery({
+        queryKey,
+        queryFn: () => getCatalogCourse(course.slug),
+        staleTime: PREFETCH_STALE_TIME_MS,
+      });
+    }
+  }, [course.slug, courseHref, queryClient, router]);
+
+  const intentPrefetchHandlers = useIntentPrefetch({
+    id: course.slug,
+    prefetchedIds: prefetchedCatalogCourseSlugs,
+    prefetch: prefetchCourse,
+  });
 
   return (
-    <div className="bg-deep-black border border-border-dark rounded-xl overflow-hidden hover:border-brand-pink/40 hover:shadow-[0_0_25px_rgba(52,211,153,0.22)] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group flex flex-col h-full">
+    <div
+      {...intentPrefetchHandlers}
+      className="bg-deep-black border border-border-dark rounded overflow-hidden hover:border-brand-pink/40 hover:shadow-[0_0_25px_rgba(52,211,153,0.22)] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group flex flex-col h-full"
+    >
       {/* Thumbnail */}
       <div
         className={`relative overflow-hidden ${aspectClass} bg-brand-dark/50`}
       >
-        <img
+        <Image
           alt={course.title}
-          className="w-full h-full object-cover transition-all duration-300"
-          src={course.thumbnailUrl || ""}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect width="100%" height="100%" fill="%231D0C14"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23AF9DA6" font-family="sans-serif">No Image</text></svg>';
-          }}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-all duration-300 group-hover:scale-105"
+          src={course.thumbnailUrl || "https://via.placeholder.com/300x200"}
         />
 
         {/* Subject Tag */}
-        <div className="absolute top-3 left-3 bg-brand-pink text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+        <div className="absolute top-3 left-3 bg-brand-pink text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
           {subjectLabel}
         </div>
 
         {/* Sale Discount Tag */}
         {discountPercent > 0 && (
-          <div className="absolute top-3 right-3 bg-accent-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-brand-dark/20 flex items-center gap-1">
+          <div className="absolute top-3 right-3 bg-accent-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-brand-dark/20 flex items-center gap-1 z-10">
             -{discountPercent}%
           </div>
         )}
@@ -64,7 +122,7 @@ export default function CourseCard({
           {/* Grade & Rating Row */}
           <div className="flex justify-between items-center mb-2.5">
             <span className="text-[12px] font-bold text-muted-taupe uppercase">
-              Khối {course.grade} • {course.lessonsCount || 0} bài học
+              Khối {course.grade} • {course.totalLessons || 0} bài học
             </span>
             <div className="flex items-center gap-1 text-accent-orange">
               <Star
@@ -76,7 +134,7 @@ export default function CourseCard({
           </div>
 
           {/* Title */}
-          <Link href={`/courses/${course.slug}`}>
+          <Link href={courseHref}>
             <h3 className="text-[16px] md:text-[18px] font-bold text-cream mb-4 leading-tight group-hover:text-brand-pink transition-colors line-clamp-2 min-h-[44px]">
               {course.title}
             </h3>
@@ -86,18 +144,18 @@ export default function CourseCard({
         <div>
           {/* Teacher Info */}
           <div className="flex items-center gap-3 mb-6">
-            <img
-              alt={course.teacher.fullName}
-              className="w-10 h-10 rounded-full object-cover border border-border-dark"
-              src={
-                course.teacher.avatarUrl ||
-                "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY"
-              }
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="20" fill="%232E1F26"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23AF9DA6" font-size="12">Teacher</text></svg>';
-              }}
-            />
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border-dark flex-shrink-0">
+              <Image
+                alt={course.teacher.fullName}
+                fill
+                sizes="40px"
+                className="object-cover"
+                src={
+                  course.teacher.avatarUrl ||
+                  "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY"
+                }
+              />
+            </div>
             <div className="flex flex-col">
               <span className="text-[12px] font-bold text-cream">
                 {course.teacher.fullName}
@@ -128,8 +186,13 @@ export default function CourseCard({
             </div>
 
             <button
-              className="p-2.5 rounded-lg bg-off-black border border-border-dark text-cream hover:bg-brand-pink hover:text-white hover:border-brand-pink transition-all active:scale-90 cursor-pointer"
-              title="Thêm vào giỏ hàng"
+              onClick={handleAddToCart}
+              className={`p-2.5 rounded-lg border transition-all active:scale-90 cursor-pointer ${
+                isAlreadyInCart
+                  ? "bg-brand-pink/10 border-brand-pink text-brand-pink hover:bg-brand-pink hover:text-white"
+                  : "bg-off-black border-border-dark text-cream hover:bg-brand-pink hover:text-white hover:border-brand-pink"
+              }`}
+              title={isAlreadyInCart ? "Đã có trong giỏ hàng" : "Thêm vào giỏ hàng"}
             >
               <ShoppingCart size={18} />
             </button>
@@ -139,4 +202,3 @@ export default function CourseCard({
     </div>
   );
 }
-

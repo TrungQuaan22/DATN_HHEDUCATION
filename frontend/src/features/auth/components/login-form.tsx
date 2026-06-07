@@ -6,7 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, LoginInput, useLoginMutation } from "../hooks/queries";
+import { loginSchema, LoginInput, useLoginMutation } from "../hooks";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { getApiErrorMessage, UI_MESSAGES } from "@/lib/constants/messages";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = React.useState(false);
@@ -37,12 +40,11 @@ export function LoginForm() {
   };
 
   const errorMessage = apiError
-    ? (apiError as any).message ||
-      "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+    ? getApiErrorMessage(apiError, UI_MESSAGES.auth.loginFailed)
     : null;
 
   return (
-    <div className="w-full bg-deep-black rounded-xl p-8 md:p-10 border border-border-dark shadow-l4 transition-all duration-300 hover:border-brand-pink/20">
+    <div className="w-full bg-deep-black rounded p-8 md:p-10 border border-border-dark shadow-l4 transition-all duration-300 hover:border-brand-pink/20">
       {/* Auth Tabs */}
       <div className="flex mb-8 bg-brand-dark/50 rounded-lg p-1 border border-border-dark">
         <button className="flex-grow py-2 text-center text-[14px] font-bold rounded-md bg-brand-pink text-brand-dark transition-all">
@@ -56,7 +58,7 @@ export function LoginForm() {
         </Link>
       </div>
 
-      {/* Success/Error Message Container (dynamic but margin adjusted) */}
+      {/* Success/Error Message Container */}
       {(isRegistered || errorMessage) && (
         <div className="mb-6">
           {isRegistered && !errorMessage && (
@@ -83,15 +85,16 @@ export function LoginForm() {
             Email
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <Mail size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="email"
               placeholder="name@example.com"
               type="email"
               disabled={isPending}
+              error={!!errors.email}
+              className="pl-11"
               {...register("email")}
             />
           </div>
@@ -119,19 +122,20 @@ export function LoginForm() {
             </a>
           </div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <Lock size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 pr-12 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="password"
               placeholder="••••••••"
               type={showPassword ? "text" : "password"}
               disabled={isPending}
+              error={!!errors.password}
+              className="pl-11 pr-12"
               {...register("password")}
             />
             <button
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-text hover:text-brand-pink transition-colors cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-text hover:text-brand-pink transition-colors cursor-pointer z-10"
               type="button"
               onClick={() => setShowPassword(!showPassword)}
             >
@@ -166,14 +170,16 @@ export function LoginForm() {
         </div>
 
         {/* Submit button */}
-        <button
-          className="w-full bg-brand-pink text-brand-dark hover:opacity-95 active:scale-[0.98] font-bold text-[14px] uppercase tracking-wider py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+        <Button
           type="submit"
-          disabled={isPending}
+          variant="primary"
+          size="lg"
+          className="w-full"
+          isLoading={isPending}
         >
           {isPending ? "Đang đăng nhập..." : "Đăng nhập ngay"}
-          {!isPending && <ArrowRight size={16} />}
-        </button>
+          {!isPending && <ArrowRight size={16} className="ml-2" />}
+        </Button>
       </form>
 
       {/* Divider */}
@@ -190,16 +196,19 @@ export function LoginForm() {
 
       {/* Social Login */}
       <div className="grid gap-4">
-        <button className="cursor-not-allowed flex items-center justify-center gap-2.5 py-3 px-4 bg-off-black border border-border-dark rounded-xl hover:bg-brand-dark/50 transition-colors w-full cursor-pointer group">
+        <Button
+          variant="secondary"
+          type="button"
+          className="w-full"
+          onClick={() => {}}
+        >
           <img
             alt="Google"
-            className="w-5 h-5 group-hover:scale-105 transition-transform"
+            className="w-5 h-5 mr-2"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtiZWFbehkPh_VjCh3BbhIqU6T4qaQGFOTmfq_lzq5JcBQYATLXdqnKovyhBldzePPeQ7AczNOnUAxlmNZOGiF0gg8h8vp-fwJvLd2np9HdxTL6LSA0Yh35hx14tmByFeZlXawBUENJXggz5KuE_KgsXwmpMcJ-PnP6NbOdJy_nHrBR_6BExVWAB7cTVxhdKOxhhr9H_CjzCYso8RfPcx3X9BYASz6r73eLhnlD0vG0FHAM8XKHf-cGZze3uk9dVHe_xgN80eYkuE"
           />
-          <span className="text-[14px] font-bold text-cream">
-            Đăng nhập bằng Google
-          </span>
-        </button>
+          Đăng nhập bằng Google
+        </Button>
       </div>
 
       {/* Switch Text */}

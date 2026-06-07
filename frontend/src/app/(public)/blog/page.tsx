@@ -1,5 +1,5 @@
 import BlogCatalog from "@/features/blog/components/blog-catalog";
-import { mockBlogPosts } from "@/data/mock-data";
+import { mockBlogPosts } from "@/features/blog/mock";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

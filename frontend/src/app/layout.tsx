@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Quicksand, Be_Vietnam_Pro } from "next/font/google";
 import Providers from "./providers";
+import "vidstack/styles/base.css";
+import "vidstack/styles/defaults.css";
+import "vidstack/styles/community-skin/video.css";
 import "./globals.css";
 
 const quicksand = Quicksand({
@@ -23,6 +26,8 @@ export const metadata: Metadata = {
     "Học tập trực tuyến hiệu quả cùng đội ngũ giáo viên giàu kinh nghiệm, bài giảng chất lượng và lộ trình cá nhân hóa.",
   keywords: "học trực tuyến, ôn thi thpt, toán, văn, anh, lý, hóa",
 };
+
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -55,8 +60,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
+        <Toaster position="top-right" richColors closeButton theme="dark" />
       </body>
     </html>
   );
 }
-

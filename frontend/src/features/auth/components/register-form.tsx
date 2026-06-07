@@ -1,16 +1,25 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Mail, Lock, User, Key, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema, RegisterInput, useRegisterMutation } from '../hooks/queries';
+import React from "react";
+import Link from "next/link";
+import { Mail, Lock, User, Key, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, RegisterInput, useRegisterMutation } from "../hooks";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { getApiErrorMessage, UI_MESSAGES } from "@/lib/constants/messages";
+import RegisterSocialButtons from "./register-social-buttons";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = React.useState(false);
 
-  const { mutate: registerMutate, error: apiError, isPending, isSuccess } = useRegisterMutation();
+  const {
+    mutate: registerMutate,
+    error: apiError,
+    isPending,
+    isSuccess,
+  } = useRegisterMutation();
 
   const {
     register,
@@ -19,10 +28,10 @@ export function RegisterForm() {
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
       agree: false,
     },
   });
@@ -32,15 +41,15 @@ export function RegisterForm() {
   };
 
   const errorMessage = apiError
-    ? (apiError as any).message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.'
+    ? getApiErrorMessage(apiError, UI_MESSAGES.auth.registerFailed)
     : null;
 
   return (
-    <div className="w-full bg-deep-black rounded-xl p-8 md:p-10 border border-border-dark shadow-l4 transition-all duration-300 hover:border-brand-pink/20">
+    <div className="w-full bg-deep-black rounded p-8 md:p-10 border border-border-dark shadow-l4 transition-all duration-300 hover:border-brand-pink/20">
       {/* Auth Tabs */}
       <div className="flex mb-8 bg-brand-dark/50 rounded-lg p-1 border border-border-dark">
-        <Link 
-          href="/login" 
+        <Link
+          href="/login"
           className="flex-grow py-2 text-center text-[14px] font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
         >
           Đăng nhập
@@ -70,23 +79,26 @@ export function RegisterForm() {
       <form className="space-y-2" onSubmit={handleSubmit(onSubmit)}>
         {/* Full Name Field */}
         <div>
-          <label className="block text-[14px] font-bold text-cream mb-2" htmlFor="fullName">
+          <label
+            className="block text-[14px] font-bold text-cream mb-2"
+            htmlFor="fullName"
+          >
             Họ và tên
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <User size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="fullName"
               placeholder="Nguyễn Văn A"
               type="text"
               disabled={isPending || isSuccess}
-              {...register('fullName')}
+              error={!!errors.fullName}
+              className="pl-11"
+              {...register("fullName")}
             />
           </div>
-          {/* Pre-allocated height for validation error to prevent layout shifts */}
           <div className="h-5 mt-1.5">
             {errors.fullName && (
               <p className="text-xs text-red-500/90 font-medium">
@@ -98,23 +110,26 @@ export function RegisterForm() {
 
         {/* Email Field */}
         <div>
-          <label className="block text-[14px] font-bold text-cream mb-2" htmlFor="email">
+          <label
+            className="block text-[14px] font-bold text-cream mb-2"
+            htmlFor="email"
+          >
             Email
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <Mail size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="email"
               placeholder="example@hheducation.edu.vn"
               type="email"
               disabled={isPending || isSuccess}
-              {...register('email')}
+              error={!!errors.email}
+              className="pl-11"
+              {...register("email")}
             />
           </div>
-          {/* Pre-allocated height for validation error to prevent layout shifts */}
           <div className="h-5 mt-1.5">
             {errors.email && (
               <p className="text-xs text-red-500/90 font-medium">
@@ -126,30 +141,33 @@ export function RegisterForm() {
 
         {/* Password Field */}
         <div>
-          <label className="block text-[14px] font-bold text-cream mb-2" htmlFor="password">
+          <label
+            className="block text-[14px] font-bold text-cream mb-2"
+            htmlFor="password"
+          >
             Mật khẩu
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <Lock size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 pr-12 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="password"
               placeholder="••••••••"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               disabled={isPending || isSuccess}
-              {...register('password')}
+              error={!!errors.password}
+              className="pl-11 pr-12"
+              {...register("password")}
             />
             <button
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-text hover:text-brand-pink transition-colors cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-text hover:text-brand-pink transition-colors cursor-pointer z-10"
               type="button"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {/* Pre-allocated height for validation error to prevent layout shifts */}
           <div className="h-5 mt-1.5">
             {errors.password && (
               <p className="text-xs text-red-500/90 font-medium">
@@ -161,23 +179,26 @@ export function RegisterForm() {
 
         {/* Confirm Password Field */}
         <div>
-          <label className="block text-[14px] font-bold text-cream mb-2" htmlFor="confirmPassword">
+          <label
+            className="block text-[14px] font-bold text-cream mb-2"
+            htmlFor="confirmPassword"
+          >
             Xác nhận mật khẩu
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-text z-10">
               <Key size={18} />
             </span>
-            <input
-              className="w-full bg-off-black border border-border-dark text-cream rounded-xl px-4 py-3.5 pl-11 placeholder:text-muted-text/30 focus:outline-none focus:border-brand-pink/50 focus:ring-1 focus:ring-brand-pink/50 transition-all text-[15px]"
+            <Input
               id="confirmPassword"
               placeholder="••••••••"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               disabled={isPending || isSuccess}
-              {...register('confirmPassword')}
+              error={!!errors.confirmPassword}
+              className="pl-11"
+              {...register("confirmPassword")}
             />
           </div>
-          {/* Pre-allocated height for validation error to prevent layout shifts */}
           <div className="h-5 mt-1.5">
             {errors.confirmPassword && (
               <p className="text-xs text-red-500/90 font-medium">
@@ -195,21 +216,23 @@ export function RegisterForm() {
               id="agree"
               type="checkbox"
               disabled={isPending || isSuccess}
-              {...register('agree')}
+              {...register("agree")}
             />
-            <label className="text-[12px] text-muted-text select-none cursor-pointer" htmlFor="agree">
-              Tôi đồng ý với{' '}
+            <label
+              className="text-[12px] text-muted-text select-none cursor-pointer"
+              htmlFor="agree"
+            >
+              Tôi đồng ý với{" "}
               <a className="text-brand-pink hover:underline" href="#">
                 Điều khoản dịch vụ
-              </a>{' '}
-              và{' '}
+              </a>{" "}
+              và{" "}
               <a className="text-brand-pink hover:underline" href="#">
                 Chính sách bảo mật
               </a>
               .
             </label>
           </div>
-          {/* Pre-allocated height for validation error to prevent layout shifts */}
           <div className="h-5 mt-1.5">
             {errors.agree && (
               <p className="text-xs text-red-500/90 font-medium">
@@ -220,50 +243,31 @@ export function RegisterForm() {
         </div>
 
         {/* Submit button */}
-        <button
-          className="w-full bg-brand-pink text-brand-dark hover:opacity-95 active:scale-[0.98] font-bold text-[14px] uppercase tracking-wider py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+        <Button
           type="submit"
-          disabled={isPending || isSuccess}
+          variant="primary"
+          size="lg"
+          className="w-full mt-2"
+          isLoading={isPending}
+          disabled={isSuccess}
         >
-          {isPending ? 'Đang tạo tài khoản...' : 'Đăng ký ngay'}
-          {!isPending && !isSuccess && <ArrowRight size={16} />}
-        </button>
+          {isPending ? "Đang tạo tài khoản..." : "Đăng ký ngay"}
+          {!isPending && !isSuccess && (
+            <ArrowRight size={16} className="ml-2" />
+          )}
+        </Button>
       </form>
 
-      {/* Divider */}
-      <div className="relative my-8">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border-dark"></div>
-        </div>
-        <div className="relative flex justify-center text-[12px]">
-          <span className="px-4 bg-deep-black text-muted-text font-bold">Hoặc đăng ký bằng</span>
-        </div>
-      </div>
-
-      {/* Social Login */}
-      <div className="grid grid-cols-2 gap-4">
-        <button className="flex items-center justify-center gap-2.5 py-3 px-4 bg-off-black border border-border-dark rounded-xl hover:bg-brand-dark/50 transition-colors w-full cursor-pointer group">
-          <img 
-            alt="Google" 
-            className="w-5 h-5 group-hover:scale-105 transition-transform" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtiZWFbehkPh_VjCh3BbhIqU6T4qaQGFOTmfq_lzq5JcBQYATLXdqnKovyhBldzePPeQ7AczNOnUAxlmNZOGiF0gg8h8vp-fwJvLd2np9HdxTL6LSA0Yh35hx14tmByFeZlXawBUENJXggz5KuE_KgsXwmpMcJ-PnP6NbOdJy_nHrBR_6BExVWAB7cTVxhdKOxhhr9H_CjzCYso8RfPcx3X9BYASz6r73eLhnlD0vG0FHAM8XKHf-cGZze3uk9dVHe_xgN80eYkuE" 
-          />
-          <span className="text-[14px] font-bold text-cream">Google</span>
-        </button>
-        
-        <button className="flex items-center justify-center gap-2.5 py-3 px-4 bg-off-black border border-border-dark rounded-xl hover:bg-brand-dark/50 transition-colors w-full cursor-pointer group">
-          <svg className="w-5 h-5 text-sky-blue group-hover:scale-105 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-          </svg>
-          <span className="text-[14px] font-bold text-cream">Facebook</span>
-        </button>
-      </div>
+      <RegisterSocialButtons />
 
       {/* Switch Text */}
       <div className="mt-8 text-center">
         <p className="text-[13px] text-muted-text">
           Đã có tài khoản?
-          <Link href="/login" className="text-brand-pink font-bold hover:underline ml-1 cursor-pointer">
+          <Link
+            href="/login"
+            className="text-brand-pink font-bold hover:underline ml-1 cursor-pointer"
+          >
             Đăng nhập ngay
           </Link>
         </p>

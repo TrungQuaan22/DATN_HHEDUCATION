@@ -1,10 +1,10 @@
-import { getCourseDetail } from "@/data/mock-data";
+import { getCatalogCourse } from "@/features/courses/api";
 import { SUBJECT_LABELS } from "@/types/common";
 import { formatVND } from "@/lib/utils/format-money";
 import CurriculumAccordion from "@/features/courses/components/curriculum-accordion";
+import CoursePreviewThumbnail from "@/features/courses/components/course-preview-thumbnail";
 import Link from "next/link";
 import {
-  PlayCircle,
   Clock,
   BookOpen,
   ShieldCheck,
@@ -12,6 +12,7 @@ import {
   Phone,
 } from "lucide-react";
 import { notFound } from "next/navigation";
+import EnrollButton from "@/features/courses/components/enroll-button";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -19,27 +20,45 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const course = getCourseDetail(slug);
-  if (!course) {
+  try {
+    const course = await getCatalogCourse(slug);
+    return {
+      title: `${course.title} | HH Education`,
+      description:
+        course.description ||
+        "Chi tiết khóa học chất lượng cao tại HH Education.",
+    };
+  } catch {
     return {
       title: "Khóa học không tìm thấy | HH Education",
     };
   }
-
-  return {
-    title: `${course.title} | HH Education`,
-    description:
-      course.description ||
-      "Chi tiết khóa học chất lượng cao tại HH Education.",
-  };
 }
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const course = getCourseDetail(slug);
-
-  if (!course) {
+  
+  let course;
+  try {
+    course = await getCatalogCourse(slug);
+  } catch {
     notFound();
+  }
+
+  // Find the first preview video lesson with a youtubeUrl to use as the course intro video
+  let previewVideoUrl: string | null = null;
+  let previewLessonTitle: string | null = null;
+  if (course.chapters) {
+    for (const chapter of course.chapters) {
+      const previewLesson = chapter.lessons.find(
+        (l) => l.allowPreview && l.type === "video" && l.youtubeUrl,
+      );
+      if (previewLesson) {
+        previewVideoUrl = previewLesson.youtubeUrl || null;
+        previewLessonTitle = previewLesson.title;
+        break;
+      }
+    }
   }
 
   // Calculate discount percentage
@@ -48,7 +67,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
       ? Math.round(((course.price - course.salePrice) / course.price) * 100)
       : 0;
 
-  const relatedCourses = course.relatedCourses;
+  const relatedCourses = course.relatedCourses || [];
 
   // SEO Course JSON-LD
   const jsonLd = {
@@ -119,20 +138,13 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
             {/* Right Card */}
             <div className="lg:col-span-5 w-full">
-              <div className="bg-deep-black rounded-2xl border border-border-dark shadow-2xl overflow-hidden transition-colors duration-200">
-                <div className="relative group aspect-video overflow-hidden">
-                  <img
-                    alt={course.title}
-                    className="w-full h-full object-cover transition-all duration-300"
-                    src={
-                      course.thumbnailUrl ||
-                      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect width="100%" height="100%" fill="%231D0C14"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23AF9DA6" font-family="sans-serif">Preview Image</text></svg>'
-                    }
-                  />
-                  <div className="absolute inset-0 bg-deep-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <PlayCircle size={60} className="text-brand-pink" />
-                  </div>
-                </div>
+              <div className="bg-deep-black rounded border border-border-dark shadow-2xl overflow-hidden transition-colors duration-200">
+                <CoursePreviewThumbnail
+                  thumbnailUrl={course.thumbnailUrl}
+                  title={course.title}
+                  previewVideoUrl={previewVideoUrl}
+                  previewLessonTitle={previewLessonTitle}
+                />
 
                 <div className="p-8 space-y-6">
                   {/* Prices */}
@@ -156,14 +168,12 @@ export default async function CourseDetailPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  <button className="w-full bg-brand-pink text-white font-bold text-[14px] py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-lg cursor-pointer">
-                    ĐĂNG KÝ NGAY
-                  </button>
+                  <EnrollButton course={course} />
 
                   <div className="space-y-4 pt-4 border-t border-border-dark">
                     <div className="flex items-center gap-3 text-muted-taupe text-[13px]">
                       <Clock size={18} className="text-sky-blue" />
-                      <span>{course.lessonsCount || 0} bài học chuyên sâu</span>
+                      <span>{course.totalLessons || 0} bài học chuyên sâu</span>
                     </div>
                     <div className="flex items-center gap-3 text-muted-taupe text-[13px]">
                       <BookOpen size={18} className="text-sky-blue" />
@@ -232,7 +242,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
             {/* Right Column */}
             <aside className="lg:col-span-4 space-y-8">
               {/* Teacher bio card */}
-              <div className="bg-deep-black border border-border-dark rounded-xl p-8 text-center shadow-lg transition-colors duration-200">
+              <div className="bg-deep-black border border-border-dark rounded p-8 text-center shadow-lg transition-colors duration-200">
                 <img
                   alt={course.teacher.fullName}
                   className="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-brand-dark"
@@ -311,16 +321,14 @@ export default async function CourseDetailPage({ params }: PageProps) {
               )}
 
               {/* Sticky Info CTA */}
-              <div className="bg-deep-black border border-border-dark p-6 rounded-xl text-cream shadow-2xl space-y-4">
+              <div className="bg-deep-black border border-border-dark p-6 rounded text-cream shadow-2xl space-y-4">
                 <p className="text-[11px] font-bold text-accent-orange uppercase tracking-wider flex items-center gap-1.5">
                   <Phone size={12} /> Hotline đăng ký gấp
                 </p>
                 <h4 className="text-[18px] font-bold">
                   Sẵn sàng để bứt phá điểm số?
                 </h4>
-                <button className="w-full bg-brand-pink text-white py-3.5 rounded-lg font-bold text-[13px] hover:opacity-90 active:scale-95 transition-all shadow-md cursor-pointer">
-                  Đăng ký ghi danh ngay
-                </button>
+                <EnrollButton course={course} />
                 <p className="text-[10px] text-center text-muted-taupe leading-relaxed">
                   Hotline tư vấn lộ trình: 1900 6789 (Hỗ trợ 24/7 miễn phí).
                 </p>

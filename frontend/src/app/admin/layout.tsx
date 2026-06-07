@@ -2,41 +2,42 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
-import AdminSidebar from '@/features/admin/components/admin-sidebar';
-import AdminHeader from '@/features/admin/components/admin-header';
+import AdminSidebar from '@/components/layout/admin-sidebar';
+import AdminHeader from '@/components/layout/admin-header';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, setTokens, setUser } = useAuthStore();
+  const { isAuthenticated, role, hasHydrated } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
-    // Auto-seed admin session for development if not logged in
-    if (!isAuthenticated) {
-      setTokens({
-        accessToken: 'mock-admin-token',
-        refreshToken: 'mock-admin-refresh-token',
-      });
-      setUser({
-        id: 'admin-id-123',
-        email: 'admin@hheducation.com',
-        fullName: 'Admin HH',
-        avatarMediaId: null,
-        avatarUrl: null,
-        role: 'admin',
-        status: 'active',
-      });
-    }
-  }, [isAuthenticated, setTokens, setUser]);
+  }, []);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    if (mounted && hasHydrated && (!isAuthenticated || (role !== 'admin' && role !== 'teacher'))) {
+      router.push('/login');
+    }
+  }, [mounted, hasHydrated, isAuthenticated, role, router]);
+
+  if (!mounted || !hasHydrated) return null;
+
+  if (!isAuthenticated || (role !== 'admin' && role !== 'teacher')) {
+    return (
+      <div className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-cream font-sans">
+        <p className="animate-pulse">Đang kiểm tra quyền truy cập...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-admin-bg text-admin-cream font-sans">
-      <AdminSidebar />
-      <div className="flex flex-col min-h-screen">
-        <AdminHeader />
-        <main className="ml-64 mt-16 p-6 md:p-8 flex-1">
+      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="flex flex-col min-h-screen min-w-0">
+        <AdminHeader onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <main className="ml-0 lg:ml-64 mt-16 p-4 md:p-6 lg:p-8 flex-1 min-w-0">
           {children}
         </main>
       </div>

@@ -15,8 +15,12 @@ import { adminCourseRoutes } from './modules/courses/routes/admin-courses.routes
 import { adminLessonRoutes } from './modules/courses/routes/admin-lessons.routes'
 import { publicCourseRoutes } from './modules/courses/routes/public.routes'
 import { learningCourseRoutes } from './modules/courses/routes/learning.routes'
-import { adminMediaRoutes } from './modules/media/routes/admin.routes'
+import { enrollmentRoutes } from './modules/enrollments/routes'
 import { uploadRoutes } from './modules/media/routes/upload.routes'
+import { adminOrderRoutes } from './modules/orders/routes/admin-order.routes'
+import { orderRoutes } from './modules/orders/routes/order.routes'
+import { adminPaymentTransactionRoutes } from './modules/payments/routes/admin-payment-transaction.routes'
+import { paymentWebhookRoutes } from './modules/payments/routes/webhook.routes'
 import { adminUserRoutes } from './modules/users/routes/admin.routes'
 import { userRoutes } from './modules/users/routes/user.routes'
 
@@ -24,8 +28,42 @@ const app = express()
 const openApiDocument = YAML.parse(
   readFileSync(join(process.cwd(), 'docs', 'openapi.yaml'), 'utf8')
 )
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
 
-app.use(express.json())
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Request-Id, Idempotency-Key, Range'
+  )
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204)
+    return
+  }
+
+  next()
+})
+app.use(
+  express.json({
+    verify: (req: Request, _res, buf) => {
+      if (req.originalUrl.startsWith('/payments/webhooks/sepay')) {
+        req.rawBody = Buffer.from(buf)
+      }
+    }
+  })
+)
 app.use(express.urlencoded({ extended: true }))
 
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -42,12 +80,16 @@ app.use('/catalog', publicCourseRoutes)
 app.use('/learning', learningCourseRoutes)
 app.use(publicBlogRoutes)
 app.use('/uploads', uploadRoutes)
+app.use('/orders', orderRoutes)
+app.use('/payments/webhooks', paymentWebhookRoutes)
 app.use('/admin', adminUserRoutes)
 app.use('/admin', adminCourseRoutes)
 app.use('/admin', adminChapterRoutes)
 app.use('/admin', adminLessonRoutes)
-app.use('/admin', adminMediaRoutes)
+app.use('/admin', enrollmentRoutes)
 app.use('/admin', adminBlogRoutes)
+app.use('/admin', adminOrderRoutes)
+app.use('/admin', adminPaymentTransactionRoutes)
 
 //Error handling middleware
 app.use(errorHandler)
