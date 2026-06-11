@@ -7,6 +7,11 @@ import swaggerUi from 'swagger-ui-express'
 import YAML from 'yaml'
 import { authRoutes } from './modules/auth/routes'
 import { randomUUID } from 'crypto'
+import {
+  adminAssessmentRoutes,
+  learningAssessmentRoutes,
+  publicAssessmentRoutes
+} from './modules/assessments'
 import { adminBlogRoutes } from './modules/blogs/routes/admin.routes'
 import { publicBlogRoutes } from './modules/blogs/routes/public.routes'
 import { errorHandler } from './common/error/error'
@@ -77,7 +82,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
 app.use('/auth', authRoutes)
 app.use('/users', userRoutes)
 app.use('/catalog', publicCourseRoutes)
+app.use('/practice', publicAssessmentRoutes)
 app.use('/learning', learningCourseRoutes)
+app.use('/learning', learningAssessmentRoutes)
 app.use(publicBlogRoutes)
 app.use('/uploads', uploadRoutes)
 app.use('/orders', orderRoutes)
@@ -88,6 +95,7 @@ app.use('/admin', adminChapterRoutes)
 app.use('/admin', adminLessonRoutes)
 app.use('/admin', enrollmentRoutes)
 app.use('/admin', adminBlogRoutes)
+app.use('/admin', adminAssessmentRoutes)
 app.use('/admin', adminOrderRoutes)
 app.use('/admin', adminPaymentTransactionRoutes)
 

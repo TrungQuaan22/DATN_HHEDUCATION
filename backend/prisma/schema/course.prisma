@@ -56,6 +56,7 @@ model Course {
   chapters          Chapter[]
   topics            Topic[]
   courseAssessments CourseAssessment[]
+  assessmentPlacements AssessmentPlacement[]
   orderItems        OrderItem[]
   enrollments       Enrollment[]
   courseProgress    CourseProgress[]
@@ -101,7 +102,7 @@ model Lesson {
 
   chapter           Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   videoMedia        Media?             @relation("LessonVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
-  lessonAssessments LessonAssessment[]
+  assessmentPlacements AssessmentPlacement[]
   progress          LessonProgress[]
 
   @@unique([chapterId, orderIndex])

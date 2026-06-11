@@ -38,6 +38,7 @@ model User {
   orders                   Order[]
   idempotencyKeys          IdempotencyKey[]
   uploadedMedia            Media[]                   @relation("UploadedMedia")
+  createdAssessments       Assessment[]              @relation("AssessmentCreator")
   avatarMedia              Media?                    @relation("UserAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
 
   @@index([role])

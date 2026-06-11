@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: API documentation for the current backend implementation.
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:4000
     description: Local development server
 
 tags:
@@ -26,6 +26,8 @@ tags:
     description: Public and admin blog content management
   - name: Media
     description: Upload media files to Cloudflare R2
+  - name: Assessments
+    description: Assessment builder, placements, attempts, and grading
 
 paths:
   /auth/register:
@@ -1885,7 +1887,7 @@ paths:
       tags:
         - Media
       summary: Create authenticated upload URL
-      description: Any authenticated user can upload images. Admin and teacher accounts can upload videos. The uploaded media is only linked to a domain object after that domain API receives the returned mediaId.
+      description: Any authenticated user can upload images and PDF documents. Admin and teacher accounts can upload videos. The uploaded media is only linked to a domain object after that domain API receives the returned mediaId.
       operationId: createUpload
       security:
         - bearerAuth: []
@@ -1966,6 +1968,842 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/assessments:
+    get:
+      tags:
+        - Assessments
+      summary: List admin assessments
+      description: Admin and teacher list non-deleted assessments with pagination and optional filters.
+      operationId: listAdminAssessments
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: subject
+          schema:
+            $ref: '#/components/schemas/Subject'
+        - in: query
+          name: grade
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - in: query
+          name: gradingType
+          schema:
+            $ref: '#/components/schemas/GradingType'
+        - in: query
+          name: scope
+          description: Filter assessment ownership surface. Teachers only receive assessments they created.
+          schema:
+            type: string
+            enum:
+              - all
+              - public
+              - course
+              - unplaced
+        - in: query
+          name: courseId
+          description: Required when scope is course. Limits results to assessments placed on the selected course or one of its lessons.
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: visibility
+          schema:
+            $ref: '#/components/schemas/AssessmentVisibility'
+      responses:
+        '200':
+          description: Assessment list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAdminAssessmentsSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Assessments
+      summary: Create assessment draft
+      description: Creates a draft assessment. Exam assessments require a ready PDF source media before publish.
+      operationId: createAssessment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+            example:
+              title: De luyen tap toan 12
+              subject: math
+              grade: 12
+              type: quiz
+              gradingType: auto
+              timeLimitMinutes: 90
+              sourceMediaId: null
+      responses:
+        '201':
+          description: Assessment draft created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssessmentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/assessments/{assessmentId}:
+    get:
+      tags:
+        - Assessments
+      summary: Get admin assessment detail
+      operationId: getAdminAssessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      responses:
+        '200':
+          description: Assessment detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminAssessmentDetailSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Assessments
+      summary: Update assessment draft
+      description: Only draft assessments can be updated.
+      operationId: updateAssessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentRequest'
+      responses:
+        '200':
+          description: Assessment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssessmentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/assessments/{assessmentId}/sections:
+    post:
+      tags: [Assessments]
+      summary: Create assessment section
+      description: Creates a section at the end of a draft assessment. The section item type controls every item created inside it.
+      operationId: createAssessmentSection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentSectionRequest'
+      responses:
+        '201': { description: Section created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/assessments/{assessmentId}/sections/{sectionId}:
+    patch:
+      tags: [Assessments]
+      summary: Update assessment section metadata
+      operationId: updateAssessmentSection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/SectionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentSectionRequest'
+      responses:
+        '200': { description: Section updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Assessments]
+      summary: Delete an empty assessment section
+      operationId: deleteAssessmentSection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/SectionIdPath'
+      responses:
+        '200': { description: Section deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/assessments/{assessmentId}/sections/{sectionId}/items:
+    post:
+      tags: [Assessments]
+      summary: Append items to an assessment section
+      description: The backend derives assessmentId and itemType from the URL and section. questionNumber and orderIndex are not accepted from clients.
+      operationId: createAssessmentSectionItems
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/SectionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentSectionItemsRequest'
+      responses:
+        '201': { description: Items created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/assessments/{assessmentId}/sections/{sectionId}/items/import:
+    post:
+      tags: [Assessments]
+      summary: Import parsed Excel items into a section
+      description: Accepts the same JSON contract as normal item creation. The frontend parses Excel; this endpoint does not upload files.
+      operationId: importAssessmentSectionItems
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/SectionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentSectionItemsRequest'
+      responses:
+        '201': { description: Items imported }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/assessments/{assessmentId}/items/{itemId}:
+    patch:
+      tags: [Assessments]
+      summary: Update one assessment item
+      description: Does not allow changing assessmentId, sectionId, itemType, orderIndex, or questionNumber.
+      operationId: updateAssessmentItem
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/AssessmentItemIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentItemRequest'
+      responses:
+        '200': { description: Item updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Assessments]
+      summary: Delete one assessment item
+      operationId: deleteAssessmentItem
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - $ref: '#/components/parameters/AssessmentItemIdPath'
+      responses:
+        '200': { description: Item deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/assessments/{assessmentId}/publish:
+    post:
+      tags:
+        - Assessments
+      summary: Publish assessment
+      operationId: publishAssessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      responses:
+        '200':
+          description: Assessment published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssessmentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/assessments/{assessmentId}/visibility:
+    patch:
+      tags:
+        - Assessments
+      summary: Update assessment visibility
+      description: Moves an assessment between draft, published, and hidden. Publishing validates items, placement, and exam PDF source. Moving back to draft is blocked once submissions exist.
+      operationId: updateAssessmentVisibility
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentVisibilityRequest'
+      responses:
+        '200':
+          description: Visibility updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssessmentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/assessments/{assessmentId}/clone:
+    post:
+      tags:
+        - Assessments
+      summary: Clone assessment
+      description: Creates a new draft owned by the current actor. Placements and submissions are not cloned.
+      operationId: cloneAssessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneAssessmentRequest'
+      responses:
+        '201':
+          description: Assessment cloned as draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssessmentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/assessments/{assessmentId}/placement:
+    put:
+      tags:
+        - Assessments
+      summary: Upsert single assessment placement
+      description: Replaces the assessment's active placement with exactly one public, course, or lesson placement.
+      operationId: upsertAssessmentPlacement
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertAssessmentPlacementRequest'
+      responses:
+        '200':
+          description: Placement upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentPlacementSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Assessments
+      summary: Delete assessment placement
+      description: Removes the assessment placement. If the assessment was published, it is moved back to draft because it is no longer visible anywhere.
+      operationId: deleteAssessmentPlacement
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+      responses:
+        '200':
+          description: Placement deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAssessmentPlacementSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/assessment-placements:
+    post:
+      tags:
+        - Assessments
+      summary: Upsert assessment placement (legacy route)
+      description: Compatibility route for older clients. It replaces the assessment's active placement with exactly one public, course, or lesson placement. Public practice requires slug; course requires courseId; lesson requires quiz lessonId.
+      operationId: createAssessmentPlacement
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentPlacementRequest'
+            example:
+              assessmentId: 00000000-0000-0000-0000-000000000000
+              type: public_practice
+              courseId: null
+              lessonId: null
+              slug: de-luyen-tap-toan-12
+              maxAttempts: 1
+              isFeatured: true
+      responses:
+        '201':
+          description: Placement created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentPlacementSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/assessment-submissions/grading:
+    get:
+      tags:
+        - Assessments
+      summary: List submissions waiting for manual grading
+      operationId: listGradingSubmissions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: assessmentId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Grading queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListGradingSubmissionsSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/assessment-submissions/{submissionId}:
+    get:
+      tags:
+        - Assessments
+      summary: Get grading submission detail
+      operationId: getGradingSubmission
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      responses:
+        '200':
+          description: Grading submission detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminGradingSubmissionDetailSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/assessment-submissions/{submissionId}/essay-score:
+    patch:
+      tags:
+        - Assessments
+      summary: Grade an essay answer
+      operationId: gradeEssayAnswer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeEssayRequest'
+      responses:
+        '200':
+          description: Essay answer graded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NullDataSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /admin/assessment-submissions/{submissionId}/finalize:
+    post:
+      tags:
+        - Assessments
+      summary: Finalize manual or mixed grading
+      operationId: finalizeManualSubmission
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      responses:
+        '200':
+          description: Submission finalized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentSubmissionSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /practice/assessments:
+    get:
+      tags:
+        - Assessments
+      summary: List public practice assessments
+      operationId: listPublicAssessmentPlacements
+      parameters:
+        - in: query
+          name: subject
+          schema:
+            $ref: '#/components/schemas/Subject'
+        - in: query
+          name: grade
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Public practice placements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAssessmentPlacementsSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /practice/assessment-placements/slug/{slug}:
+    get:
+      tags:
+        - Assessments
+      summary: Get public practice assessment by slug
+      operationId: getPublicAssessmentBySlug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 255
+      responses:
+        '200':
+          description: Runtime assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeAssessmentSuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /practice/assessment-placements/{placementId}:
+    get:
+      tags:
+        - Assessments
+      summary: Get public practice assessment by placement id
+      operationId: getPublicAssessment
+      parameters:
+        - $ref: '#/components/parameters/PlacementIdPath'
+      responses:
+        '200':
+          description: Runtime assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeAssessmentSuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /learning/assessment-placements/{placementId}:
+    get:
+      tags:
+        - Assessments
+      summary: Get enrolled learning assessment preview
+      description: Returns metadata, item shells, and student attempt history. It does not return question content, answer options, or sourceMediaUrl.
+      operationId: getLearningAssessment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PlacementIdPath'
+      responses:
+        '200':
+          description: Runtime assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeAssessmentSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /learning/assessment-placements/{placementId}/workspace:
+    get:
+      tags:
+        - Assessments
+      summary: Get active assessment workspace content
+      description: Returns PDF URL and question content only for an active doing submission owned by the authenticated student.
+      operationId: getLearningAssessmentWorkspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PlacementIdPath'
+        - in: query
+          name: submissionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active workspace content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentWorkspaceSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /learning/assessment-placements/{placementId}/attempts:
+    post:
+      tags:
+        - Assessments
+      summary: Start or resume assessment attempt
+      operationId: startAssessmentAttempt
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PlacementIdPath'
+      responses:
+        '201':
+          description: Attempt started or resumed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentSubmissionSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /learning/assessment-submissions/{submissionId}/answers:
+    put:
+      tags:
+        - Assessments
+      summary: Save assessment answers
+      operationId: saveAssessmentAnswers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAssessmentAnswersRequest'
+      responses:
+        '200':
+          description: Answers saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveAssessmentAnswersSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /learning/assessment-submissions/{submissionId}/submit:
+    post:
+      tags:
+        - Assessments
+      summary: Submit assessment attempt
+      operationId: submitAssessmentAttempt
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      responses:
+        '200':
+          description: Attempt submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentSubmissionSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /orders:
     post:
@@ -2468,6 +3306,46 @@ components:
         type: string
         format: uuid
 
+    AssessmentIdPath:
+      in: path
+      name: assessmentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SectionIdPath:
+      in: path
+      name: sectionId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    AssessmentItemIdPath:
+      in: path
+      name: itemId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PlacementIdPath:
+      in: path
+      name: placementId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SubmissionIdPath:
+      in: path
+      name: submissionId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
     IdempotencyKeyHeader:
       in: header
       name: Idempotency-Key
@@ -2517,6 +3395,34 @@ components:
                 - location: body
                   field: email
                   message: Invalid email
+
+    Unauthorized:
+      description: Missing, expired, or invalid access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: The authenticated user does not have permission to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Request conflicts with the current resource state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
     UserRole:
@@ -3270,11 +4176,31 @@ components:
           items:
             $ref: '#/components/schemas/AdminCourseLesson'
 
+    AdminCourseTopic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        courseId:
+          type: string
+          format: uuid
+
     AdminCourseDetailResponseData:
       allOf:
         - $ref: '#/components/schemas/AdminCourseSummary'
         - type: object
           properties:
+            topics:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminCourseTopic'
             chapters:
               type: array
               items:
@@ -4378,6 +5304,1217 @@ components:
         - history
         - geography
 
+    AssessmentType:
+      type: string
+      enum:
+        - quiz
+        - exam
+
+    GradingType:
+      type: string
+      enum:
+        - auto
+        - manual
+        - mixed
+
+    AssessmentPlacementType:
+      type: string
+      enum:
+        - public_practice
+        - course
+        - lesson
+
+    AssessmentVisibility:
+      type: string
+      enum:
+        - draft
+        - published
+        - hidden
+
+    AssessmentItemType:
+      type: string
+      enum:
+        - mcq
+        - true_false
+        - numeric
+        - essay
+
+    QuestionDifficulty:
+      type: string
+      enum:
+        - recognition
+        - understanding
+        - application
+        - advanced
+
+    CreateAssessmentRequest:
+      type: object
+      required:
+        - title
+        - subject
+        - grade
+        - type
+        - gradingType
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 255
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+          minimum: 1
+          maximum: 12
+        gradingType:
+          $ref: '#/components/schemas/GradingType'
+        timeLimitMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+        sourceMediaId:
+          type: string
+          format: uuid
+          nullable: true
+
+    UpdateAssessmentRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 255
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+          minimum: 1
+          maximum: 12
+        type:
+          $ref: '#/components/schemas/AssessmentType'
+        gradingType:
+          $ref: '#/components/schemas/GradingType'
+        timeLimitMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+        sourceMediaId:
+          type: string
+          format: uuid
+          nullable: true
+
+    UpdateAssessmentVisibilityRequest:
+      type: object
+      required:
+        - visibility
+      additionalProperties: false
+      properties:
+        visibility:
+          $ref: '#/components/schemas/AssessmentVisibility'
+
+    AssessmentRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+        type:
+          $ref: '#/components/schemas/AssessmentType'
+        gradingType:
+          $ref: '#/components/schemas/GradingType'
+        visibility:
+          $ref: '#/components/schemas/AssessmentVisibility'
+        createdById:
+          type: string
+          format: uuid
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        hiddenAt:
+          type: string
+          format: date-time
+          nullable: true
+        timeLimitMinutes:
+          type: integer
+          nullable: true
+        sourceMediaId:
+          type: string
+          format: uuid
+          nullable: true
+        sourceMetadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAssessmentSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AssessmentRecord'
+
+    AssessmentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        subject:
+          $ref: '#/components/schemas/Subject'
+        grade:
+          type: integer
+        type:
+          $ref: '#/components/schemas/AssessmentType'
+        gradingType:
+          $ref: '#/components/schemas/GradingType'
+        visibility:
+          $ref: '#/components/schemas/AssessmentVisibility'
+        createdById:
+          type: string
+          format: uuid
+          nullable: true
+
+    AdminAssessmentPlacement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/AssessmentPlacementType'
+        slug:
+          type: string
+          nullable: true
+        courseId:
+          type: string
+          format: uuid
+          nullable: true
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+        isFeatured:
+          type: boolean
+        openTime:
+          type: string
+          format: date-time
+          nullable: true
+        closeTime:
+          type: string
+          format: date-time
+          nullable: true
+        maxAttempts:
+          type: integer
+          nullable: true
+
+    AdminAssessmentListItem:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSummary'
+        - type: object
+          properties:
+            timeLimitMinutes:
+              type: integer
+              nullable: true
+            itemCount:
+              type: integer
+            submissionCount:
+              type: integer
+            createdById:
+              type: string
+              format: uuid
+              nullable: true
+            placements:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminAssessmentPlacement'
+            createdAt:
+              type: string
+              format: date-time
+
+    ListAdminAssessmentsResponseData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAssessmentListItem'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+
+    ListAdminAssessmentsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListAdminAssessmentsResponseData'
+
+    AdminQuestionOption:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          nullable: true
+        isCorrect:
+          type: boolean
+        orderIndex:
+          type: integer
+
+    AdminAssessmentQuestion:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          nullable: true
+          description: Generated quiz questions use `{ kind, label }`; exam answer-key questions use `{ kind, itemType }`.
+        explanation:
+          nullable: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminQuestionOption'
+
+    AdminAssessmentItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderIndex:
+          type: integer
+        questionNumber:
+          type: integer
+          description: Computed from the item position within its section; not stored in the database.
+        itemType:
+          $ref: '#/components/schemas/AssessmentItemType'
+        topicId:
+          type: string
+          format: uuid
+          nullable: true
+        topicName:
+          type: string
+          nullable: true
+        difficulty:
+          allOf:
+            - $ref: '#/components/schemas/QuestionDifficulty'
+          nullable: true
+        maxScore:
+          type: string
+          example: '1.00'
+        scoringConfig:
+          nullable: true
+        correctAnswer:
+          nullable: true
+        explanation:
+          nullable: true
+        question:
+          $ref: '#/components/schemas/AdminAssessmentQuestion'
+
+    AssessmentSection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        itemType:
+          $ref: '#/components/schemas/AssessmentItemType'
+        orderIndex:
+          type: integer
+
+    AdminAssessmentSection:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSection'
+        - type: object
+          properties:
+            sections:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminAssessmentSection'
+
+    AdminAssessmentDetail:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSummary'
+        - type: object
+          properties:
+            timeLimitMinutes:
+              type: integer
+              nullable: true
+            sourceMediaId:
+              type: string
+              format: uuid
+              nullable: true
+            sourceMedia:
+              type: object
+              additionalProperties: true
+              nullable: true
+            createdById:
+              type: string
+              format: uuid
+              nullable: true
+            submissionCount:
+              type: integer
+            placements:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminAssessmentPlacement'
+            sections:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminAssessmentSection'
+
+    AdminAssessmentDetailSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminAssessmentDetail'
+
+    CreateAssessmentSectionRequest:
+      type: object
+      required: [title, itemType]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 5000
+        itemType:
+          $ref: '#/components/schemas/AssessmentItemType'
+
+    UpdateAssessmentSectionRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 5000
+
+    AssessmentSectionItemInput:
+      type: object
+      additionalProperties: false
+      description: Shape-specific fields are selected by assessment.type and section.itemType. Server derives itemType and ordering from the section.
+      properties:
+        topicId:
+          type: string
+          format: uuid
+          nullable: true
+        topicName:
+          type: string
+          nullable: true
+          maxLength: 100
+        difficulty:
+          $ref: '#/components/schemas/QuestionDifficulty'
+        maxScore:
+          type: number
+          exclusiveMinimum: 0
+        explanation:
+          type: string
+          nullable: true
+          maxLength: 20000
+        contentLabel:
+          type: string
+          maxLength: 20000
+        mode:
+          type: string
+          enum: [single, multiple]
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/QuizMcqOptionInput'
+        optionCount:
+          type: integer
+          minimum: 2
+          maximum: 26
+        correctOptions:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            pattern: '^[A-Z]$'
+        statements:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [correctValue]
+            properties:
+              label:
+                type: string
+                maxLength: 1000
+              correctValue:
+                type: boolean
+        correctAnswer:
+          type: number
+        rubric:
+          nullable: true
+
+    CreateAssessmentSectionItemInput:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSectionItemInput'
+        - type: object
+          required: [difficulty, maxScore]
+
+    CreateAssessmentSectionItemsRequest:
+      type: object
+      required: [items]
+      additionalProperties: false
+      properties:
+        courseId:
+          type: string
+          format: uuid
+          nullable: true
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateAssessmentSectionItemInput'
+
+    UpdateAssessmentItemRequest:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSectionItemInput'
+        - type: object
+          minProperties: 1
+          description: All fields are optional for PATCH. Immutable fields are not part of this schema.
+
+    QuizMcqOptionInput:
+      type: object
+      required:
+        - content
+        - isCorrect
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        isCorrect:
+          type: boolean
+
+    CreateAssessmentPlacementRequest:
+      type: object
+      required:
+        - assessmentId
+        - type
+      additionalProperties: false
+      properties:
+        assessmentId:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/AssessmentPlacementType'
+        courseId:
+          type: string
+          format: uuid
+          nullable: true
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+        openTime:
+          type: string
+          format: date-time
+          nullable: true
+        closeTime:
+          type: string
+          format: date-time
+          nullable: true
+        maxAttempts:
+          type: integer
+          minimum: 1
+          nullable: true
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 255
+          nullable: true
+        isFeatured:
+          type: boolean
+        orderIndex:
+          type: integer
+          nullable: true
+
+    UpsertAssessmentPlacementRequest:
+      type: object
+      required:
+        - type
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/AssessmentPlacementType'
+        courseId:
+          type: string
+          format: uuid
+          nullable: true
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+        openTime:
+          type: string
+          format: date-time
+          nullable: true
+        closeTime:
+          type: string
+          format: date-time
+          nullable: true
+        maxAttempts:
+          type: integer
+          minimum: 1
+          nullable: true
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 255
+          nullable: true
+        isFeatured:
+          type: boolean
+        orderIndex:
+          type: integer
+          nullable: true
+
+    CloneAssessmentRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    AssessmentPlacementSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/AssessmentPlacementType'
+        slug:
+          type: string
+          nullable: true
+        isFeatured:
+          type: boolean
+        assessment:
+          $ref: '#/components/schemas/AssessmentSummary'
+
+    AssessmentPlacementSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AssessmentPlacementSummary'
+
+    DeleteAssessmentPlacementResponseData:
+      type: object
+      properties:
+        assessmentId:
+          type: string
+          format: uuid
+        placementDeleted:
+          type: boolean
+
+    DeleteAssessmentPlacementSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DeleteAssessmentPlacementResponseData'
+
+    ListAssessmentPlacementsResponseData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssessmentPlacementSummary'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+
+    ListAssessmentPlacementsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListAssessmentPlacementsResponseData'
+
+    RuntimeQuestionOption:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          nullable: true
+        orderIndex:
+          type: integer
+
+    RuntimeQuestion:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        content:
+          nullable: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuntimeQuestionOption'
+
+    RuntimeAssessmentItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderIndex:
+          type: integer
+        questionNumber:
+          type: integer
+          description: Computed within the containing section.
+        itemType:
+          $ref: '#/components/schemas/AssessmentItemType'
+        maxScore:
+          type: string
+          example: '1.00'
+        answerMode:
+          type: string
+          nullable: true
+          enum:
+            - single
+            - multiple
+        question:
+          $ref: '#/components/schemas/RuntimeQuestion'
+
+    RuntimeAssessmentSection:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentSection'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RuntimeAssessmentItem'
+
+    RuntimeAssessment:
+      allOf:
+        - $ref: '#/components/schemas/AssessmentPlacementSummary'
+        - type: object
+          description: Runtime placement payload. Preview endpoints return item shells only; workspace endpoints return question content and PDF URL when available.
+          properties:
+            openTime:
+              type: string
+              format: date-time
+              nullable: true
+            closeTime:
+              type: string
+              format: date-time
+              nullable: true
+            maxAttempts:
+              type: integer
+              nullable: true
+            timeLimitMinutes:
+              type: integer
+              nullable: true
+            sourceMediaId:
+              type: string
+              format: uuid
+              nullable: true
+            sourceMediaUrl:
+              type: string
+              nullable: true
+            sections:
+              type: array
+              description: Preview contains item shells only. Workspace contains question content without correct answers, option isCorrect flags, explanations, rubrics, or scoringConfig.
+              items:
+                $ref: '#/components/schemas/RuntimeAssessmentSection'
+            submissions:
+              type: array
+              description: Present on learning preview responses; contains only the authenticated student's attempt history.
+              items:
+                $ref: '#/components/schemas/AssessmentSubmissionSummary'
+
+    RuntimeAssessmentSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/RuntimeAssessment'
+
+    AssessmentWorkspace:
+      type: object
+      description: Active workspace payload. It omits placement type because the taking UI only needs assessment.type to choose quiz or PDF exam layout.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Assessment placement id.
+        slug:
+          type: string
+          nullable: true
+        isFeatured:
+          type: boolean
+        assessment:
+          $ref: '#/components/schemas/AssessmentSummary'
+        openTime:
+          type: string
+          format: date-time
+          nullable: true
+        closeTime:
+          type: string
+          format: date-time
+          nullable: true
+        maxAttempts:
+          type: integer
+          nullable: true
+        timeLimitMinutes:
+          type: integer
+          nullable: true
+        sourceMediaId:
+          type: string
+          format: uuid
+          nullable: true
+        sourceMediaUrl:
+          type: string
+          nullable: true
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuntimeAssessmentSection'
+        submissionId:
+          type: string
+          format: uuid
+        submission:
+          $ref: '#/components/schemas/AssessmentSubmission'
+        timeRemainingSeconds:
+          type: integer
+          nullable: true
+
+    AssessmentWorkspaceSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AssessmentWorkspace'
+
+    SubmissionStatus:
+      type: string
+      enum:
+        - doing
+        - submitted
+        - auto_submitted
+        - completed
+
+    AssessmentSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+          nullable: true
+        attemptNumber:
+          type: integer
+        status:
+          $ref: '#/components/schemas/SubmissionStatus'
+        startTime:
+          type: string
+          format: date-time
+        submitTime:
+          type: string
+          format: date-time
+          nullable: true
+        autoScore:
+          type: string
+          nullable: true
+        finalScore:
+          type: string
+          nullable: true
+        answers:
+          type: object
+          properties:
+            mcq:
+              type: array
+              items:
+                type: object
+                properties:
+                  itemId:
+                    type: string
+                    format: uuid
+                  selectedOptionIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+            trueFalse:
+              type: array
+              items:
+                type: object
+                properties:
+                  itemId:
+                    type: string
+                    format: uuid
+                  optionId:
+                    type: string
+                    format: uuid
+                  selectedValue:
+                    type: boolean
+            numeric:
+              type: array
+              items:
+                type: object
+                properties:
+                  itemId:
+                    type: string
+                    format: uuid
+                  answerValue:
+                    type: string
+            essay:
+              type: array
+              items:
+                type: object
+                properties:
+                  itemId:
+                    type: string
+                    format: uuid
+                  answer:
+                    type: string
+
+    AssessmentSubmissionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+          nullable: true
+        attemptNumber:
+          type: integer
+        status:
+          $ref: '#/components/schemas/SubmissionStatus'
+        startTime:
+          type: string
+          format: date-time
+        submitTime:
+          type: string
+          format: date-time
+          nullable: true
+        autoScore:
+          type: string
+          nullable: true
+        finalScore:
+          type: string
+          nullable: true
+
+    AssessmentSubmissionSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AssessmentSubmission'
+
+    SaveAnswer:
+      oneOf:
+        - type: object
+          required:
+            - itemId
+            - type
+            - selectedOptionIds
+          additionalProperties: false
+          properties:
+            itemId:
+              type: string
+              format: uuid
+            type:
+              type: string
+              enum:
+                - mcq
+            selectedOptionIds:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                format: uuid
+        - type: object
+          required:
+            - itemId
+            - type
+            - selections
+          additionalProperties: false
+          properties:
+            itemId:
+              type: string
+              format: uuid
+            type:
+              type: string
+              enum:
+                - true_false
+            selections:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - optionId
+                  - selectedValue
+                additionalProperties: false
+                properties:
+                  optionId:
+                    type: string
+                    format: uuid
+                  selectedValue:
+                    type: boolean
+        - type: object
+          required:
+            - itemId
+            - type
+            - answerValue
+          additionalProperties: false
+          properties:
+            itemId:
+              type: string
+              format: uuid
+            type:
+              type: string
+              enum:
+                - numeric
+            answerValue:
+              type: number
+        - type: object
+          required:
+            - itemId
+            - type
+            - answer
+          additionalProperties: false
+          properties:
+            itemId:
+              type: string
+              format: uuid
+            type:
+              type: string
+              enum:
+                - essay
+            answer:
+              type: string
+              minLength: 1
+              maxLength: 20000
+      discriminator:
+        propertyName: type
+
+    SaveAssessmentAnswersRequest:
+      type: object
+      required:
+        - answers
+      additionalProperties: false
+      properties:
+        answers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SaveAnswer'
+
+    SaveAssessmentAnswersResponseData:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        saved:
+          type: boolean
+
+    SaveAssessmentAnswersSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SaveAssessmentAnswersResponseData'
+
+    AdminGradingSubmissionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+          nullable: true
+        attemptNumber:
+          type: integer
+        status:
+          type: string
+          enum:
+            - submitted
+        submitTime:
+          type: string
+          format: date-time
+          nullable: true
+        autoScore:
+          type: string
+          nullable: true
+        finalScore:
+          type: string
+          nullable: true
+        assessment:
+          $ref: '#/components/schemas/AssessmentSummary'
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            fullName:
+              type: string
+            email:
+              type: string
+              format: email
+        essayCount:
+          type: integer
+        gradedEssayCount:
+          type: integer
+
+    ListGradingSubmissionsResponseData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminGradingSubmissionSummary'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+
+    ListGradingSubmissionsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListGradingSubmissionsResponseData'
+
+    AdminGradingSubmissionDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminGradingSubmissionSummary'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminAssessmentItem'
+            essayAnswers:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  itemId:
+                    type: string
+                    format: uuid
+                  answer:
+                    type: string
+                  teacherScore:
+                    type: string
+                    nullable: true
+                  teacherNote:
+                    type: string
+                    nullable: true
+                  gradedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+
+    AdminGradingSubmissionDetailSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminGradingSubmissionDetail'
+
+    GradeEssayRequest:
+      type: object
+      required:
+        - itemId
+        - teacherScore
+      additionalProperties: false
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        teacherScore:
+          type: number
+          minimum: 0
+        teacherNote:
+          type: string
+          maxLength: 5000
+          nullable: true
+
     CatalogChapter:
       type: object
       properties:
@@ -4890,6 +7027,7 @@ components:
           enum:
             - image
             - video
+            - document
         fileName:
           type: string
           minLength: 1
