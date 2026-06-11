@@ -20,6 +20,12 @@ export type AdminCourseRecord = Omit<
 }
 
 export type AdminCourseDetailRecord = AdminCourseRecord & {
+  topics: Array<{
+    id: string
+    name: string
+    parentId: string | null
+    courseId: string
+  }>
   chapters: Array<{
     id: string
     courseId: string
@@ -52,7 +58,7 @@ export type AdminCourseDetailRecord = AdminCourseRecord & {
           : never
         durationSec: number | null
       } | null
-      lessonAssessments: Array<{
+      assessmentPlacements: Array<{
         assessmentId: string
       }>
     }>

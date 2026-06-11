@@ -33,7 +33,8 @@ export const uploadFileDirectly = async (
 ): Promise<void> => {
   // Safe Content-Type fallback matching the presign request values
   const isVideo = file.name.endsWith('.mp4') || file.name.endsWith('.webm') || file.name.endsWith('.mov');
-  const contentType = file.type || (isVideo ? 'video/mp4' : 'image/jpeg');
+  const isPdf = file.name.toLowerCase().endsWith('.pdf');
+  const contentType = file.type || (isPdf ? 'application/pdf' : isVideo ? 'video/mp4' : 'image/jpeg');
 
   // Use a clean axios instance to avoid sending our app's JWT token to R2/S3 (causes CORS issues/security leaks)
   await axios.put(uploadUrl, file, {

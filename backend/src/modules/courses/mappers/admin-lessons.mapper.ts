@@ -22,7 +22,7 @@ type AdminLessonResponseFields = {
   youtubeUrl: string | null
   durationSec: number | null
   allowPreview: boolean
-  lessonAssessments: Array<{ assessmentId: string }>
+  assessmentPlacements: Array<{ assessmentId: string }>
   orderIndex: number
   createdAt: Date
   updatedAt: Date
@@ -50,7 +50,7 @@ export const mapAdminLessonResponse = (
   youtubeUrl: lesson.youtubeUrl,
   durationSec: lesson.durationSec,
   allowPreview: lesson.allowPreview,
-  assessmentId: lesson.lessonAssessments[0]?.assessmentId ?? null,
+  assessmentId: lesson.assessmentPlacements[0]?.assessmentId ?? null,
   orderIndex: lesson.orderIndex,
   createdAt: lesson.createdAt,
   updatedAt: lesson.updatedAt

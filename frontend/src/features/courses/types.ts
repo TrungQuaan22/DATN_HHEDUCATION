@@ -129,7 +129,15 @@ export type AdminCourseChapter = {
   lessons: AdminCourseLesson[];
 };
 
+export type AdminCourseTopic = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  courseId: string;
+};
+
 export type AdminCourseDetail = AdminCourseSummary & {
+  topics: AdminCourseTopic[];
   chapters: AdminCourseChapter[];
 };
 export type CatalogCourseDetailResponse = CourseDetail;
@@ -195,6 +203,14 @@ export type LearningCourseMaterial = {
   fileSize: number;
 };
 
+export type LearningAssessmentPlacement = {
+  id: string;
+  assessmentId: string;
+  title: string;
+  type: "exam" | "quiz";
+  gradingType: "auto" | "manual" | "mixed";
+};
+
 export type LearningLesson = {
   id: string;
   title: string;
@@ -205,6 +221,8 @@ export type LearningLesson = {
   durationSec: number | null;
   allowPreview: boolean;
   assessmentId: string | null;
+  assessmentPlacementId: string | null;
+  assessmentPlacement: LearningAssessmentPlacement | null;
   orderIndex: number;
   videoMedia: LearningCourseMedia | null;
   materials: LearningCourseMaterial[];
@@ -218,6 +236,7 @@ export type LearningLessonOverview = {
   durationSec: number | null;
   orderIndex: number;
   videoMedia: LearningCourseOverviewMedia | null;
+  assessmentPlacement: LearningAssessmentPlacement | null;
   progress: LearningCourseProgress;
 };
 
@@ -229,6 +248,7 @@ export type LearningChapter = {
 };
 
 export type LearningCourseOverview = LearningCourseItem & {
+  assessmentPlacements: LearningAssessmentPlacement[];
   chapters: LearningChapter[];
 };
 

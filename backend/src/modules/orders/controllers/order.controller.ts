@@ -3,7 +3,10 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 import { withIdempotency } from '~/common/utils/with-idempotency'
-import { orderService } from '../services/order.service'
+import {
+  type OrderService,
+  orderService
+} from '../services/order.service'
 import {
   cancelOrderSchema,
   createPaymentAttemptSchema,
@@ -19,7 +22,7 @@ type CreatePaymentAttemptValidated = z.infer<typeof createPaymentAttemptSchema>
 
 
 export class OrderController {
-  constructor(private readonly service = orderService) {}
+  constructor(private readonly service: OrderService) {}
 
   createOrder = async (req: Request) => {
     const validated = req.validated as CreateOrderValidated

@@ -76,7 +76,13 @@ export const updateLessonBodySchema = z
   .object({
     title: titleSchema.optional(),
     description: z.string().trim().max(5000).optional().nullable(),
-    allowPreview: z.boolean().optional()
+    allowPreview: z.boolean().optional(),
+    type: z.nativeEnum(LessonType).optional(),
+    videoType: z.nativeEnum(VideoType).optional().nullable(),
+    videoMediaId: z.string().uuid().optional().nullable(),
+    youtubeUrl: z.string().trim().url().optional().nullable(),
+    durationSec: durationSchema.optional().nullable(),
+    assessmentId: z.string().uuid().optional().nullable()
   })
   .strict()
   .refine((data) => Object.values(data).some((value) => value !== undefined), {

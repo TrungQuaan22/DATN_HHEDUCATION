@@ -4,7 +4,10 @@ import z from 'zod'
 import { sendSuccess } from '~/common/http/response'
 
 import type { CompleteUploadDto, CreatePresignedUploadDto } from '../dto'
-import { mediaUploadService } from '../services/upload.service'
+import {
+  type MediaUploadService,
+  mediaUploadService
+} from '../services/upload.service'
 import {
   completeUploadSchema,
   createPresignedUploadSchema
@@ -14,7 +17,7 @@ type CreatePresignedUploadValidated = z.infer<typeof createPresignedUploadSchema
 type CompleteUploadValidated = z.infer<typeof completeUploadSchema>
 
 export class MediaUploadController {
-  constructor(private readonly service = mediaUploadService) {}
+  constructor(private readonly service: MediaUploadService) {}
 
   createUpload = async (req: Request, res: Response) => {
     const validated = req.validated as CreatePresignedUploadValidated

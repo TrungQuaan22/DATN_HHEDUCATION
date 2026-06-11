@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Play, FileText, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { Play, FileText, BookOpen, ArrowRight } from "lucide-react";
 import { VideoPlayer } from "./video-player";
 import { YouTubePlayer, getYouTubeVideoId } from "./youtube-player";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -60,15 +61,28 @@ export function LessonRenderer({
   }
 
   if (activeLesson.type === "quiz") {
+    const assessmentPlacementId =
+      activeLesson.assessmentPlacementId || activeLesson.assessmentPlacement?.id;
+
     return (
       <EmptyState
         icon={<FileText className="w-12 h-12 text-accent-orange mb-3" />}
-        title="Bài tập trắc nghiệm"
-        description="Bài học này yêu cầu bạn làm bài tập trắc nghiệm để tự kiểm tra kiến thức."
+        title={activeLesson.assessmentPlacement?.title || "Bài kiểm tra"}
+        description={
+          assessmentPlacementId
+            ? "Hoàn thành bài kiểm tra của lesson này để tự đánh giá kiến thức."
+            : "Lesson này chưa có assessment placement được xuất bản."
+        }
         action={
-          <button className="bg-accent-orange text-brand-dark px-6 py-2 rounded font-bold text-[12px] hover:scale-[1.02] active:scale-95 transition-all">
-            Làm bài kiểm tra ngay
-          </button>
+          assessmentPlacementId ? (
+            <Link
+              href={`/student/assessments/${assessmentPlacementId}`}
+              className="inline-flex items-center gap-1.5 rounded bg-accent-orange px-6 py-2 text-[12px] font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
+            >
+              Làm bài ngay
+              <ArrowRight size={14} />
+            </Link>
+          ) : null
         }
         className="aspect-video w-full"
       />

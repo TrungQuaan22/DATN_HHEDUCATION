@@ -2,11 +2,13 @@ import { mapMediaUrl } from '~/common/mappers/media.mapper'
 import { mapUserAvatar } from '~/modules/users/mappers'
 
 import type {
+  LearningAssessmentPlacementDto,
   LearningCourseItemDto,
   LearningCourseOverviewDto,
   LearningLessonDetailDto
 } from '../dto'
 import type {
+  LearningAssessmentPlacementRecord,
   LearningCourseOverviewRecord,
   LearningEnrollmentCourseRecord,
   LearningLessonDetailRecord
@@ -40,6 +42,15 @@ export const mapLearningCourseItem = (
   }
 }
 
+const mapLearningAssessmentPlacement = (
+  placement: LearningAssessmentPlacementRecord
+): LearningAssessmentPlacementDto => ({
+  id: placement.id,
+  assessmentId: placement.assessmentId,
+  title: placement.assessment.title,
+  type: placement.assessment.type,
+  gradingType: placement.assessment.gradingType
+})
 
 export const mapLearningCourseOverview = (
   enrollment: LearningCourseOverviewRecord
@@ -48,6 +59,7 @@ export const mapLearningCourseOverview = (
 
   return {
     ...courseItem,
+    assessmentPlacements: enrollment.course.assessmentPlacements.map(mapLearningAssessmentPlacement),
     chapters: enrollment.course.chapters.map((chapter) => ({
       id: chapter.id,
       title: chapter.title,
@@ -66,6 +78,9 @@ export const mapLearningCourseOverview = (
                 status: lesson.videoMedia.status
               }
             : null,
+          assessmentPlacement: lesson.assessmentPlacements[0]
+            ? mapLearningAssessmentPlacement(lesson.assessmentPlacements[0])
+            : null,
           progress: {
             watchedSeconds: progress?.watchedSeconds ?? 0,
             lastPositionSec: progress?.lastPositionSec ?? 0,
@@ -81,6 +96,7 @@ export const mapLearningLessonDetail = (
   lesson: LearningLessonDetailRecord
 ): LearningLessonDetailDto => {
   const progress = lesson.progress[0]
+  const assessmentPlacement = lesson.assessmentPlacements[0]
 
   return {
     id: lesson.id,
@@ -91,7 +107,9 @@ export const mapLearningLessonDetail = (
     youtubeUrl: lesson.youtubeUrl,
     durationSec: lesson.durationSec,
     allowPreview: lesson.allowPreview,
-    assessmentId: lesson.lessonAssessments[0]?.assessmentId ?? null,
+    assessmentId: assessmentPlacement?.assessmentId ?? null,
+    assessmentPlacementId: assessmentPlacement?.id ?? null,
+    assessmentPlacement: assessmentPlacement ? mapLearningAssessmentPlacement(assessmentPlacement) : null,
     orderIndex: lesson.orderIndex,
     videoMedia: lesson.videoMedia
       ? {

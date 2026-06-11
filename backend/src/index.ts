@@ -33,7 +33,7 @@ const app = express()
 const openApiDocument = YAML.parse(
   readFileSync(join(process.cwd(), 'docs', 'openapi.yaml'), 'utf8')
 )
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean)

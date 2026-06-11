@@ -7,6 +7,7 @@ import {
 } from '../validators/admin-courses.validator'
 import type {
   AdminCourseChapter,
+  AdminCourseTopic,
   AdminCourseTeacher,
   CourseSummary,
   PaginatedResponseShape
@@ -42,6 +43,7 @@ export type AdminCourseSummary = Omit<
 
 // Response DTO for GET /admin/courses/:courseId
 export type AdminCourseDetailResponseDto = AdminCourseSummary & {
+  topics: AdminCourseTopic[]
   chapters: AdminCourseChapter[]
 }
 

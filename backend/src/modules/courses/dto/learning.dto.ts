@@ -1,4 +1,11 @@
-import type { LessonType, MediaStatus, Subject, VideoType } from '@prisma/client'
+import type {
+  AssessmentType,
+  GradingType,
+  LessonType,
+  MediaStatus,
+  Subject,
+  VideoType
+} from '@prisma/client'
 
 export type LearningCourseItemDto = {
   id: string
@@ -22,6 +29,14 @@ export type LearningCourseItemDto = {
   lastLearnedAt: Date | null
 }
 
+export type LearningAssessmentPlacementDto = {
+  id: string
+  assessmentId: string
+  title: string
+  type: AssessmentType
+  gradingType: GradingType
+}
+
 export type ListLearningCoursesResponseDto = {
   items: LearningCourseItemDto[]
   pagination: {
@@ -33,6 +48,7 @@ export type ListLearningCoursesResponseDto = {
 }
 
 export type LearningCourseOverviewDto = LearningCourseItemDto & {
+  assessmentPlacements: LearningAssessmentPlacementDto[]
   chapters: Array<{
     id: string
     title: string
@@ -46,6 +62,7 @@ export type LearningCourseOverviewDto = LearningCourseItemDto & {
       videoMedia: {
         status: MediaStatus
       } | null
+      assessmentPlacement: LearningAssessmentPlacementDto | null
       progress: {
         watchedSeconds: number
         lastPositionSec: number
@@ -65,6 +82,8 @@ export type LearningLessonDetailDto = {
   durationSec: number | null
   allowPreview: boolean
   assessmentId: string | null
+  assessmentPlacementId: string | null
+  assessmentPlacement: LearningAssessmentPlacementDto | null
   orderIndex: number
   videoMedia: {
     id: string

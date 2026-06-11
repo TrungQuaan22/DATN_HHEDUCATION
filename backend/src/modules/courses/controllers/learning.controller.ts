@@ -3,7 +3,10 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import { learningCourseService } from '../services/learning.service'
+import {
+  type LearningCourseService,
+  learningCourseService
+} from '../services/learning.service'
 import {
   getLearningLessonSchema,
   getLearningLessonHlsSchema,
@@ -48,7 +51,7 @@ const rewritePlaylistUrls = (playlist: string, req: Request, lessonId: string): 
 }
 
 export class LearningCourseController {
-  constructor(private readonly service = learningCourseService) {}
+  constructor(private readonly service: LearningCourseService) {}
 
   listMyLearningCourses = async (req: Request, res: Response) => {
     const validated = req.validated as ListMyCoursesValidated

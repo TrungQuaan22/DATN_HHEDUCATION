@@ -2,14 +2,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import Cookies from 'js-cookie';
 import { useCartStore } from './cart-store';
+import type { AuthUser } from '@/types/auth';
 
 type AuthState = {
   accessToken: string | null;
   refreshToken: string | null;
+  user: AuthUser | null;
   role: string | null;
   isAuthenticated: boolean;
   hasHydrated: boolean;
   setTokens: (tokens: { accessToken: string; refreshToken: string; role?: string }) => void;
+  setUser: (user: AuthUser | null) => void;
   setRole: (role: string | null) => void;
   clearSession: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
@@ -26,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       accessToken: null,
       refreshToken: null,
+      user: null,
       role: null,
       isAuthenticated: false,
       hasHydrated: false,
@@ -43,6 +47,17 @@ export const useAuthStore = create<AuthState>()(
           role: tokens.role !== undefined ? tokens.role : state.role,
           isAuthenticated: true,
         }));
+      },
+      setUser: (user) => {
+        if (user?.role) {
+          Cookies.set('role', user.role, getCookieOptions(7));
+        }
+
+        set({
+          user,
+          role: user?.role ?? null,
+          isAuthenticated: Boolean(user),
+        });
       },
       setRole: (role) => {
         if (role) {
@@ -67,6 +82,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           accessToken: null,
           refreshToken: null,
+          user: null,
           role: null,
           isAuthenticated: false,
         });

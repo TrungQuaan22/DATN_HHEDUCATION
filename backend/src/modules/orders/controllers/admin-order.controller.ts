@@ -3,7 +3,10 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import { adminOrderService } from '../services/admin-order.service'
+import {
+  type AdminOrderService,
+  adminOrderService
+} from '../services/admin-order.service'
 import {
   getAdminOrderSchema,
   listAdminOrdersSchema
@@ -13,7 +16,7 @@ type ListAdminOrdersValidated = z.infer<typeof listAdminOrdersSchema>
 type GetAdminOrderValidated = z.infer<typeof getAdminOrderSchema>
 
 export class AdminOrderController {
-  constructor(private readonly service = adminOrderService) {}
+  constructor(private readonly service: AdminOrderService) {}
 
   listOrders = async (req: Request, res: Response) => {
     const validated = req.validated as ListAdminOrdersValidated

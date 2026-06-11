@@ -25,6 +25,17 @@
   --admin-surface-low: #0a0f0d;
   --admin-border-dark: rgba(52, 211, 153, 0.15);
   --admin-cream: #f4f7f5;
+
+  /* Extra Theme Variables for Assessment Screens */
+  --surface-container: #16201c;
+  --surface-container-high: #202b27;
+  --surface-container-highest: #2d3d37;
+  --primary-container: rgba(52, 211, 153, 0.15);
+  --on-primary-container: #34d399;
+  --outline-variant: #202b27;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 }
 
 html.light {
@@ -49,6 +60,17 @@ html.light {
   --admin-surface-low: #ebf5f0;
   --admin-border-dark: #dae5e0;
   --admin-cream: #141e1b;
+
+  /* Extra Theme Variables for Assessment Screens (Light Mode) */
+  --surface-container: #ffffff;
+  --surface-container-high: #f1fcf7;
+  --surface-container-highest: #e5f0eb;
+  --primary-container: rgba(20, 66, 45, 0.1);
+  --on-primary-container: #14422d;
+  --outline-variant: #dae5e0;
+  --success: #10b981;
+  --warning: #d97706;
+  --error: #ef4444;
 }
 
 /* Custom scrollbar */
@@ -143,3 +165,26 @@ h2,
   transition-duration: 420ms !important;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
+
+/* Glass panel design matching Stitch mockups but adapted to Cozy Forest themes */
+.glass-panel {
+  background: rgba(22, 32, 28, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(20, 66, 45, 0.1);
+}
+
+/* Hide scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

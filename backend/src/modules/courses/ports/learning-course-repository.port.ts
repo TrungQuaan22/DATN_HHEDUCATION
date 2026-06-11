@@ -1,4 +1,13 @@
-import type { LessonType, MediaStatus, Subject, VideoType, Enrollment, LessonProgress } from '@prisma/client'
+import type {
+  AssessmentType,
+  Enrollment,
+  GradingType,
+  LessonProgress,
+  LessonType,
+  MediaStatus,
+  Subject,
+  VideoType
+} from '@prisma/client'
 
 export type LearningTeacherRecord = {
   id: string
@@ -9,6 +18,16 @@ export type LearningTeacherRecord = {
 export type LearningCourseProgressRecord = {
   completedLessons: number
   lastLearnedAt: Date | null
+}
+
+export type LearningAssessmentPlacementRecord = {
+  id: string
+  assessmentId: string
+  assessment: {
+    title: string
+    type: AssessmentType
+    gradingType: GradingType
+  }
 }
 
 export type LearningCourseRecord = {
@@ -40,6 +59,7 @@ export type LearningLessonProgressRecord = {
 
 export type LearningCourseOverviewRecord = LearningEnrollmentCourseRecord & {
   course: LearningCourseRecord & {
+    assessmentPlacements: LearningAssessmentPlacementRecord[]
     chapters: Array<{
       id: string
       title: string
@@ -53,6 +73,7 @@ export type LearningCourseOverviewRecord = LearningEnrollmentCourseRecord & {
         videoMedia: {
           status: MediaStatus
         } | null
+        assessmentPlacements: LearningAssessmentPlacementRecord[]
         progress: LearningLessonProgressRecord[]
       }>
     }>
@@ -76,7 +97,7 @@ export type LearningLessonDetailRecord = {
     status: MediaStatus
     durationSec: number | null
   } | null
-  lessonAssessments: Array<{ assessmentId: string }>
+  assessmentPlacements: LearningAssessmentPlacementRecord[]
   progress: LearningLessonProgressRecord[]
 }
 

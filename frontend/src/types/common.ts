@@ -52,6 +52,74 @@ export type TeacherSummary = {
   achievements: TeacherAchievement[];
 };
 
+export type CourseTeacherSummary = {
+  id: string;
+  fullName: string;
+  avatarUrl?: string | null;
+};
+
+export type CourseSummary = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  subject: Subject;
+  grade: Grade;
+  teacher: CourseTeacherSummary;
+  thumbnailUrl: string | null;
+  price: number;
+  salePrice: number | null;
+  status: "draft" | "published" | "archived";
+  lessonsCount?: number;
+  totalLessons?: number;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CourseLessonSummary = {
+  id: string;
+  title: string;
+  type: "video" | "quiz" | "document";
+  videoType?: "system" | "youtube" | null;
+  youtubeUrl?: string | null;
+  durationSec?: number | null;
+  orderIndex?: number;
+  allowPreview?: boolean;
+};
+
+export type CourseChapterSummary = {
+  id: string;
+  title: string;
+  orderIndex?: number;
+  lessons: CourseLessonSummary[];
+};
+
+export type CourseDetail = CourseSummary & {
+  chapters: CourseChapterSummary[];
+  relatedCourses: CourseSummary[];
+};
+
+export type BlogPostSummary = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  category?: string | null;
+  thumbnailMediaId?: string | null;
+  thumbnailUrl: string | null;
+  author: CourseTeacherSummary;
+  publishedAt: string;
+  readingMinutes: number;
+  tags: string[];
+  isFeatured?: boolean;
+};
+
+export type BlogPostDetail = BlogPostSummary & {
+  content: RichContent;
+  relatedPosts: BlogPostSummary[];
+};
+
 
 
 export type RichContent = {

@@ -8,6 +8,8 @@ import {
   ChevronRight,
   BookOpen,
   CheckCircle2,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -150,6 +152,29 @@ function StudentLearningContent() {
                   Giảng viên: {course.teacher.fullName}
                 </p>
               </div>
+
+              {course.assessmentPlacements.length > 0 && (
+                <div className="rounded border border-accent-orange/30 bg-accent-orange/10 px-4 py-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-wider text-accent-orange">
+                        <FileText size={14} />
+                        Assessment khóa học
+                      </div>
+                      <p className="mt-1 truncate text-[14px] font-bold text-cream">
+                        {course.assessmentPlacements[0].title}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/student/assessments/${course.assessmentPlacements[0].id}`}
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded bg-accent-orange px-4 py-2 text-[12px] font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
+                    >
+                      Làm bài
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* Lesson Media/Content Renderer */}
               <LessonRenderer

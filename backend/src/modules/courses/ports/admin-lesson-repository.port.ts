@@ -21,7 +21,7 @@ export type AdminLessonRecord = {
   youtubeUrl: string | null
   durationSec: number | null
   allowPreview: boolean
-  lessonAssessments: Array<{ assessmentId: string }>
+  assessmentPlacements: Array<{ assessmentId: string }>
   orderIndex: number
   createdAt: Date
   updatedAt: Date
@@ -53,6 +53,12 @@ export interface AdminLessonRepositoryPort {
     title?: string
     description?: string | null
     allowPreview?: boolean
+    type?: LessonType
+    videoType?: VideoType | null
+    videoMediaId?: string | null
+    youtubeUrl?: string | null
+    durationSec?: number | null
+    assessmentId?: string | null
   }): Promise<AdminLessonRecord>
   softDeleteLesson(data: { lessonId: string; courseId: string }): Promise<unknown>
   reorderLessons(

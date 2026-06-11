@@ -31,6 +31,12 @@ type AdminCourseSummaryFields = Omit<
   }
 
 type AdminCourseDetailFields = AdminCourseSummaryFields & {
+    topics: Array<{
+      id: string
+      name: string
+      parentId: string | null
+      courseId: string
+    }>
     chapters: Array<{
       id: string
       courseId: string
@@ -63,7 +69,7 @@ type AdminCourseDetailFields = AdminCourseSummaryFields & {
             : never
           durationSec: number | null
         } | null
-        lessonAssessments: Array<{
+        assessmentPlacements: Array<{
           assessmentId: string
         }>
       }>
@@ -108,14 +114,15 @@ export const mapAdminCourseDetailResponse = (
 
   return {
     ...mappedCourse,
+    topics: course.topics,
     chapters: course.chapters.map((chapter) => ({
       ...chapter,
       lessons: chapter.lessons.map((lesson) => {
-        const { lessonAssessments, videoMedia, ...lessonFields } = lesson
+        const { assessmentPlacements, videoMedia, ...lessonFields } = lesson
 
         return {
           ...lessonFields,
-          assessmentId: lessonAssessments[0]?.assessmentId ?? null,
+          assessmentId: assessmentPlacements[0]?.assessmentId ?? null,
           videoMedia: videoMedia
             ? {
                 id: videoMedia.id,
@@ -132,4 +139,3 @@ export const mapAdminCourseDetailResponse = (
 }
 
 export const mapCatalogCourseResponse = mapCourseMedia
-

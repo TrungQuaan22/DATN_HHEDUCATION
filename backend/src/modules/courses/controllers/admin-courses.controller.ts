@@ -9,7 +9,10 @@ import type {
   ListAdminCoursesDto,
   UpdateCourseDto
 } from '../dto'
-import { adminCourseService } from '../services/admin-courses.service'
+import {
+  type AdminCourseService,
+  adminCourseService
+} from '../services/admin-courses.service'
 import {
   changeCourseStatusSchema,
   createCourseSchema,
@@ -25,7 +28,7 @@ type UpdateCourseValidated = z.infer<typeof updateCourseSchema>
 type ChangeCourseStatusValidated = z.infer<typeof changeCourseStatusSchema>
 
 export class AdminCourseController {
-  constructor(private readonly service = adminCourseService) {}
+  constructor(private readonly service: AdminCourseService) {}
 
   createCourse = async (req: Request, res: Response) => {
     const validated = req.validated as CreateCourseValidated

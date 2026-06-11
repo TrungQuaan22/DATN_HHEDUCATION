@@ -9,7 +9,10 @@ import type {
   ReorderChaptersDto,
   UpdateChapterDto
 } from '../dto'
-import { adminChapterService } from '../services/admin-chapters.service'
+import {
+  type AdminChapterService,
+  adminChapterService
+} from '../services/admin-chapters.service'
 import {
   createChapterSchema,
   deleteChapterSchema,
@@ -23,7 +26,7 @@ type DeleteChapterValidated = z.infer<typeof deleteChapterSchema>
 type ReorderChaptersValidated = z.infer<typeof reorderChaptersSchema>
 
 export class AdminChapterController {
-  constructor(private readonly service = adminChapterService) {}
+  constructor(private readonly service: AdminChapterService) {}
 
   createChapter = async (req: Request, res: Response) => {
     const validated = req.validated as CreateChapterValidated

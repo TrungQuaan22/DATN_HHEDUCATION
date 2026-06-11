@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useParams } from "next/navigation";
 import {
   X,
   FileText,
@@ -23,6 +24,7 @@ import {
 import LessonYoutubeField from "./lesson-youtube-field";
 import LessonSystemVideoField from "./lesson-system-video-field";
 import LessonQuizField from "./lesson-quiz-field";
+import { listAdminAssessments } from "@/features/assessments/api";
 
 type LessonModalProps = {
   isOpen: boolean;
@@ -31,17 +33,33 @@ type LessonModalProps = {
   initialData?: Partial<AdminCourseLesson> | null;
 };
 
-// No active assessments API; list remains empty
-const assessments: { id: string; title: string }[] = [];
-
 export default function LessonModal({
   isOpen,
   onClose,
   onSave,
   initialData = null,
 }: LessonModalProps) {
+  const params = useParams();
+  const courseId = params?.courseId as string | undefined;
+
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [assessmentsList, setAssessmentsList] = useState<{ id: string; title: string }[]>([]);
+
+  const loadAssessments = async () => {
+    try {
+      const res = await listAdminAssessments({ page: 1, limit: 100 });
+      setAssessmentsList(res.items.map((item) => ({ id: item.id, title: item.title })));
+    } catch (error) {
+      console.error("Lỗi tải danh sách đề thi:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAssessments();
+    }
+  }, [isOpen]);
 
   const {
     register,
@@ -86,7 +104,7 @@ export default function LessonModal({
           durationMin: Math.floor(totalSec / 60) || 10,
           durationSec: totalSec % 60 || 0,
           videoMediaId: initialData.videoMediaId || null,
-          assessmentId: initialData.assessmentId || (initialData as any).lessonAssessments?.[0]?.assessmentId || "",
+          assessmentId: initialData.assessmentId || "",
         };
         reset(initVal);
         setVideoFileName(
@@ -371,7 +389,10 @@ export default function LessonModal({
             <LessonQuizField
               register={register}
               errors={errors}
-              assessments={assessments}
+              assessments={assessmentsList}
+              courseId={courseId}
+              lessonId={initialData?.id}
+              onRefresh={loadAssessments}
             />
           )}
 

@@ -77,6 +77,13 @@ export type AdminCourseChapter = {
   lessons: AdminCourseLesson[]
 }
 
+export type AdminCourseTopic = {
+  id: string
+  name: string
+  parentId: string | null
+  courseId: string
+}
+
 export type PaginationResponseFields = {
   page: number
   limit: number

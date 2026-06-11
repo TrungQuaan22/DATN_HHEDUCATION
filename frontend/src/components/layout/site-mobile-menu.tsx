@@ -44,6 +44,15 @@ export default function SiteMobileMenu({
         Courses
       </Link>
       <Link
+        href="/practice"
+        onClick={onClose}
+        className={`text-sm font-medium transition-colors ${
+          isActive("/practice") ? "text-brand-pink" : "text-cream hover:text-brand-pink"
+        }`}
+      >
+        Thi Thử
+      </Link>
+      <Link
         href="/#teachers"
         onClick={onClose}
         className="text-sm font-medium text-cream hover:text-brand-pink transition-colors"

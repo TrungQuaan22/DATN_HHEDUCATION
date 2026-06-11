@@ -1,5 +1,5 @@
 export interface CreatePresignedUploadRequest {
-  resourceType: 'image' | 'video';
+  resourceType: 'image' | 'video' | 'document';
   fileName: string;
   contentType: string;
   fileSize: number;

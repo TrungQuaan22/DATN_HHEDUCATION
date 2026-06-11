@@ -15,6 +15,10 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = React.useState(false);
   const searchParams = useSearchParams();
   const isRegistered = searchParams.get("registered") === "true";
+  const callbackUrl = searchParams.get("callbackUrl");
+  const registerHref = callbackUrl
+    ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/register";
 
   const {
     mutate: loginMutate,
@@ -51,7 +55,7 @@ export function LoginForm() {
           Đăng nhập
         </button>
         <Link
-          href="/register"
+          href={registerHref}
           className="flex-grow py-2 text-center text-[14px] font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
         >
           Đăng ký
@@ -216,7 +220,7 @@ export function LoginForm() {
         <p className="text-[13px] text-muted-text">
           Chưa có tài khoản?
           <Link
-            href="/register"
+            href={registerHref}
             className="text-brand-pink font-bold hover:underline ml-1 cursor-pointer"
           >
             Đăng ký ngay

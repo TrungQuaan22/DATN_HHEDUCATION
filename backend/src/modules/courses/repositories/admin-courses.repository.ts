@@ -11,7 +11,7 @@ import type { GradeValue } from '~/common/constant/taxonomy'
 import { prisma } from '~/config/db'
 
 import type { AdminCourseRepositoryPort } from '../ports/admin-course-repository.port'
-import { adminTeacherSelect, lessonAssessmentSelect, lessonVideoMediaSelect } from './shared'
+import { adminTeacherSelect, lessonVideoMediaSelect } from './shared'
 
 export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
   findActiveCourseBySlug(slug: string) {
@@ -93,6 +93,15 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
             enrollments: true
           }
         },
+        topics: {
+          orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
+          select: {
+            id: true,
+            name: true,
+            parentId: true,
+            courseId: true
+          }
+        },
         chapters: {
           where: {
             deletedAt: null
@@ -131,8 +140,9 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
                 videoMedia: {
                   select: lessonVideoMediaSelect
                 },
-                lessonAssessments: {
-                  select: lessonAssessmentSelect
+                assessmentPlacements: {
+                  where: { type: 'lesson' },
+                  select: { assessmentId: true }
                 }
               }
             }

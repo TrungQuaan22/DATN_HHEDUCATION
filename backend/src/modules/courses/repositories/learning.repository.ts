@@ -2,7 +2,7 @@ import { CourseStatus } from '@prisma/client'
 import { prisma } from '~/config/db'
 
 import type { LearningCourseRepositoryPort } from '../ports/learning-course-repository.port'
-import { lessonAssessmentSelect, lessonVideoMediaSelect, publicTeacherSelect } from './shared'
+import { lessonVideoMediaSelect, publicTeacherSelect } from './shared'
 
 export class PrismaLearningCourseRepository implements LearningCourseRepositoryPort {
   listEnrolledCourses(data: { userId: string; skip: number; take: number }) {
@@ -88,6 +88,25 @@ export class PrismaLearningCourseRepository implements LearningCourseRepositoryP
             teacher: {
               select: publicTeacherSelect
             },
+            assessmentPlacements: {
+              where: {
+                type: 'course'
+              },
+              orderBy: {
+                createdAt: 'desc'
+              },
+              select: {
+                id: true,
+                assessmentId: true,
+                assessment: {
+                  select: {
+                    title: true,
+                    type: true,
+                    gradingType: true
+                  }
+                }
+              }
+            },
             chapters: {
               where: {
                 deletedAt: null
@@ -115,6 +134,25 @@ export class PrismaLearningCourseRepository implements LearningCourseRepositoryP
                     videoMedia: {
                       select: {
                         status: true
+                      }
+                    },
+                    assessmentPlacements: {
+                      where: {
+                        type: 'lesson'
+                      },
+                      orderBy: {
+                        createdAt: 'desc'
+                      },
+                      select: {
+                        id: true,
+                        assessmentId: true,
+                        assessment: {
+                          select: {
+                            title: true,
+                            type: true,
+                            gradingType: true
+                          }
+                        }
                       }
                     },
                     progress: {
@@ -179,8 +217,24 @@ export class PrismaLearningCourseRepository implements LearningCourseRepositoryP
         videoMedia: {
           select: lessonVideoMediaSelect
         },
-        lessonAssessments: {
-          select: lessonAssessmentSelect
+        assessmentPlacements: {
+          where: {
+            type: 'lesson'
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          select: {
+            id: true,
+            assessmentId: true,
+            assessment: {
+              select: {
+                title: true,
+                type: true,
+                gradingType: true
+              }
+            }
+          }
         },
         progress: {
           where: {

@@ -28,6 +28,19 @@ const config: Config = {
         "admin-surface-low": "var(--admin-surface-low)",
         "admin-border": "var(--admin-border-dark)",
         "admin-cream": "var(--admin-cream)",
+        
+        // Assessment Theme Mapping
+        "primary": "var(--brand-pink)",
+        "secondary": "var(--accent-orange)",
+        "surface-container": "var(--surface-container)",
+        "surface-container-high": "var(--surface-container-high)",
+        "surface-container-highest": "var(--surface-container-highest)",
+        "primary-container": "var(--primary-container)",
+        "on-primary-container": "var(--on-primary-container)",
+        "outline-variant": "var(--outline-variant)",
+        "success": "var(--success)",
+        "warning": "var(--warning)",
+        "error": "var(--error)",
       },
       fontFamily: {
         serif: ["var(--font-quicksand)", "sans-serif"],

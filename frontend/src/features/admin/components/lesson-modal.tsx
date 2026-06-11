@@ -78,7 +78,7 @@ export default function LessonModal({
         }
 
         if (initialData.type === 'quiz') {
-          const assId = initialData.lessonAssessments?.[0]?.assessmentId || '';
+          const assId = initialData.assessmentId || '';
           setAssessmentId(assId);
         } else {
           setAssessmentId('');

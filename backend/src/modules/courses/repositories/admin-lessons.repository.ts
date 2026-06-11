@@ -3,7 +3,7 @@ import { type LessonType, type Prisma, type VideoType } from '@prisma/client'
 import { prisma } from '~/config/db'
 
 import type { AdminLessonRepositoryPort } from '../ports/admin-lesson-repository.port'
-import { lessonAssessmentSelect, lessonVideoMediaSelect } from './shared'
+import { lessonVideoMediaSelect } from './shared'
 
 const getNextDeletedLessonOrderIndex = async (tx: Prisma.TransactionClient) => {
   const deletedLessonOrder = await tx.lesson.aggregate({
@@ -84,8 +84,9 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         videoMedia: {
           select: lessonVideoMediaSelect
         },
-        lessonAssessments: {
-          select: lessonAssessmentSelect
+        assessmentPlacements: {
+          where: { type: 'lesson' },
+          select: { assessmentId: true }
         }
       }
     })
@@ -155,10 +156,11 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
           durationSec: data.durationSec,
           allowPreview: data.allowPreview,
           orderIndex: nextOrderIndex,
-          lessonAssessments: data.assessmentId
+          assessmentPlacements: data.assessmentId
             ? {
                 create: {
-                  assessmentId: data.assessmentId
+                  assessmentId: data.assessmentId,
+                  type: 'lesson'
                 }
               }
             : undefined
@@ -167,8 +169,9 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
           videoMedia: {
             select: lessonVideoMediaSelect
           },
-          lessonAssessments: {
-            select: lessonAssessmentSelect
+          assessmentPlacements: {
+            where: { type: 'lesson' },
+            select: { assessmentId: true }
           }
         }
       })
@@ -193,24 +196,103 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
     title?: string
     description?: string | null
     allowPreview?: boolean
+    type?: LessonType
+    videoType?: VideoType | null
+    videoMediaId?: string | null
+    youtubeUrl?: string | null
+    durationSec?: number | null
+    assessmentId?: string | null
   }) {
-    return prisma.lesson.update({
-      where: {
-        id: data.lessonId
-      },
-      data: {
-        title: data.title,
-        description: data.description,
-        allowPreview: data.allowPreview
-      },
-      include: {
-        videoMedia: {
-          select: lessonVideoMediaSelect
-        },
-        lessonAssessments: {
-          select: lessonAssessmentSelect
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.lesson.findUniqueOrThrow({
+        where: { id: data.lessonId },
+        include: {
+          assessmentPlacements: {
+            where: { type: 'lesson' }
+          }
+        }
+      })
+
+      const targetType = data.type ?? current.type
+      const currentAssessmentId = current.assessmentPlacements[0]?.assessmentId ?? null
+      
+      let newAssessmentId: string | null = currentAssessmentId
+      if (data.assessmentId !== undefined) {
+        newAssessmentId = data.assessmentId
+      }
+
+      if (targetType !== 'quiz') {
+        newAssessmentId = null
+      }
+
+      // If assessment link changed, sync AssessmentPlacement
+      if (newAssessmentId !== currentAssessmentId) {
+        await tx.assessmentPlacement.deleteMany({
+          where: { lessonId: data.lessonId, type: 'lesson' }
+        })
+
+        if (newAssessmentId) {
+          await tx.assessmentPlacement.create({
+            data: {
+              assessmentId: newAssessmentId,
+              type: 'lesson',
+              lessonId: data.lessonId
+            }
+          })
+        }
+      } else if (newAssessmentId && current.type !== 'quiz' && targetType === 'quiz') {
+        const placementExists = current.assessmentPlacements.length > 0
+        if (!placementExists) {
+          await tx.assessmentPlacement.create({
+            data: {
+              assessmentId: newAssessmentId,
+              type: 'lesson',
+              lessonId: data.lessonId
+            }
+          })
         }
       }
+
+      let finalVideoType = data.videoType !== undefined ? data.videoType : current.videoType
+      let finalVideoMediaId = data.videoMediaId !== undefined ? data.videoMediaId : current.videoMediaId
+      let finalYoutubeUrl = data.youtubeUrl !== undefined ? data.youtubeUrl : current.youtubeUrl
+      let finalDurationSec = data.durationSec !== undefined ? data.durationSec : current.durationSec
+
+      if (targetType !== 'video') {
+        finalVideoType = null
+        finalVideoMediaId = null
+        finalYoutubeUrl = null
+        finalDurationSec = null
+      } else if (finalVideoType === 'system') {
+        finalYoutubeUrl = null
+      } else if (finalVideoType === 'youtube') {
+        finalVideoMediaId = null
+      }
+
+      const lesson = await tx.lesson.update({
+        where: { id: data.lessonId },
+        data: {
+          title: data.title,
+          description: data.description,
+          allowPreview: data.allowPreview,
+          type: data.type,
+          videoType: finalVideoType,
+          videoMediaId: finalVideoMediaId,
+          youtubeUrl: finalYoutubeUrl,
+          durationSec: finalDurationSec
+        },
+        include: {
+          videoMedia: {
+            select: lessonVideoMediaSelect
+          },
+          assessmentPlacements: {
+            where: { type: 'lesson' },
+            select: { assessmentId: true }
+          }
+        }
+      })
+
+      return lesson
     })
   }
 

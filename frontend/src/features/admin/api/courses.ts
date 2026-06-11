@@ -130,7 +130,7 @@ export type AdminLessonResponse = {
   durationSec: number | null;
   allowPreview: boolean;
   orderIndex: number;
-  lessonAssessments?: { assessmentId: string }[];
+  assessmentId?: string | null;
   videoMedia?: { id: string, objectKey: string } | null;
 };
 

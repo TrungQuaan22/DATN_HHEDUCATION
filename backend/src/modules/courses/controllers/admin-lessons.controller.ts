@@ -9,7 +9,10 @@ import type {
   ReorderLessonsDto,
   UpdateLessonDto
 } from '../dto'
-import { adminLessonService } from '../services/admin-lessons.service'
+import {
+  type AdminLessonService,
+  adminLessonService
+} from '../services/admin-lessons.service'
 import {
   createLessonSchema,
   deleteLessonSchema,
@@ -23,7 +26,7 @@ type DeleteLessonValidated = z.infer<typeof deleteLessonSchema>
 type ReorderLessonsValidated = z.infer<typeof reorderLessonsSchema>
 
 export class AdminLessonController {
-  constructor(private readonly service = adminLessonService) {}
+  constructor(private readonly service: AdminLessonService) {}
 
   createLesson = async (req: Request, res: Response) => {
     const validated = req.validated as CreateLessonValidated

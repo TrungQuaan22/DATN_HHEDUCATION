@@ -4,21 +4,27 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMeQuery } from "@/features/auth/hooks";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationBell } from "./notification-bell";
 import { UserDropdown } from "./user-dropdown";
 
 type AdminHeaderProps = {
   onToggleSidebar: () => void;
+  isSidebarCollapsed?: boolean;
 };
 
-export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
+export default function AdminHeader({
+  onToggleSidebar,
+  isSidebarCollapsed = false,
+}: AdminHeaderProps) {
   const { data: user } = useMeQuery();
 
   return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-admin-deep border-b border-admin-border/30 flex justify-between items-center px-4 sm:px-8 z-40 text-admin-cream">
-      {/* Menu toggle for mobile + Search box */}
+    <header className={`fixed top-0 right-0 left-0 h-16 bg-admin-deep border-b border-admin-border/30 flex justify-between items-center px-4 sm:px-8 z-40 text-admin-cream transition-all duration-300 ${
+      isSidebarCollapsed ? "lg:left-20" : "lg:left-64"
+    }`}>
+      {/* Menu toggle for mobile + Collapse toggle + Search box */}
       <div className="flex items-center gap-4 w-1/2 sm:w-1/3">
         <button
           onClick={onToggleSidebar}
@@ -27,6 +33,7 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
         >
           <Menu size={20} />
         </button>
+
         <div className="relative w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted group-focus-within:text-admin-pink w-4 h-4 transition-colors" />
           <input

@@ -41,6 +41,17 @@ export default function SiteNavLinks({
         Courses
       </Link>
       <Link
+        href="/practice"
+        onClick={onLinkClick}
+        className={`${itemClassName} ${
+          isActive("/practice")
+            ? "text-brand-pink border-b-2 border-brand-pink"
+            : "text-cream hover:text-brand-pink"
+        }`}
+      >
+        Thi Thử
+      </Link>
+      <Link
         href="/teachers"
         onClick={onLinkClick}
         className={`${itemClassName} text-cream hover:text-brand-pink`}

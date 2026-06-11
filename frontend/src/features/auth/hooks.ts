@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authApi } from "./api";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -83,8 +83,14 @@ export function useMeQuery() {
 
 export function useLoginMutation() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const setTokens = useAuthStore((state) => state.setTokens);
+  const callbackUrl = searchParams.get("callbackUrl");
+  const safeCallbackUrl =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
 
   return useMutation({
     mutationFn: async (data: LoginInput) => {
@@ -102,8 +108,9 @@ export function useLoginMutation() {
       // Ingest user details into TanStack Query Cache directly
       queryClient.setQueryData(['users', 'me'], data.user);
       
-      // Navigate based on role immediately
-      if (data.user.role === 'admin') {
+      if (safeCallbackUrl) {
+        router.push(safeCallbackUrl);
+      } else if (data.user.role === 'admin') {
         router.push("/admin/courses");
       } else {
         router.push("/");
@@ -115,8 +122,14 @@ export function useLoginMutation() {
 
 export function useRegisterMutation() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const setTokens = useAuthStore((state) => state.setTokens);
+  const callbackUrl = searchParams.get("callbackUrl");
+  const safeCallbackUrl =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
 
   return useMutation({
     mutationFn: async (data: RegisterInput) => {
@@ -147,14 +160,20 @@ export function useRegisterMutation() {
         });
         queryClient.setQueryData(['users', 'me'], result.loginData.user);
         
-        if (result.loginData.user.role === 'admin') {
+        if (safeCallbackUrl) {
+          router.push(safeCallbackUrl);
+        } else if (result.loginData.user.role === 'admin') {
           router.push("/admin/courses");
         } else {
           router.push("/");
         }
         router.refresh();
       } else {
-        router.push("/login?registered=true");
+        router.push(
+          safeCallbackUrl
+            ? `/login?registered=true&callbackUrl=${encodeURIComponent(safeCallbackUrl)}`
+            : "/login?registered=true",
+        );
       }
     },
   });

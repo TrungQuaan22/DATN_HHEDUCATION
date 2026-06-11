@@ -21,7 +21,3 @@ export const lessonVideoMediaSelect = {
   status: true,
   durationSec: true
 } satisfies Prisma.MediaSelect
-
-export const lessonAssessmentSelect = {
-  assessmentId: true
-} satisfies Prisma.LessonAssessmentSelect

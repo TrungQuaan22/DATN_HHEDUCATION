@@ -3,7 +3,10 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import { adminPaymentTransactionService } from '../services/admin-payment-transaction.service'
+import {
+  type AdminPaymentTransactionService,
+  adminPaymentTransactionService
+} from '../services/admin-payment-transaction.service'
 import {
   getAdminPaymentTransactionSchema,
   listAdminPaymentTransactionsSchema
@@ -17,7 +20,7 @@ type GetAdminPaymentTransactionValidated = z.infer<
 >
 
 export class AdminPaymentTransactionController {
-  constructor(private readonly service = adminPaymentTransactionService) {}
+  constructor(private readonly service: AdminPaymentTransactionService) {}
 
   listTransactions = async (req: Request, res: Response) => {
     const validated = req.validated as ListAdminPaymentTransactionsValidated

@@ -36,12 +36,20 @@ const buildObjectKey = (input: CreatePresignedUploadDto): string => {
     return `uploads/images/${assetId}${extension}`
   }
 
+  if (input.resourceType === 'document') {
+    return `uploads/documents/${assetId}${extension}`
+  }
+
   return `uploads/videos/source/${assetId}${extension}`
 }
 
 const getMediaType = (resourceType: CreatePresignedUploadDto['resourceType']): MediaType => {
   if (resourceType === 'image') {
     return 'image'
+  }
+
+  if (resourceType === 'document') {
+    return 'document'
   }
 
   return 'video'
@@ -122,7 +130,7 @@ export class MediaUploadService {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Uploaded object not found')
   }
 
-  const nextStatus = media.type === 'image' ? MediaStatus.ready : MediaStatus.uploaded
+  const nextStatus = media.type === 'video' ? MediaStatus.uploaded : MediaStatus.ready
 
   const updatedMedia = await this.repository.updateMediaById(media.id, {
     status: nextStatus,

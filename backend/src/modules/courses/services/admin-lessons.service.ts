@@ -129,11 +129,33 @@ export class AdminLessonService {
     ensureCanManageCourse({ actor, course: lesson.chapter.course })
     ensureCourseCanBeEdited(lesson.chapter.course.status)
 
+    // Merge and validate related lesson data
+    const type = input.type ?? lesson.type
+    const videoType = input.videoType !== undefined ? input.videoType : lesson.videoType
+    const videoMediaId = input.videoMediaId !== undefined ? input.videoMediaId : lesson.videoMediaId
+    const youtubeUrl = input.youtubeUrl !== undefined ? input.youtubeUrl : lesson.youtubeUrl
+    const assessmentId = input.assessmentId !== undefined ? input.assessmentId : (lesson.assessmentPlacements[0]?.assessmentId ?? null)
+
+    await this.validateRelatedLessonData({
+      actor,
+      type,
+      videoType,
+      videoMediaId,
+      youtubeUrl,
+      assessmentId
+    })
+
     const updatedLesson = await this.lessonRepository.updateLesson({
       lessonId: input.lessonId,
       title: input.title,
       description: input.description,
-      allowPreview: input.allowPreview
+      allowPreview: input.allowPreview,
+      type: input.type,
+      videoType: input.videoType,
+      videoMediaId: input.videoMediaId,
+      youtubeUrl: input.youtubeUrl,
+      durationSec: input.durationSec,
+      assessmentId: input.assessmentId
     })
 
     return mapAdminLessonResponse(updatedLesson)

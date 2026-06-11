@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Mail, Lock, User, Key, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +14,11 @@ import RegisterSocialButtons from "./register-social-buttons";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = React.useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const loginHref = callbackUrl
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/login";
 
   const {
     mutate: registerMutate,
@@ -49,7 +55,7 @@ export function RegisterForm() {
       {/* Auth Tabs */}
       <div className="flex mb-8 bg-brand-dark/50 rounded-lg p-1 border border-border-dark">
         <Link
-          href="/login"
+          href={loginHref}
           className="flex-grow py-2 text-center text-[14px] font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
         >
           Đăng nhập
@@ -265,7 +271,7 @@ export function RegisterForm() {
         <p className="text-[13px] text-muted-text">
           Đã có tài khoản?
           <Link
-            href="/login"
+            href={loginHref}
             className="text-brand-pink font-bold hover:underline ml-1 cursor-pointer"
           >
             Đăng nhập ngay
