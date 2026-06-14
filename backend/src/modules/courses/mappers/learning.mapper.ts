@@ -1,11 +1,10 @@
 import { mapMediaUrl } from '~/common/mappers/media.mapper'
-import { mapUserAvatar } from '~/modules/users/mappers'
 
 import type {
   LearningAssessmentPlacementDto,
   LearningCourseItemDto,
   LearningCourseOverviewDto,
-  LearningLessonDetailDto
+  LearningLessonDetailResponse
 } from '../dto'
 import type {
   LearningAssessmentPlacementRecord,
@@ -30,7 +29,11 @@ export const mapLearningCourseItem = (
     description: course.description,
     subject: course.subject,
     grade: course.grade,
-    teacher: mapUserAvatar(course.teacher),
+    teacher: {
+      id: course.teacher.id,
+      fullName: course.teacher.fullName,
+      avatarUrl: mapMediaUrl(course.teacher.avatarObjectKey)
+    },
     thumbnailUrl: mapMediaUrl(course.thumbnailObjectKey),
     price: course.price,
     salePrice: course.salePrice,
@@ -94,7 +97,7 @@ export const mapLearningCourseOverview = (
 
 export const mapLearningLessonDetail = (
   lesson: LearningLessonDetailRecord
-): LearningLessonDetailDto => {
+): LearningLessonDetailResponse => {
   const progress = lesson.progress[0]
   const assessmentPlacement = lesson.assessmentPlacements[0]
 

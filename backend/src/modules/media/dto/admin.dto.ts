@@ -8,14 +8,14 @@ import {
 export type CreatePresignedUploadDto = z.infer<typeof createPresignedUploadBodySchema>
 export type CompleteUploadDto = z.infer<typeof completeUploadBodySchema>
 
-export type CreatePresignedUploadResponseDto = {
+export type CreatePresignedUploadResponse = {
   mediaId: string
   uploadUrl: string
   objectKey: string
   method: 'PUT'
 }
 
-export type CompleteUploadResponseDto = {
+export type CompleteUploadResponse = {
   mediaId: string
   objectKey: string
   contentType: string | null

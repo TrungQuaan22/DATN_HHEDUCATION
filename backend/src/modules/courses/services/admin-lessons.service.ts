@@ -6,23 +6,22 @@ import { ensureActorCanUseVideoMedia } from '~/common/ensures/media.ensure'
 import { AppError } from '~/common/error/app-error'
 
 import type {
-  AdminLessonResponseDto,
+  AdminLessonResponse,
   CreateLessonDto,
   DeleteLessonDto,
   ReorderLessonsDto,
-  ReorderLessonsResponseDto,
+  ReorderLessonsResponse,
   UpdateLessonDto
-} from '../dto'
-import { mapAdminLessonResponse } from '../mappers'
+} from '../dto/admin-lessons.dto'
 import {
   type CourseActor,
   ensureCanManageCourse,
   ensureCourseCanBeEdited,
   ensureCourseCanBeReordered,
-  ensureExactReorderIds,
-  ensureCreateLessonPayloadIsValid
+  ensureCreateLessonPayloadIsValid,
+  ensureExactReorderIds
 } from '../ensures/courses.ensure'
-import { adminChapterRepository, adminLessonRepository } from '../repositories'
+import { mapAdminLessonResponse } from '../mappers'
 import type {
   AdminChapterRepositoryPort,
   AdminChapterWithCourseRecord
@@ -31,16 +30,18 @@ import type {
   AdminLessonRepositoryPort,
   AdminLessonWithChapterRecord
 } from '../ports/admin-lesson-repository.port'
+import { adminChapterRepository, adminLessonRepository } from '../repositories'
+import { mediaRepository } from '~/modules/media/repository'
+import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 export class AdminLessonService {
   constructor(
     private readonly lessonRepository: AdminLessonRepositoryPort,
-    private readonly chapterRepository: AdminChapterRepositoryPort
+    private readonly chapterRepository: AdminChapterRepositoryPort,
+    private readonly mediaRepository: MediaRepositoryPort
   ) {}
 
-  private async ensureChapterExists(chapterId: string): Promise<AdminChapterWithCourseRecord> {
-    const chapter = await this.chapterRepository.findChapterById(chapterId)
-
+  private ensureChapterExists(chapter: AdminChapterWithCourseRecord | null): AdminChapterWithCourseRecord {
     if (!chapter) {
       throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
     }
@@ -48,9 +49,7 @@ export class AdminLessonService {
     return chapter
   }
 
-  private async ensureLessonExists(lessonId: string): Promise<AdminLessonWithChapterRecord> {
-    const lesson = await this.lessonRepository.findLessonById(lessonId)
-
+  private ensureLessonExists(lesson: AdminLessonWithChapterRecord | null): AdminLessonWithChapterRecord {
     if (!lesson) {
       throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
     }
@@ -58,9 +57,7 @@ export class AdminLessonService {
     return lesson
   }
 
-  private async ensureAssessmentExists(assessmentId: string): Promise<void> {
-    const assessment = await this.lessonRepository.findAssessmentById(assessmentId)
-
+  private ensureAssessmentExists(assessment: { id: string } | null): void {
     if (!assessment) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
     }
@@ -78,7 +75,8 @@ export class AdminLessonService {
     ensureCreateLessonPayloadIsValid(data)
 
     if (data.type === LessonType.quiz && data.assessmentId) {
-      await this.ensureAssessmentExists(data.assessmentId)
+      const assessment = await this.lessonRepository.findAssessmentById(data.assessmentId)
+      this.ensureAssessmentExists(assessment)
     }
 
     if (
@@ -86,16 +84,18 @@ export class AdminLessonService {
       data.videoType === VideoType.system &&
       data.videoMediaId
     ) {
-      await ensureActorCanUseVideoMedia({
+      const media = await this.mediaRepository.findMediaById(data.videoMediaId)
+      ensureActorCanUseVideoMedia({
         actor: data.actor,
-        mediaId: data.videoMediaId,
+        media,
         label: 'Video media'
       })
     }
   }
 
-  async createLesson(actor: CourseActor, input: CreateLessonDto): Promise<AdminLessonResponseDto> {
-    const chapter = await this.ensureChapterExists(input.chapterId)
+  async createLesson(actor: CourseActor, input: CreateLessonDto): Promise<AdminLessonResponse> {
+    const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
+    const chapter = this.ensureChapterExists(chapterRecord)
     ensureCanManageCourse({ actor, course: chapter.course })
     ensureCourseCanBeEdited(chapter.course.status)
 
@@ -124,8 +124,9 @@ export class AdminLessonService {
     return mapAdminLessonResponse(lesson)
   }
 
-  async updateLesson(actor: CourseActor, input: UpdateLessonDto): Promise<AdminLessonResponseDto> {
-    const lesson = await this.ensureLessonExists(input.lessonId)
+  async updateLesson(actor: CourseActor, input: UpdateLessonDto): Promise<AdminLessonResponse> {
+    const lessonRecord = await this.lessonRepository.findLessonById(input.lessonId)
+    const lesson = this.ensureLessonExists(lessonRecord)
     ensureCanManageCourse({ actor, course: lesson.chapter.course })
     ensureCourseCanBeEdited(lesson.chapter.course.status)
 
@@ -134,7 +135,8 @@ export class AdminLessonService {
     const videoType = input.videoType !== undefined ? input.videoType : lesson.videoType
     const videoMediaId = input.videoMediaId !== undefined ? input.videoMediaId : lesson.videoMediaId
     const youtubeUrl = input.youtubeUrl !== undefined ? input.youtubeUrl : lesson.youtubeUrl
-    const assessmentId = input.assessmentId !== undefined ? input.assessmentId : (lesson.assessmentPlacements[0]?.assessmentId ?? null)
+    const assessmentId =
+      input.assessmentId !== undefined ? input.assessmentId : lesson.assessmentId
 
     await this.validateRelatedLessonData({
       actor,
@@ -165,7 +167,8 @@ export class AdminLessonService {
     actor: CourseActor,
     input: DeleteLessonDto
   ): Promise<{ id: string; deleted: true }> {
-    const lesson = await this.ensureLessonExists(input.lessonId)
+    const lessonRecord = await this.lessonRepository.findLessonById(input.lessonId)
+    const lesson = this.ensureLessonExists(lessonRecord)
     ensureCanManageCourse({ actor, course: lesson.chapter.course })
     ensureCourseCanBeEdited(lesson.chapter.course.status)
 
@@ -183,8 +186,9 @@ export class AdminLessonService {
   async reorderLessons(
     actor: CourseActor,
     input: ReorderLessonsDto
-  ): Promise<ReorderLessonsResponseDto> {
-    const chapter = await this.ensureChapterExists(input.chapterId)
+  ): Promise<ReorderLessonsResponse> {
+    const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
+    const chapter = this.ensureChapterExists(chapterRecord)
     ensureCanManageCourse({ actor, course: chapter.course })
     ensureCourseCanBeReordered(chapter.course.status)
 
@@ -205,5 +209,6 @@ export class AdminLessonService {
 
 export const adminLessonService = new AdminLessonService(
   adminLessonRepository,
-  adminChapterRepository
+  adminChapterRepository,
+  mediaRepository
 )

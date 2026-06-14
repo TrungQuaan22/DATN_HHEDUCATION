@@ -1,7 +1,7 @@
 export type IdempotencyRecord = {
   scope: string
   key: string
-  userId: string | null
+  userId: string
   requestHash: string
   statusCode: number | null
   responseBody: unknown
@@ -19,12 +19,19 @@ export interface IdempotencyRepositoryPort {
     processingAt: Date
     expiresAt: Date
   }): Promise<boolean>
-  findByScopeAndKey(data: { scope: string; key: string }): Promise<IdempotencyRecord | null>
-  markProcessing(data: { scope: string; key: string; processingAt: Date }): Promise<void>
-  deleteByScopeAndKey(data: { scope: string; key: string }): Promise<void>
+  findByScopeKeyAndUser(data: { scope: string; key: string; userId: string }): Promise<IdempotencyRecord | null>
+  markProcessing(data: {
+    scope: string
+    key: string
+    userId: string
+    processingAt: Date
+    staleProcessingAt: Date | null
+  }): Promise<boolean>
+  deleteByScopeKeyAndUser(data: { scope: string; key: string; userId: string }): Promise<void>
   saveResponse(data: {
     scope: string
     key: string
+    userId: string
     statusCode: number
     responseBody: unknown
   }): Promise<void>

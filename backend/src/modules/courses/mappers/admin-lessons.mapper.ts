@@ -1,36 +1,11 @@
-import type { LessonType, MediaStatus, VideoType } from '@prisma/client'
-
 import { mapMediaUrl } from '~/common/mappers/media.mapper'
 
-import type { AdminLessonResponseDto } from '../dto'
-
-type AdminLessonResponseFields = {
-  id: string
-  chapterId: string
-  title: string
-  type: LessonType
-  description: string | null
-  videoType: VideoType | null
-  videoMediaId: string | null
-  videoMedia: {
-    id: string
-    objectKey: string
-    originalName: string | null
-    status: MediaStatus
-    durationSec: number | null
-  } | null
-  youtubeUrl: string | null
-  durationSec: number | null
-  allowPreview: boolean
-  assessmentPlacements: Array<{ assessmentId: string }>
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-}
+import type { AdminLessonResponse } from '../dto/admin-lessons.dto'
+import type { AdminLessonRecord } from '../ports/admin-lesson-repository.port'
 
 export const mapAdminLessonResponse = (
-  lesson: AdminLessonResponseFields
-): AdminLessonResponseDto => ({
+  lesson: AdminLessonRecord
+): AdminLessonResponse => ({
   id: lesson.id,
   chapterId: lesson.chapterId,
   title: lesson.title,
@@ -50,7 +25,7 @@ export const mapAdminLessonResponse = (
   youtubeUrl: lesson.youtubeUrl,
   durationSec: lesson.durationSec,
   allowPreview: lesson.allowPreview,
-  assessmentId: lesson.assessmentPlacements[0]?.assessmentId ?? null,
+  assessmentId: lesson.assessmentId,
   orderIndex: lesson.orderIndex,
   createdAt: lesson.createdAt,
   updatedAt: lesson.updatedAt

@@ -2,16 +2,13 @@ import { MediaStatus, MediaType, UserRole, type Media } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
-import { mediaRepository } from '~/modules/media/repository'
 
 export type MediaActor = {
   id: string
   role: UserRole
 }
 
-export const ensureMediaExists = async (mediaId: string) => {
-  const media = await mediaRepository.findMediaById(mediaId)
-
+export const ensureMediaExists = (media: Media | null): Media => {
   if (!media || media.status === MediaStatus.deleted) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
   }
@@ -26,54 +23,54 @@ export const ensureActorCanUseMedia = ({ actor, media }: { actor: MediaActor; me
   }
 }
 
-export const ensureActorCanUseImageMedia = async ({
+export const ensureActorCanUseImageMedia = ({
   actor,
-  mediaId,
+  media,
   label = 'Image media'
 }: {
   actor: MediaActor
-  mediaId: string
+  media: Media | null
   label?: string
-}) => {
-  const media = await ensureMediaExists(mediaId)
+}): Media => {
+  const verifiedMedia = ensureMediaExists(media)
 
-  if (media.type !== MediaType.image) {
+  if (verifiedMedia.type !== MediaType.image) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} must be an image`)
   }
 
-  if (media.status !== MediaStatus.ready) {
+  if (verifiedMedia.status !== MediaStatus.ready) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} is not ready`)
   }
 
-  ensureActorCanUseMedia({ actor, media })
+  ensureActorCanUseMedia({ actor, media: verifiedMedia })
 
-  return media
+  return verifiedMedia
 }
 
-export const ensureActorCanUseVideoMedia = async ({
+export const ensureActorCanUseVideoMedia = ({
   actor,
-  mediaId,
+  media,
   label = 'Video media'
 }: {
   actor: MediaActor
-  mediaId: string
+  media: Media | null
   label?: string
-}) => {
-  const media = await ensureMediaExists(mediaId)
+}): Media => {
+  const verifiedMedia = ensureMediaExists(media)
 
-  if (media.type !== MediaType.video) {
+  if (verifiedMedia.type !== MediaType.video) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} must be a video`)
   }
 
   if (
-    media.status !== MediaStatus.uploaded &&
-    media.status !== MediaStatus.processing &&
-    media.status !== MediaStatus.ready
+    verifiedMedia.status !== MediaStatus.uploaded &&
+    verifiedMedia.status !== MediaStatus.processing &&
+    verifiedMedia.status !== MediaStatus.ready
   ) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, `${label} is not ready to use`)
   }
 
-  ensureActorCanUseMedia({ actor, media })
+  ensureActorCanUseMedia({ actor, media: verifiedMedia })
 
-  return media
+  return verifiedMedia
 }

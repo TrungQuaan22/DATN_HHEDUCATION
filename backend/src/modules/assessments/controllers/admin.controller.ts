@@ -3,10 +3,8 @@ import type z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import {
-  adminAssessmentService,
-  type AdminAssessmentService
-} from '../services/admin.service'
+import type { AdminAssessmentService } from '../services/admin.service'
+import { adminAssessmentService } from '../wiring'
 import type {
   assessmentIdSchema,
   cloneAssessmentSchema,

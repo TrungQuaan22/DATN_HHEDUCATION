@@ -31,33 +31,49 @@ export class PrismaIdempotencyRepository implements IdempotencyRepositoryPort {
     }
   }
 
-  findByScopeAndKey(data: { scope: string; key: string }) {
+  findByScopeKeyAndUser(data: { scope: string; key: string; userId: string }) {
     return prisma.idempotencyKey.findUnique({
       where: {
-        scope_key: data
+        userId_scope_key: {
+          userId: data.userId,
+          scope: data.scope,
+          key: data.key
+        }
       }
     })
   }
 
-  async markProcessing(data: { scope: string; key: string; processingAt: Date }): Promise<void> {
-    await prisma.idempotencyKey.update({
+  async markProcessing(data: {
+    scope: string
+    key: string
+    userId: string
+    processingAt: Date
+    staleProcessingAt: Date | null
+  }): Promise<boolean> {
+    const result = await prisma.idempotencyKey.updateMany({
       where: {
-        scope_key: {
-          scope: data.scope,
-          key: data.key
-        }
+        userId: data.userId,
+        scope: data.scope,
+        key: data.key,
+        processingAt: data.staleProcessingAt,
+        statusCode: null
       },
       data: {
         processingAt: data.processingAt
       }
     })
+    return result.count === 1
   }
 
-  async deleteByScopeAndKey(data: { scope: string; key: string }): Promise<void> {
+  async deleteByScopeKeyAndUser(data: { scope: string; key: string; userId: string }): Promise<void> {
     await prisma.idempotencyKey
       .delete({
         where: {
-          scope_key: data
+          userId_scope_key: {
+            userId: data.userId,
+            scope: data.scope,
+            key: data.key
+          }
         }
       })
       .catch(() => undefined)
@@ -66,12 +82,14 @@ export class PrismaIdempotencyRepository implements IdempotencyRepositoryPort {
   async saveResponse(data: {
     scope: string
     key: string
+    userId: string
     statusCode: number
     responseBody: unknown
   }): Promise<void> {
     await prisma.idempotencyKey.update({
       where: {
-        scope_key: {
+        userId_scope_key: {
+          userId: data.userId,
           scope: data.scope,
           key: data.key
         }

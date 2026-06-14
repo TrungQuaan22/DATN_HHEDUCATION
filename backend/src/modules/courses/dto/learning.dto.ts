@@ -37,7 +37,7 @@ export type LearningAssessmentPlacementDto = {
   gradingType: GradingType
 }
 
-export type ListLearningCoursesResponseDto = {
+export type ListLearningCoursesResponse = {
   items: LearningCourseItemDto[]
   pagination: {
     page: number
@@ -72,7 +72,7 @@ export type LearningCourseOverviewDto = LearningCourseItemDto & {
   }>
 }
 
-export type LearningLessonDetailDto = {
+export type LearningLessonDetailResponse = {
   id: string
   title: string
   type: LessonType
@@ -100,7 +100,7 @@ export type LearningLessonDetailDto = {
   }
 }
 
-export type UpdateLessonProgressResponseDto = {
+export type UpdateLessonProgressResponse = {
   lessonId: string
   courseId: string
   watchedSeconds: number

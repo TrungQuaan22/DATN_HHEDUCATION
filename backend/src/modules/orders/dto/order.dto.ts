@@ -1,4 +1,6 @@
-import type { OrderStatus, PaymentStatus } from '@prisma/client'
+import type { OrderStatus, PaymentStatus } from '../ports/order-repository.port'
+
+import type { PaymentProviderName } from '~/modules/payments/constants'
 
 export type CreateOrderDto = {
   userId: string
@@ -13,10 +15,10 @@ export type CancelOrderDto = {
 export type CreatePaymentAttemptDto = {
   userId: string
   orderId: string
-  provider: string
+  provider: PaymentProviderName
 }
 
-export type OrderPaymentDto = {
+export type OrderPaymentResponse = {
   id: string
   provider: string
   amount: number
@@ -28,7 +30,7 @@ export type OrderPaymentDto = {
   paidAt: Date | null
 }
 
-export type OrderItemDto = {
+export type OrderItemResponse = {
   id: string
   courseId: string
   title: string
@@ -36,7 +38,7 @@ export type OrderItemDto = {
   priceAtPurchase: number
 }
 
-export type OrderDto = {
+export type OrderResponse = {
   id: string
   orderInvoiceNumber: string
   totalAmount: number
@@ -44,24 +46,24 @@ export type OrderDto = {
   status: OrderStatus
   expiresAt: Date
   createdAt: Date
-  items: OrderItemDto[]
-  payment: OrderPaymentDto | null
+  items: OrderItemResponse[]
+  payment: OrderPaymentResponse | null
 }
 
-export type CreateOrderResponseDto =
+export type CreateOrderResponse =
   | {
       code: 'ORDER_CREATED' | 'FREE_ORDER_COMPLETED'
-      order: OrderDto
+      order: OrderResponse
     }
   | {
       code: 'PENDING_ORDER_EXISTS'
-      order: OrderDto
+      order: OrderResponse
     }
 
-export type CancelOrderResponseDto = {
-  order: OrderDto
+export type CancelOrderResponse = {
+  order: OrderResponse
 }
 
-export type CreatePaymentAttemptResponseDto = {
-  order: OrderDto
+export type CreatePaymentAttemptResponse = {
+  order: OrderResponse
 }

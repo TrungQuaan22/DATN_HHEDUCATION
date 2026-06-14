@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client'
+import type { OrderStatus, PaymentStatus, PaymentTransactionDirection } from '@prisma/client'
 import z from 'zod'
 
 import type { listAdminPaymentTransactionsQuerySchema } from '../validators/admin-payment-transaction.validator'
@@ -7,63 +7,48 @@ export type ListAdminPaymentTransactionsDto = z.infer<
   typeof listAdminPaymentTransactionsQuerySchema
 >
 
-export const ADMIN_PAYMENT_TRANSACTION_LIST_SELECT = {
-  id: true,
-  provider: true,
-  providerEventId: true,
-  transactionRef: true,
-  orderInvoiceNumber: true,
-  amount: true,
-  currency: true,
-  direction: true,
-  transactionDate: true,
-  matchStatus: true,
-  metadata: true,
-  createdAt: true,
-  orderId: true,
-  paymentId: true,
+export type AdminPaymentTransactionListItemResponse = {
+  id: string
+  provider: string
+  providerEventId: string | null
+  transactionRef: string | null
+  orderInvoiceNumber: string | null
+  amount: number
+  currency: string
+  direction: PaymentTransactionDirection
+  transactionDate: Date | null
+  matchStatus: string
+  metadata: any
+  createdAt: Date
+  orderId: string | null
+  paymentId: string | null
   order: {
-    select: {
-      id: true,
-      orderInvoiceNumber: true,
-      status: true,
-      totalAmount: true,
-      user: {
-        select: {
-          id: true,
-          email: true,
-          fullName: true
-        }
-      }
+    id: string
+    orderInvoiceNumber: string
+    status: OrderStatus
+    totalAmount: number
+    user: {
+      id: string
+      email: string
+      fullName: string
     }
-  },
+  } | null
   payment: {
-    select: {
-      id: true,
-      provider: true,
-      status: true,
-      amount: true,
-      currency: true,
-      paidAt: true
-    }
-  }
-} satisfies Prisma.PaymentTransactionSelect
+    id: string
+    provider: string
+    status: PaymentStatus
+    amount: number
+    currency: string
+    paidAt: Date | null
+  } | null
+}
 
-export const ADMIN_PAYMENT_TRANSACTION_DETAIL_SELECT = {
-  ...ADMIN_PAYMENT_TRANSACTION_LIST_SELECT,
-  rawPayload: true
-} satisfies Prisma.PaymentTransactionSelect
+export type AdminPaymentTransactionDetailResponse = AdminPaymentTransactionListItemResponse & {
+  rawPayload: any
+}
 
-export type AdminPaymentTransactionListItemDto = Prisma.PaymentTransactionGetPayload<{
-  select: typeof ADMIN_PAYMENT_TRANSACTION_LIST_SELECT
-}>
-
-export type AdminPaymentTransactionDetailDto = Prisma.PaymentTransactionGetPayload<{
-  select: typeof ADMIN_PAYMENT_TRANSACTION_DETAIL_SELECT
-}>
-
-export type ListAdminPaymentTransactionsResponseDto = {
-  items: AdminPaymentTransactionListItemDto[]
+export type ListAdminPaymentTransactionsResponse = {
+  items: AdminPaymentTransactionListItemResponse[]
   pagination: {
     page: number
     limit: number

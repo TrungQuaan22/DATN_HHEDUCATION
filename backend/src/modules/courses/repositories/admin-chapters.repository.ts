@@ -2,7 +2,11 @@ import type { Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
-import type { AdminChapterRepositoryPort } from '../ports/admin-chapter-repository.port'
+import type {
+  AdminChapterRecord,
+  AdminChapterRepositoryPort,
+  AdminChapterWithCourseRecord
+} from '../ports/admin-chapter-repository.port'
 
 const getNextDeletedChapterOrderIndex = async (tx: Prisma.TransactionClient) => {
   const deletedChapterOrder = await tx.chapter.aggregate({
@@ -19,10 +23,13 @@ const getNextDeletedChapterOrderIndex = async (tx: Prisma.TransactionClient) => 
   return (deletedChapterOrder._min.orderIndex ?? 0) - 1
 }
 
-const moveFollowingChaptersUp = (tx: Prisma.TransactionClient, data: {
-  courseId: string
-  deletedOrderIndex: number
-}) =>
+const moveFollowingChaptersUp = (
+  tx: Prisma.TransactionClient,
+  data: {
+    courseId: string
+    deletedOrderIndex: number
+  }
+) =>
   tx.chapter.updateMany({
     where: {
       courseId: data.courseId,
@@ -60,9 +67,20 @@ const buildFinalChapterOrderUpdates = (chapterIds: string[]) => {
   })
 }
 
+function mapToChapterRecord(chapter: any): AdminChapterRecord {
+  return {
+    id: chapter.id,
+    courseId: chapter.courseId,
+    title: chapter.title,
+    orderIndex: chapter.orderIndex,
+    createdAt: chapter.createdAt,
+    updatedAt: chapter.updatedAt
+  }
+}
+
 export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort {
-  findChapterById(chapterId: string) {
-    return prisma.chapter.findFirst({
+  async findChapterById(chapterId: string): Promise<AdminChapterWithCourseRecord | null> {
+    const chapter = await prisma.chapter.findFirst({
       where: {
         id: chapterId,
         deletedAt: null
@@ -78,9 +96,21 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
         }
       }
     })
+
+    if (!chapter) return null
+
+    return {
+      ...mapToChapterRecord(chapter),
+      course: {
+        id: chapter.course.id,
+        teacherId: chapter.course.teacherId,
+        status: chapter.course.status,
+        deletedAt: chapter.course.deletedAt
+      }
+    }
   }
 
-  listCourseChapterIds(courseId: string) {
+  async listCourseChapterIds(courseId: string) {
     return prisma.chapter.findMany({
       where: {
         courseId,
@@ -95,7 +125,7 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
     })
   }
 
-  async createChapter(data: { courseId: string; title: string }) {
+  async createChapter(data: { courseId: string; title: string }): Promise<AdminChapterRecord> {
     const aggregate = await prisma.chapter.aggregate({
       where: {
         courseId: data.courseId,
@@ -108,17 +138,19 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
 
     const nextOrderIndex = (aggregate._max.orderIndex ?? 0) + 1
 
-    return prisma.chapter.create({
+    const chapter = await prisma.chapter.create({
       data: {
         courseId: data.courseId,
         title: data.title,
         orderIndex: nextOrderIndex
       }
     })
+
+    return mapToChapterRecord(chapter)
   }
 
-  updateChapter(data: { chapterId: string; title: string }) {
-    return prisma.chapter.update({
+  async updateChapter(data: { chapterId: string; title: string }): Promise<AdminChapterRecord> {
+    const chapter = await prisma.chapter.update({
       where: {
         id: data.chapterId
       },
@@ -126,9 +158,11 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
         title: data.title
       }
     })
+
+    return mapToChapterRecord(chapter)
   }
 
-  countActiveLessonsByChapter(chapterId: string) {
+  async countActiveLessonsByChapter(chapterId: string) {
     return prisma.lesson.count({
       where: {
         chapterId,
@@ -137,7 +171,7 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
     })
   }
 
-  softDeleteChapter(chapterId: string) {
+  async softDeleteChapter(chapterId: string): Promise<AdminChapterRecord> {
     return prisma.$transaction(async (tx) => {
       const chapter = await tx.chapter.findUniqueOrThrow({
         where: {
@@ -165,11 +199,14 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
         deletedOrderIndex: chapter.orderIndex
       })
 
-      return deletedChapter
+      return mapToChapterRecord(deletedChapter)
     })
   }
 
-  async reorderChapters(courseId: string, chapterIds: string[]) {
+  async reorderChapters(
+    courseId: string,
+    chapterIds: string[]
+  ): Promise<Array<{ id: string; orderIndex: number }>> {
     const operations = [
       ...buildTemporaryChapterOrderUpdates(chapterIds),
       ...buildFinalChapterOrderUpdates(chapterIds)

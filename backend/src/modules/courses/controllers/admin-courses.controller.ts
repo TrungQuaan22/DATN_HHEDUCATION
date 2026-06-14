@@ -3,16 +3,8 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import type {
-  CourseIdDto,
-  CreateCourseDto,
-  ListAdminCoursesDto,
-  UpdateCourseDto
-} from '../dto'
-import {
-  type AdminCourseService,
-  adminCourseService
-} from '../services/admin-courses.service'
+import type { CourseIdDto, CreateCourseDto, ListAdminCoursesDto, UpdateCourseDto } from '../dto'
+import { type AdminCourseService, adminCourseService } from '../services/admin-courses.service'
 import {
   changeCourseStatusSchema,
   createCourseSchema,

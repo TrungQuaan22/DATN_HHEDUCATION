@@ -1,7 +1,9 @@
 import { BlogPostStatus, type Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
+
 import type {
+  BlogPostRecord,
   BlogRepositoryPort,
   CreateBlogPostRecordInput,
   UpdateBlogPostRecordInput
@@ -14,8 +16,34 @@ const blogAuthorSelect = {
   avatarObjectKey: true
 } satisfies Prisma.UserSelect
 
+function mapToBlogPostRecord(post: any): BlogPostRecord {
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt ?? '',
+    category: post.category,
+    tags: post.tags,
+    content: post.content,
+    thumbnailMediaId: post.thumbnailMediaId,
+    thumbnailObjectKey: post.thumbnailObjectKey,
+    authorId: post.authorId,
+    author: {
+      id: post.author.id,
+      fullName: post.author.fullName,
+      avatarMediaId: post.author.avatarMediaId,
+      avatarObjectKey: post.author.avatarObjectKey
+    },
+    status: post.status,
+    isFeatured: post.isFeatured,
+    publishedAt: post.publishedAt,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt
+  }
+}
+
 export class PrismaBlogRepository implements BlogRepositoryPort {
-  findActivePostBySlug(slug: string) {
+  async findActivePostBySlug(slug: string) {
     return prisma.blogPost.findFirst({
       where: {
         slug,
@@ -27,8 +55,8 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
     })
   }
 
-  findActivePostById(blogPostId: string) {
-    return prisma.blogPost.findFirst({
+  async findActivePostById(blogPostId: string): Promise<BlogPostRecord | null> {
+    const post = await prisma.blogPost.findFirst({
       where: {
         id: blogPostId,
         deletedAt: null
@@ -39,10 +67,13 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    if (!post) return null
+    return mapToBlogPostRecord(post)
   }
 
-  findPublishedPostBySlug(slug: string) {
-    return prisma.blogPost.findFirst({
+  async findPublishedPostBySlug(slug: string): Promise<BlogPostRecord | null> {
+    const post = await prisma.blogPost.findFirst({
       where: {
         slug,
         status: BlogPostStatus.published,
@@ -57,10 +88,16 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    if (!post) return null
+    return mapToBlogPostRecord(post)
   }
 
-  listPublishedPostSummaries(data: { where: Prisma.BlogPostWhereInput; take: number }) {
-    return prisma.blogPost.findMany({
+  async listPublishedPostSummaries(data: {
+    where: Prisma.BlogPostWhereInput
+    take: number
+  }): Promise<BlogPostRecord[]> {
+    const posts = await prisma.blogPost.findMany({
       where: data.where,
       take: data.take,
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
@@ -70,10 +107,16 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    return posts.map(mapToBlogPostRecord)
   }
 
-  listAdminPosts(data: { where: Prisma.BlogPostWhereInput; skip: number; take: number }) {
-    return prisma.$transaction([
+  async listAdminPosts(data: {
+    where: Prisma.BlogPostWhereInput
+    skip: number
+    take: number
+  }): Promise<[BlogPostRecord[], number]> {
+    const [posts, total] = await prisma.$transaction([
       prisma.blogPost.findMany({
         where: data.where,
         skip: data.skip,
@@ -89,10 +132,16 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         where: data.where
       })
     ])
+
+    return [posts.map(mapToBlogPostRecord), total]
   }
 
-  listPublishedPosts(data: { where: Prisma.BlogPostWhereInput; skip: number; take: number }) {
-    return prisma.$transaction([
+  async listPublishedPosts(data: {
+    where: Prisma.BlogPostWhereInput
+    skip: number
+    take: number
+  }): Promise<[BlogPostRecord[], number]> {
+    const [posts, total] = await prisma.$transaction([
       prisma.blogPost.findMany({
         where: data.where,
         skip: data.skip,
@@ -108,9 +157,11 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         where: data.where
       })
     ])
+
+    return [posts.map(mapToBlogPostRecord), total]
   }
 
-  listTagSources(where: Prisma.BlogPostWhereInput) {
+  async listTagSources(where: Prisma.BlogPostWhereInput) {
     return prisma.blogPost.findMany({
       where,
       select: {
@@ -119,7 +170,7 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
     })
   }
 
-  listCategorySources(where: Prisma.BlogPostWhereInput) {
+  async listCategorySources(where: Prisma.BlogPostWhereInput) {
     return prisma.blogPost.findMany({
       where,
       select: {
@@ -128,8 +179,8 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
     })
   }
 
-  createPost(data: CreateBlogPostRecordInput) {
-    return prisma.blogPost.create({
+  async createPost(data: CreateBlogPostRecordInput): Promise<BlogPostRecord> {
+    const post = await prisma.blogPost.create({
       data: {
         title: data.title,
         slug: data.slug,
@@ -148,10 +199,12 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    return mapToBlogPostRecord(post)
   }
 
-  updatePost(data: UpdateBlogPostRecordInput) {
-    return prisma.blogPost.update({
+  async updatePost(data: UpdateBlogPostRecordInput): Promise<BlogPostRecord> {
+    const post = await prisma.blogPost.update({
       where: {
         id: data.blogPostId
       },
@@ -172,14 +225,16 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    return mapToBlogPostRecord(post)
   }
 
-  updateStatus(data: {
+  async updateStatus(data: {
     blogPostId: string
     status: BlogPostStatus
     publishedAt?: Date | null
-  }) {
-    return prisma.blogPost.update({
+  }): Promise<BlogPostRecord> {
+    const post = await prisma.blogPost.update({
       where: {
         id: data.blogPostId
       },
@@ -193,9 +248,11 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         }
       }
     })
+
+    return mapToBlogPostRecord(post)
   }
 
-  softDeletePost(blogPostId: string) {
+  async softDeletePost(blogPostId: string) {
     return prisma.blogPost.update({
       where: {
         id: blogPostId
@@ -211,9 +268,3 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
 }
 
 export const blogRepository = new PrismaBlogRepository()
-
-export type {
-  BlogPostWithAuthor,
-  PublishedBlogPost
-} from './ports/blog-repository.port'
-

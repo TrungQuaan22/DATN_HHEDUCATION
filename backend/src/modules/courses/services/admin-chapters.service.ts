@@ -1,15 +1,15 @@
-import type {
-  AdminChapterResponseDto,
-  CreateChapterDto,
-  DeleteChapterDto,
-  ReorderChaptersDto,
-  ReorderChaptersResponseDto,
-  UpdateChapterDto
-} from '../dto'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 
+import type {
+  AdminChapterResponse,
+  CreateChapterDto,
+  DeleteChapterDto,
+  ReorderChaptersDto,
+  ReorderChaptersResponse,
+  UpdateChapterDto
+} from '../dto/admin-chapters.dto'
 import {
   type CourseActor,
   ensureCanManageCourse,
@@ -17,7 +17,6 @@ import {
   ensureCourseCanBeReordered,
   ensureExactReorderIds
 } from '../ensures/courses.ensure'
-import { adminChapterRepository, adminCourseRepository } from '../repositories'
 import type {
   AdminChapterRepositoryPort,
   AdminChapterWithCourseRecord
@@ -26,6 +25,7 @@ import type {
   AdminCourseRecord,
   AdminCourseRepositoryPort
 } from '../ports/admin-course-repository.port'
+import { adminChapterRepository, adminCourseRepository } from '../repositories'
 
 export class AdminChapterService {
   constructor(
@@ -33,9 +33,7 @@ export class AdminChapterService {
     private readonly courseRepository: AdminCourseRepositoryPort
   ) {}
 
-  private async ensureCourseExists(courseId: string): Promise<AdminCourseRecord> {
-    const course = await this.courseRepository.findCourseById(courseId)
-
+  private ensureCourseExists(course: AdminCourseRecord | null): AdminCourseRecord {
     if (!course) {
       throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
     }
@@ -43,9 +41,7 @@ export class AdminChapterService {
     return course
   }
 
-  private async ensureChapterExists(chapterId: string): Promise<AdminChapterWithCourseRecord> {
-    const chapter = await this.chapterRepository.findChapterById(chapterId)
-
+  private ensureChapterExists(chapter: AdminChapterWithCourseRecord | null): AdminChapterWithCourseRecord {
     if (!chapter) {
       throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
     }
@@ -53,22 +49,18 @@ export class AdminChapterService {
     return chapter
   }
 
-  async createChapter(
-    actor: CourseActor,
-    input: CreateChapterDto
-  ): Promise<AdminChapterResponseDto> {
-    const course = await this.ensureCourseExists(input.courseId)
+  async createChapter(actor: CourseActor, input: CreateChapterDto): Promise<AdminChapterResponse> {
+    const courseRecord = await this.courseRepository.findCourseById(input.courseId)
+    const course = this.ensureCourseExists(courseRecord)
     ensureCanManageCourse({ actor, course })
     ensureCourseCanBeEdited(course.status)
 
     return this.chapterRepository.createChapter(input)
   }
 
-  async updateChapter(
-    actor: CourseActor,
-    input: UpdateChapterDto
-  ): Promise<AdminChapterResponseDto> {
-    const chapter = await this.ensureChapterExists(input.chapterId)
+  async updateChapter(actor: CourseActor, input: UpdateChapterDto): Promise<AdminChapterResponse> {
+    const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
+    const chapter = this.ensureChapterExists(chapterRecord)
     ensureCanManageCourse({ actor, course: chapter.course })
     ensureCourseCanBeEdited(chapter.course.status)
 
@@ -79,7 +71,8 @@ export class AdminChapterService {
     actor: CourseActor,
     input: DeleteChapterDto
   ): Promise<{ id: string; deleted: true }> {
-    const chapter = await this.ensureChapterExists(input.chapterId)
+    const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
+    const chapter = this.ensureChapterExists(chapterRecord)
     ensureCanManageCourse({ actor, course: chapter.course })
     ensureCourseCanBeEdited(chapter.course.status)
 
@@ -106,8 +99,9 @@ export class AdminChapterService {
   async reorderChapters(
     actor: CourseActor,
     input: ReorderChaptersDto
-  ): Promise<ReorderChaptersResponseDto> {
-    const course = await this.ensureCourseExists(input.courseId)
+  ): Promise<ReorderChaptersResponse> {
+    const courseRecord = await this.courseRepository.findCourseById(input.courseId)
+    const course = this.ensureCourseExists(courseRecord)
     ensureCanManageCourse({ actor, course })
     ensureCourseCanBeReordered(course.status)
 

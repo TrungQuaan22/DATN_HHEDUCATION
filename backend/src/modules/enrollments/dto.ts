@@ -4,7 +4,7 @@ import { createManualEnrollmentBodySchema } from './validators'
 
 export type CreateManualEnrollmentDto = z.infer<typeof createManualEnrollmentBodySchema>
 
-export type ManualEnrollmentResponseDto = {
+export type ManualEnrollmentResponse = {
   id: string
   courseId: string
   userId: string

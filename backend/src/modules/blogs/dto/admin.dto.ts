@@ -41,14 +41,14 @@ export type ListAdminBlogCategoriesDto = {
   limit: number
 }
 
-export type BlogAuthorDto = {
+export type BlogAuthorResponse = {
   id: string
   fullName: string
   avatarMediaId: string | null
   avatarUrl: string | null
 }
 
-export type AdminBlogPostDto = {
+export type AdminBlogPostResponse = {
   id: string
   title: string
   slug: string
@@ -56,7 +56,7 @@ export type AdminBlogPostDto = {
   category: string | null
   tags: string[]
   content: Prisma.JsonValue
-  author: BlogAuthorDto
+  author: BlogAuthorResponse
   thumbnailMediaId: string | null
   thumbnailUrl: string | null
   status: BlogPostStatus
@@ -67,10 +67,26 @@ export type AdminBlogPostDto = {
   updatedAt: Date
 }
 
-export type AdminBlogPostSummaryDto = Omit<AdminBlogPostDto, 'content'>
+export type AdminBlogPostSummaryResponse = {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  category: string | null
+  tags: string[]
+  author: BlogAuthorResponse
+  thumbnailMediaId: string | null
+  thumbnailUrl: string | null
+  status: BlogPostStatus
+  isFeatured: boolean
+  publishedAt: Date | null
+  readingMinutes: number
+  createdAt: Date
+  updatedAt: Date
+}
 
-export type ListAdminBlogPostsResponseDto = {
-  items: AdminBlogPostSummaryDto[]
+export type ListAdminBlogPostsResponse = {
+  items: AdminBlogPostSummaryResponse[]
   pagination: {
     page: number
     limit: number
@@ -79,20 +95,20 @@ export type ListAdminBlogPostsResponseDto = {
   }
 }
 
-export type AdminBlogTagSummaryDto = {
+export type AdminBlogTagSummaryResponse = {
   name: string
   count: number
 }
 
-export type ListAdminBlogTagsResponseDto = {
-  items: AdminBlogTagSummaryDto[]
+export type ListAdminBlogTagsResponse = {
+  items: AdminBlogTagSummaryResponse[]
 }
 
-export type AdminBlogCategorySummaryDto = {
+export type AdminBlogCategorySummaryResponse = {
   name: string
   count: number
 }
 
-export type ListAdminBlogCategoriesResponseDto = {
-  items: AdminBlogCategorySummaryDto[]
+export type ListAdminBlogCategoriesResponse = {
+  items: AdminBlogCategorySummaryResponse[]
 }

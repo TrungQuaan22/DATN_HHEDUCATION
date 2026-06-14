@@ -1,4 +1,4 @@
-import type { CourseStatus, LessonType, MediaStatus, Subject, VideoType } from '@prisma/client'
+import type { CourseStatus, LessonType, Subject } from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 
@@ -8,11 +8,6 @@ export type CourseTeacherPublic = {
   id: string
   fullName: string
   avatarUrl: string | null
-}
-
-export type AdminCourseTeacher = CourseTeacherPublic & {
-  email: string
-  avatarMediaId: string | null
 }
 
 export type CourseSummary = {
@@ -48,50 +43,4 @@ export type CourseChapterPublic = {
   title: string
   orderIndex: number
   lessons: CourseLessonPublic[]
-}
-
-export type AdminCourseLesson = CourseLessonPublic & {
-  chapterId: string
-  description: string | null
-  videoType: VideoType | null
-  videoMediaId: string | null
-  assessmentId: string | null
-  videoMedia: {
-    id: string
-    url: string | null
-    originalName: string | null
-    status: MediaStatus
-    durationSec: number | null
-  } | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-export type AdminCourseChapter = {
-  id: string
-  courseId: string
-  title: string
-  orderIndex: number
-  createdAt: Date
-  updatedAt: Date
-  lessons: AdminCourseLesson[]
-}
-
-export type AdminCourseTopic = {
-  id: string
-  name: string
-  parentId: string | null
-  courseId: string
-}
-
-export type PaginationResponseFields = {
-  page: number
-  limit: number
-  totalItems: number
-  totalPages: number
-}
-
-export type PaginatedResponseShape<TItem> = {
-  items: TItem[]
-  pagination: PaginationResponseFields
 }

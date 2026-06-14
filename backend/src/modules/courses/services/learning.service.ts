@@ -7,9 +7,9 @@ import * as policy from '../policies/learning-progress.policy'
 
 import type {
   LearningCourseOverviewDto,
-  LearningLessonDetailDto,
-  ListLearningCoursesResponseDto,
-  UpdateLessonProgressResponseDto
+  LearningLessonDetailResponse,
+  ListLearningCoursesResponse,
+  UpdateLessonProgressResponse
 } from '../dto'
 import {
   mapLearningCourseItem,
@@ -51,7 +51,7 @@ export class LearningCourseService {
     userId: string
     page: number
     limit: number
-  }): Promise<ListLearningCoursesResponseDto> {
+  }): Promise<ListLearningCoursesResponse> {
     const skip = (data.page - 1) * data.limit
     const take = data.limit
 
@@ -88,7 +88,7 @@ export class LearningCourseService {
   async getLearningLesson(data: {
     userId: string
     lessonId: string
-  }): Promise<LearningLessonDetailDto> {
+  }): Promise<LearningLessonDetailResponse> {
     const lesson = await this.courseRepository.findEnrolledLessonById(data)
 
     if (!lesson) {
@@ -134,7 +134,7 @@ export class LearningCourseService {
     lessonId: string
     watchedSeconds: number
     lastPositionSec: number
-  }): Promise<UpdateLessonProgressResponseDto> {
+  }): Promise<UpdateLessonProgressResponse> {
     const now = new Date()
 
     const lesson = await this.courseRepository.findLessonForProgress(data.lessonId)

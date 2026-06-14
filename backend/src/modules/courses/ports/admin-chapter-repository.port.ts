@@ -1,8 +1,13 @@
 import type { CourseStatus } from '@prisma/client'
 
-import type { AdminChapterResponseDto, ReorderChaptersResponseDto } from '../dto'
-
-export type AdminChapterRecord = AdminChapterResponseDto
+export type AdminChapterRecord = {
+  id: string
+  courseId: string
+  title: string
+  orderIndex: number
+  createdAt: Date
+  updatedAt: Date
+}
 
 export type AdminChapterWithCourseRecord = AdminChapterRecord & {
   course: {
@@ -23,5 +28,5 @@ export interface AdminChapterRepositoryPort {
   reorderChapters(
     courseId: string,
     chapterIds: string[]
-  ): Promise<ReorderChaptersResponseDto['items']>
+  ): Promise<Array<{ id: string; orderIndex: number }>>
 }

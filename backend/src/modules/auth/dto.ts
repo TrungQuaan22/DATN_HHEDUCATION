@@ -4,7 +4,7 @@ import { UserRole, UserStatus } from '@prisma/client'
 
 export type LoginDto = z.infer<typeof loginBodySchema>
 
-export type LoginResponseDto = {
+export type LoginResponse = {
   accessToken: string
   refreshToken: string
   user: {
@@ -20,7 +20,7 @@ export type LoginResponseDto = {
 
 export type RefreshTokenDto = z.infer<typeof refreshTokenBodySchema>
 
-export type RefreshTokenResponseDto = {
+export type RefreshTokenResponse = {
   accessToken: string
   refreshToken: string
 }
@@ -29,7 +29,7 @@ export type RefreshTokenResponseDto = {
 export type RegisterDto = z.infer<typeof registerBodySchema>
 
 // Dữ liệu trả về sau khi đăng ký thành công
-export type RegisterResponseDto = {
+export type RegisterResponse = {
   id: string
   email: string
   fullName: string

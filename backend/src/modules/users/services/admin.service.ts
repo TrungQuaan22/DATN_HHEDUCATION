@@ -1,4 +1,3 @@
-import type { Prisma } from '@prisma/client'
 import { UserRole, UserStatus } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
@@ -6,15 +5,21 @@ import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 import { authRepository } from '~/modules/auth/repository'
 import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
-import { mapUserAvatar } from '../mappers'
+import {
+  mapAuthUserToCreateTeacherResponse,
+  mapUserProfileToAdminItemResponse,
+  mapTeacherOptionToResponse
+} from '../mappers'
+import { mediaRepository } from '~/modules/media/repository'
+import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 import type {
   CreateTeacherDto,
-  CreateTeacherResponseDto,
+  CreateTeacherResponse,
   ListTeacherOptionsDto,
-  ListTeacherOptionsResponseDto,
+  ListTeacherOptionsResponse,
   ListUsersDto,
-  ListUsersResponseDto,
+  ListUsersResponse,
   UpdateUserStatusDto
 } from '../dto'
 import { userRepository } from '../repository'
@@ -27,10 +32,11 @@ export class AdminUserService {
   constructor(
     private readonly users: UserRepositoryPort,
     private readonly auth: AuthRepositoryPort,
-    private readonly passwordHasher: PasswordHasherPort
+    private readonly passwordHasher: PasswordHasherPort,
+    private readonly mediaRepository: MediaRepositoryPort
   ) {}
 
-  async createTeacher(input: CreateTeacherDto): Promise<CreateTeacherResponseDto> {
+  async createTeacher(input: CreateTeacherDto): Promise<CreateTeacherResponse> {
     const existed = await this.auth.findUserByEmail(input.email)
 
     if (existed) {
@@ -38,10 +44,13 @@ export class AdminUserService {
     }
 
     const passwordHash = await this.passwordHasher.hashPassword(input.password)
+    const media = input.avatarMediaId
+      ? await this.mediaRepository.findMediaById(input.avatarMediaId)
+      : null
     const avatarMedia = input.avatarMediaId
-      ? await ensureActorCanUseImageMedia({
+      ? ensureActorCanUseImageMedia({
           actor: { id: input.actorId, role: UserRole.admin },
-          mediaId: input.avatarMediaId,
+          media,
           label: 'Avatar media'
         })
       : null
@@ -53,33 +62,11 @@ export class AdminUserService {
       avatarObjectKey: avatarMedia?.objectKey ?? null,
       passwordHash
     })
-    const mappedUser = mapUserAvatar(user)
 
-    return {
-      id: mappedUser.id,
-      email: mappedUser.email,
-      fullName: mappedUser.fullName,
-      avatarMediaId: mappedUser.avatarMediaId,
-      avatarUrl: mappedUser.avatarUrl,
-      role: UserRole.teacher,
-      status: UserStatus.active
-    }
+    return mapAuthUserToCreateTeacherResponse(user)
   }
 
-  async getAllUsers(input: ListUsersDto): Promise<ListUsersResponseDto> {
-    const where: Prisma.UserWhereInput = {
-      role: input.role,
-      status: input.status,
-      deletedAt: null
-    }
-
-    if (input.search) {
-      where.OR = [
-        { email: { contains: input.search, mode: 'insensitive' } },
-        { fullName: { contains: input.search, mode: 'insensitive' } }
-      ]
-    }
-
+  async getAllUsers(input: ListUsersDto): Promise<ListUsersResponse> {
     const skip = (input.page - 1) * input.limit
     const newUsersFrom = new Date()
     newUsersFrom.setDate(newUsersFrom.getDate() - 30)
@@ -87,7 +74,9 @@ export class AdminUserService {
     const [[items, totalItems], [totalUsers, totalTeachers, newUsersLast30Days]] =
       await Promise.all([
         this.users.listUsers({
-          where,
+          role: input.role,
+          status: input.status,
+          search: input.search,
           skip,
           take: input.limit
         }),
@@ -95,7 +84,7 @@ export class AdminUserService {
       ])
 
     return {
-      items: items.map(mapUserAvatar),
+      items: items.map(mapUserProfileToAdminItemResponse),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -112,26 +101,16 @@ export class AdminUserService {
 
   async listTeacherOptions(
     input: ListTeacherOptionsDto
-  ): Promise<ListTeacherOptionsResponseDto> {
-    const where: Prisma.UserWhereInput = {
-      role: UserRole.teacher,
-      status: UserStatus.active,
-      deletedAt: null
-    }
-
-    if (input.search) {
-      where.fullName = { contains: input.search, mode: 'insensitive' }
-    }
-
+  ): Promise<ListTeacherOptionsResponse> {
     const skip = (input.page - 1) * input.limit
     const [teachers, totalItems] = await this.users.listTeacherOptions({
-      where,
+      search: input.search,
       skip,
       take: input.limit
     })
 
     return {
-      items: teachers.map(mapUserAvatar),
+      items: teachers.map(mapTeacherOptionToResponse),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -155,5 +134,6 @@ export class AdminUserService {
 export const adminService = new AdminUserService(
   userRepository,
   authRepository,
-  new BcryptPasswordHasherAdapter()
+  new BcryptPasswordHasherAdapter(),
+  mediaRepository
 )

@@ -6,6 +6,11 @@ import { paymentConfig } from '~/modules/payments/config'
 
 type BusinessHandler<T> = (req: Request) => Promise<{ statusCode: number; body: T }>
 
+type SuccessResponse<T> = {
+  success: true
+  data: T
+}
+
 const addHours = (date: Date, hours: number) => {
   const next = new Date(date)
   next.setHours(next.getHours() + hours)
@@ -35,11 +40,7 @@ export const withIdempotency = <T>(handler: BusinessHandler<T>) => {
 
     if (!req.user?.id) {
       return next(
-        new AppError(
-          401,
-          ERROR_CODE.UNAUTHORIZED,
-          'Authentication is required for idempotency.'
-        )
+        new AppError(401, ERROR_CODE.UNAUTHORIZED, 'Authentication is required for idempotency.')
       )
     }
 
@@ -57,16 +58,10 @@ export const withIdempotency = <T>(handler: BusinessHandler<T>) => {
     })
 
     if (!created) {
-      const existing = await idempotencyRepository.findByScopeAndKey({ scope, key })
+      const existing = await idempotencyRepository.findByScopeKeyAndUser({ scope, key, userId })
 
       if (!existing) {
-        return next(
-          new AppError(
-            409,
-            ERROR_CODE.CONFLICT,
-            'Idempotency key conflict'
-          )
-        )
+        return next(new AppError(409, ERROR_CODE.CONFLICT, 'Idempotency key conflict'))
       }
 
       if (existing.requestHash !== requestHash) {
@@ -95,11 +90,23 @@ export const withIdempotency = <T>(handler: BusinessHandler<T>) => {
         )
       }
 
-      await idempotencyRepository.markProcessing({
+      const marked = await idempotencyRepository.markProcessing({
         scope,
         key,
-        processingAt: now
+        userId,
+        processingAt: now,
+        staleProcessingAt: existing.processingAt
       })
+
+      if (!marked) {
+        return next(
+          new AppError(
+            409,
+            ERROR_CODE.CONFLICT,
+            'Request with this idempotency key is still processing'
+          )
+        )
+      }
     }
 
     let result: { statusCode: number; body: T }
@@ -107,27 +114,29 @@ export const withIdempotency = <T>(handler: BusinessHandler<T>) => {
     try {
       result = await handler(req)
     } catch (error) {
-      await idempotencyRepository.deleteByScopeAndKey({ scope, key }).catch(() => undefined)
+      await idempotencyRepository.deleteByScopeKeyAndUser({ scope, key, userId }).catch(() => undefined)
       return next(error)
+    }
+
+    const responseBody: SuccessResponse<T> = {
+      success: true,
+      data: result.body
     }
 
     try {
       await idempotencyRepository.saveResponse({
         scope,
         key,
+        userId,
         statusCode: result.statusCode,
-        responseBody: result.body
+        responseBody
       })
     } catch {
       return next(
-        new AppError(
-          500,
-          ERROR_CODE.INTERNAL_SERVER_ERROR,
-          'Failed to save idempotency response.'
-        )
+        new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'Failed to save idempotency response.')
       )
     }
 
-    return res.status(result.statusCode).json(result.body)
+    return res.status(result.statusCode).json(responseBody)
   }
 }

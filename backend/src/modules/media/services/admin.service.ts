@@ -11,9 +11,9 @@ import { buildMediaPublicUrl } from '~/common/utils/media'
 
 import type {
   CompleteUploadDto,
-  CompleteUploadResponseDto,
+  CompleteUploadResponse,
   CreatePresignedUploadDto,
-  CreatePresignedUploadResponseDto
+  CreatePresignedUploadResponse
 } from '../dto/admin.dto'
 import { mediaRepository } from '../repository'
 
@@ -58,7 +58,7 @@ export const adminMediaService = {
   async createPresignedUpload(
     userId: string,
     input: CreatePresignedUploadDto
-  ): Promise<CreatePresignedUploadResponseDto> {
+  ): Promise<CreatePresignedUploadResponse> {
     const objectKey = buildObjectKey(input)
     const media = await mediaRepository.createMedia({
       type: getMediaType(input.resourceType),
@@ -88,7 +88,7 @@ export const adminMediaService = {
     }
   },
 
-  async completeUpload(input: CompleteUploadDto): Promise<CompleteUploadResponseDto> {
+  async completeUpload(input: CompleteUploadDto): Promise<CompleteUploadResponse> {
     const media = await mediaRepository.findMediaById(input.mediaId)
 
     if (!media || media.status === MediaStatus.deleted) {
@@ -130,7 +130,7 @@ export const adminMediaService = {
   async createAuthenticatedUpload(
     user: { id: string; role: UserRole },
     input: CreatePresignedUploadDto
-  ): Promise<CreatePresignedUploadResponseDto> {
+  ): Promise<CreatePresignedUploadResponse> {
     if (input.resourceType === 'video' && user.role === UserRole.student) {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Student accounts cannot upload videos')
     }
@@ -141,7 +141,7 @@ export const adminMediaService = {
   async completeAuthenticatedUpload(
     user: { id: string; role: UserRole },
     input: CompleteUploadDto
-  ): Promise<CompleteUploadResponseDto> {
+  ): Promise<CompleteUploadResponse> {
     const media = await mediaRepository.findMediaById(input.mediaId)
 
     if (!media || media.status === MediaStatus.deleted) {

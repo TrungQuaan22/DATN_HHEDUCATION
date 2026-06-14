@@ -1,9 +1,8 @@
-import type {
-  OrderStatus,
-  PaymentStatus,
-  PaymentTransactionMatchStatus,
-  WebhookStatus
-} from '@prisma/client'
+import type { OrderStatus, PaymentStatus } from '~/modules/orders/ports/order-repository.port'
+
+export type WebhookStatus = 'received' | 'processing' | 'processed' | 'failed'
+export type PaymentTransactionMatchStatus = 'matched' | 'unmatched' | 'manual_review' | 'ignored'
+
 
 import type { NormalizedPaymentEvent } from '../dto'
 

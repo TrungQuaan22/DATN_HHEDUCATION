@@ -1,67 +1,53 @@
-import {
-  OrderStatus,
-  PaymentStatus
-} from '@prisma/client'
-
-import { ERROR_CODE } from '~/common/constant/error-code'
-import { AppError } from '~/common/error/app-error'
+import { OrderStatus } from '@prisma/client'
 
 import { paymentConfig } from '~/modules/payments/config'
+import { getPaymentProvider } from '~/modules/payments/providers/provider.factory'
+import type { PaymentProviderName } from '~/modules/payments/constants'
+
 import type {
-  CancelOrderResponseDto,
-  CreatePaymentAttemptResponseDto,
-  CreateOrderResponseDto,
-  OrderDto
+  CancelOrderDto,
+  CancelOrderResponse,
+  CreateOrderDto,
+  CreatePaymentAttemptDto,
+  CreatePaymentAttemptResponse,
+  CreateOrderResponse,
+  OrderResponse
 } from '../dto'
 import {
   ensureCoursesArePurchasable,
-  ensureNotAlreadyEnrolled
+  ensureNotAlreadyEnrolled,
+  ensureOrderCanBeCancelled,
+  ensureOrderExists,
+  ensureOrderHasNotExpired,
+  ensureOrderIsPayable,
+  ensureReloadedOrderExists,
+  ensurePaymentCanBeRetried
 } from '../ensures/order.ensure'
 import { mapOrder } from '../mappers/order.mapper'
-import { orderUnitOfWorkRepository } from '../repositories/order-uow.repository'
-import type { OrderRepositoryPort } from '../ports/order-repository.port'
-
-const addMinutes = (date: Date, minutes: number) => {
-  const next = new Date(date)
-  next.setMinutes(next.getMinutes() + minutes)
-  return next
-}
-
-const calculateTotalAmount = (courses: Array<{ price: number; salePrice: number | null }>) => {
-  return courses.reduce((sum, course) => sum + (course.salePrice ?? course.price), 0)
-}
+import {
+  calculateOrderExpiration,
+  calculateOrderTotalAmount,
+  findBlockingPayment,
+  findPendingPayment,
+  isFreeOrder
+} from '../policies/order.policy'
+import type { OrderTransactionPort } from '../ports/order-transaction.port'
+import { orderTransaction } from '../repositories/order-transaction'
 
 export class OrderService {
-  constructor(
-    private readonly orderRepository: OrderRepositoryPort
-  ) {}
+  constructor(private readonly orderTransaction: OrderTransactionPort) {}
 
-  async expireStalePendingOrders(data?: { userId?: string; orderId?: string }) {
-    const now = new Date()
-
-    return this.orderRepository.expireStalePendingOrders({
-      userId: data?.userId,
-      orderId: data?.orderId,
-      now
-    })
-  }
-
-
-
-  async createOrder(data: {
-    userId: string
-    courseIds: string[]
-  }): Promise<CreateOrderResponseDto> {
+  async createOrder(data: CreateOrderDto): Promise<CreateOrderResponse> {
     const uniqueCourseIds = [...new Set(data.courseIds)]
     const now = new Date()
 
-    return this.orderRepository.withTransaction(async (transaction) => {
-      await transaction.expireStalePendingOrders({
+    return this.orderTransaction.run(async (repository) => {
+      await repository.expireStalePendingOrders({
         userId: data.userId,
         now
       })
 
-      const pendingOrder = await transaction.findActivePendingOrder(data.userId, now)
+      const pendingOrder = await repository.findActivePendingOrder(data.userId, now)
 
       if (pendingOrder) {
         return {
@@ -70,129 +56,102 @@ export class OrderService {
         }
       }
 
-      const courses = await transaction.getPublishedCourses(uniqueCourseIds)
+      const courses = await repository.findPublishedCourses(uniqueCourseIds)
       ensureCoursesArePurchasable(uniqueCourseIds, courses)
-      ensureNotAlreadyEnrolled(
-        await transaction.getExistingEnrollments({
-          userId: data.userId,
-          courseIds: uniqueCourseIds
-        })
-      )
 
-      const totalAmount = calculateTotalAmount(courses)
-      const expiresAt = addMinutes(now, paymentConfig.pendingTtlMinutes)
-      const orderInvoiceNumber = await transaction.createUniqueInvoiceNumber()
+      const existingEnrollments = await repository.findExistingEnrollments({
+        userId: data.userId,
+        courseIds: uniqueCourseIds
+      })
+      ensureNotAlreadyEnrolled(existingEnrollments)
 
-      const order = await transaction.createOrder({
+      const totalAmount = calculateOrderTotalAmount(courses)
+      const freeOrder = isFreeOrder(totalAmount)
+      const expiresAt = calculateOrderExpiration(now, paymentConfig.pendingTtlMinutes)
+      const orderInvoiceNumber = await repository.createUniqueInvoiceNumber()
+
+      const order = await repository.createOrder({
         userId: data.userId,
         orderInvoiceNumber,
         totalAmount,
         currency: 'VND',
-        status: totalAmount === 0 ? OrderStatus.completed : OrderStatus.pending,
+        status: freeOrder ? OrderStatus.completed : OrderStatus.pending,
         expiresAt,
         courses
       })
 
-      if (totalAmount === 0) {
-        await transaction.completeFreeOrder({
+      if (freeOrder) {
+        await repository.completeFreeOrder({
           orderId: order.id,
           userId: data.userId,
           courseIds: uniqueCourseIds
         })
       }
 
-      const createdOrder = await transaction.getOrderById(order.id)
-
-      if (!createdOrder) {
-        throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'Created order not found')
-      }
+      const createdOrderRecord = await repository.findOrderById(order.id)
+      const createdOrder = ensureReloadedOrderExists(createdOrderRecord)
 
       return {
-        code: totalAmount === 0 ? 'FREE_ORDER_COMPLETED' : 'ORDER_CREATED',
+        code: freeOrder ? 'FREE_ORDER_COMPLETED' : 'ORDER_CREATED',
         order: mapOrder(createdOrder)
       }
     })
   }
 
-
-
-  async createPaymentAttempt(data: {
-    userId: string
-    orderId: string
-    provider: string
-  }): Promise<CreatePaymentAttemptResponseDto> {
+  async createPaymentAttempt(data: CreatePaymentAttemptDto): Promise<CreatePaymentAttemptResponse> {
     const now = new Date()
 
-    const order = await this.orderRepository.withTransaction(async (transaction) => {
-      await transaction.expireStalePendingOrders({
+    const order = await this.orderTransaction.run(async (repository) => {
+      await repository.expireStalePendingOrders({
         userId: data.userId,
         orderId: data.orderId,
         now
       })
 
-      const currentOrder = await transaction.findOrderForPaymentAttempt({
+      const currentOrderRecord = await repository.findOrderForPaymentAttempt({
         orderId: data.orderId,
         userId: data.userId
       })
+      const currentOrder = ensureOrderExists(currentOrderRecord)
 
-      if (!currentOrder) {
-        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Order not found')
-      }
+      ensureOrderIsPayable(currentOrder)
+      ensureOrderHasNotExpired(currentOrder.expiresAt, now)
 
-      if (currentOrder.totalAmount === 0 || currentOrder.status !== OrderStatus.pending) {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Order is not payable')
-      }
+      const blockingPayment = findBlockingPayment(currentOrder.payments)
+      ensurePaymentCanBeRetried(blockingPayment)
 
-      if (currentOrder.expiresAt <= now) {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Order has expired')
-      }
-
-      const blockingPayment = currentOrder.payments.find(
-        (payment) =>
-          payment.status === PaymentStatus.success ||
-          payment.status === PaymentStatus.manual_review ||
-          payment.status === PaymentStatus.late_success
-      )
-
-      if (blockingPayment) {
-        throw new AppError(
-          409,
-          ERROR_CODE.CONFLICT,
-          'Order already has a payment that cannot be retried automatically'
-        )
-      }
-
-      const existingPendingPayment = currentOrder.payments.find(
-        (payment) => payment.status === PaymentStatus.pending
-      )
+      const existingPendingPayment = findPendingPayment(currentOrder.payments)
 
       if (existingPendingPayment?.provider === data.provider) {
-        const refreshedOrder = await transaction.getOrderById(currentOrder.id)
-
-        if (!refreshedOrder) {
-          throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'Order not found')
-        }
+        const refreshedOrderRecord = await repository.findOrderById(currentOrder.id)
+        const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
 
         return refreshedOrder
       }
 
       if (existingPendingPayment) {
-        await transaction.cancelPendingPayments(currentOrder.id)
+        await repository.cancelPendingPayments(currentOrder.id)
       }
 
-      await transaction.createPaymentForOrder({
-        orderId: currentOrder.id,
+      const providerInstance = getPaymentProvider(data.provider)
+      const providerPayment = providerInstance.createPayment({
         orderInvoiceNumber: currentOrder.orderInvoiceNumber,
-        totalAmount: currentOrder.totalAmount,
-        expiresAt: currentOrder.expiresAt,
-        providerName: data.provider
+        amount: currentOrder.totalAmount,
+        expiresAt: currentOrder.expiresAt
       })
 
-      const refreshedOrder = await transaction.getOrderById(currentOrder.id)
+      await repository.createPaymentForOrder({
+        orderId: currentOrder.id,
+        provider: providerPayment.provider,
+        providerPaymentId: providerPayment.providerPaymentId,
+        amount: currentOrder.totalAmount,
+        qrCodeUrl: providerPayment.qrCodeUrl,
+        checkoutUrl: providerPayment.checkoutUrl,
+        expiresAt: providerPayment.expiresAt ?? currentOrder.expiresAt
+      })
 
-      if (!refreshedOrder) {
-        throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'Order not found')
-      }
+      const refreshedOrderRecord = await repository.findOrderById(currentOrder.id)
+      const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
 
       return refreshedOrder
     })
@@ -202,51 +161,38 @@ export class OrderService {
     }
   }
 
-  async getMyOrder(data: { userId: string; orderId: string }): Promise<OrderDto> {
+  async getMyOrder(data: { userId: string; orderId: string }): Promise<OrderResponse> {
     const now = new Date()
 
-    await this.orderRepository.withTransaction(async (transaction) => {
-      await transaction.expireStalePendingOrders({
+    const order = await this.orderTransaction.run(async (repository) => {
+      await repository.expireStalePendingOrders({
         userId: data.userId,
         orderId: data.orderId,
         now
       })
+
+      return repository.findOrderForUser(data.orderId, data.userId)
     })
 
-    const order = await this.orderRepository.getOrderForUser(data.orderId, data.userId)
+    const existingOrder = ensureOrderExists(order)
 
-    if (!order) {
-      throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Order not found')
-    }
-
-    return mapOrder(order)
+    return mapOrder(existingOrder)
   }
 
-  async cancelOrder(data: {
-    userId: string
-    orderId: string
-  }): Promise<CancelOrderResponseDto> {
-    const updatedOrder = await this.orderRepository.withTransaction(async (transaction) => {
-      const order = await transaction.findOrderForCancel({
+  async cancelOrder(data: CancelOrderDto): Promise<CancelOrderResponse> {
+    const updatedOrder = await this.orderTransaction.run(async (repository) => {
+      const orderRecord = await repository.findOrderForCancel({
         orderId: data.orderId,
         userId: data.userId
       })
+      const order = ensureOrderExists(orderRecord)
 
-      if (!order) {
-        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Order not found')
-      }
+      ensureOrderCanBeCancelled(order.status)
 
-      if (order.status !== OrderStatus.pending) {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Only pending orders can be cancelled')
-      }
+      await repository.cancelOrderAndPendingPayments(data.orderId)
 
-      await transaction.cancelOrderAndPendingPayments(data.orderId)
-
-      const refreshedOrder = await transaction.getOrderById(data.orderId)
-
-      if (!refreshedOrder) {
-        throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'Cancelled order not found')
-      }
+      const refreshedOrderRecord = await repository.findOrderById(data.orderId)
+      const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
 
       return refreshedOrder
     })
@@ -255,7 +201,6 @@ export class OrderService {
       order: mapOrder(updatedOrder)
     }
   }
-
 }
 
-export const orderService = new OrderService(orderUnitOfWorkRepository)
+export const orderService = new OrderService(orderTransaction)

@@ -23,7 +23,7 @@ export type ReorderLessonsDto = z.infer<typeof reorderLessonsBodySchema> & {
   chapterId: string
 }
 
-export type AdminLessonResponseDto = {
+export type AdminLessonResponse = {
   id: string
   chapterId: string
   title: string
@@ -47,7 +47,7 @@ export type AdminLessonResponseDto = {
   updatedAt: Date
 }
 
-export type ReorderLessonsResponseDto = {
+export type ReorderLessonsResponse = {
   chapterId: string
   items: Array<{
     id: string

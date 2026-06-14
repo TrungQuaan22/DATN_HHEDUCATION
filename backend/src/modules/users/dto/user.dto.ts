@@ -7,7 +7,7 @@ export type UpdateMeDto = z.infer<typeof updateMeBodySchema> & {
   userId: string
 }
 
-export type GetMeResponseDto = {
+export type GetMeResponse = {
   id: string
   email: string
   fullName: string
@@ -19,4 +19,4 @@ export type GetMeResponseDto = {
   updatedAt: Date
 }
 
-export type UpdateMeResponseDto = GetMeResponseDto
+export type UpdateMeResponse = GetMeResponse

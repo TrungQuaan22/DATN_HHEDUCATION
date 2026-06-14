@@ -2,36 +2,41 @@ import { CourseStatus, type Prisma } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
-import { AppError } from '~/common/error/app-error'
 import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { AppError } from '~/common/error/app-error'
+import { applySearchCondition, normalizeText } from '~/common/utils/search'
 import { createSlugFromText } from '~/common/utils/slug'
-import { mapAdminCourseDetailResponse, mapAdminCourseResponse } from '../mappers'
 
-import type {
-  AdminCourseDetailResponseDto,
-  AdminCourseResponseDto,
-  CourseIdDto,
-  CreateCourseDto,
-  ListAdminCoursesDto,
-  ListAdminCoursesResponseDto,
-  UpdateCourseDto
-} from '../dto'
-import { adminCourseRepository as courseRepository } from '../repositories'
-import type {
-  AdminCourseDetailRecord,
-  AdminCourseRecord,
-  AdminCourseRepositoryPort
-} from '../ports/admin-course-repository.port'
+import {
+  type AdminCourseDetailResponse,
+  type AdminCourseResponse,
+  type CourseIdDto,
+  type CreateCourseDto,
+  type ListAdminCoursesDto,
+  type ListAdminCoursesResponse,
+  type UpdateCourseDto
+} from '../dto/admin-courses.dto'
 import {
   type CourseActor,
   ensureCanManageCourse,
   ensureCourseCanBeEdited,
   ensureCoursePriceIsValid
 } from '../ensures/courses.ensure'
-import { applySearchCondition, normalizeText } from '~/common/utils/search'
+import { mapAdminCourseDetailResponse, mapAdminCourseResponse } from '../mappers'
+import type {
+  AdminCourseDetailRecord,
+  AdminCourseRecord,
+  AdminCourseRepositoryPort
+} from '../ports/admin-course-repository.port'
+import { adminCourseRepository as courseRepository } from '../repositories'
+import { mediaRepository } from '~/modules/media/repository'
+import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 export class AdminCourseService {
-  constructor(private readonly courseRepository: AdminCourseRepositoryPort) {}
+  constructor(
+    private readonly courseRepository: AdminCourseRepositoryPort,
+    private readonly mediaRepository: MediaRepositoryPort
+  ) {}
 
   private async createCourseSlug(title: string): Promise<string> {
     const normalizedTitle = normalizeText(title)
@@ -52,9 +57,7 @@ export class AdminCourseService {
     return slug
   }
 
-  private async ensureActiveTeacher(teacherId: string): Promise<void> {
-    const teacher = await this.courseRepository.findActiveTeacherById(teacherId)
-
+  private ensureActiveTeacher(teacher: { id: string } | null): void {
     if (!teacher) {
       throw new AppError(
         400,
@@ -64,9 +67,7 @@ export class AdminCourseService {
     }
   }
 
-  private async ensureCourseExists(courseId: string): Promise<AdminCourseRecord> {
-    const course = await this.courseRepository.findCourseById(courseId)
-
+  private ensureCourseExists(course: AdminCourseRecord | null): AdminCourseRecord {
     if (!course) {
       throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
     }
@@ -74,9 +75,7 @@ export class AdminCourseService {
     return course
   }
 
-  private async ensureCourseDetailExists(courseId: string): Promise<AdminCourseDetailRecord> {
-    const course = await this.courseRepository.findCourseDetailById(courseId)
-
+  private ensureCourseDetailExists(course: AdminCourseDetailRecord | null): AdminCourseDetailRecord {
     if (!course) {
       throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
     }
@@ -84,16 +83,20 @@ export class AdminCourseService {
     return course
   }
 
-  async createCourse(actor: CourseActor, input: CreateCourseDto): Promise<AdminCourseResponseDto> {
+  async createCourse(actor: CourseActor, input: CreateCourseDto): Promise<AdminCourseResponse> {
     if (actor.role !== 'admin' && input.teacherId !== actor.id) {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
     }
 
-    await this.ensureActiveTeacher(input.teacherId)
+    const teacher = await this.courseRepository.findActiveTeacherById(input.teacherId)
+    this.ensureActiveTeacher(teacher)
+    const media = input.thumbnailMediaId
+      ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
+      : null
     const thumbnailMedia = input.thumbnailMediaId
-      ? await ensureActorCanUseImageMedia({
+      ? ensureActorCanUseImageMedia({
           actor,
-          mediaId: input.thumbnailMediaId,
+          media,
           label: 'Thumbnail media'
         })
       : null
@@ -111,7 +114,7 @@ export class AdminCourseService {
   async listCourses(
     actor: CourseActor,
     input: ListAdminCoursesDto
-  ): Promise<ListAdminCoursesResponseDto> {
+  ): Promise<ListAdminCoursesResponse> {
     let where: Prisma.CourseWhereInput = {
       deletedAt: null,
       status: input.status,
@@ -143,15 +146,17 @@ export class AdminCourseService {
     }
   }
 
-  async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponseDto> {
-    const course = await this.ensureCourseDetailExists(input.courseId)
+  async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponse> {
+    const courseRecord = await this.courseRepository.findCourseDetailById(input.courseId)
+    const course = this.ensureCourseDetailExists(courseRecord)
     ensureCanManageCourse({ actor, course })
 
     return mapAdminCourseDetailResponse(course)
   }
 
-  async updateCourse(actor: CourseActor, input: UpdateCourseDto): Promise<AdminCourseResponseDto> {
-    const course = await this.ensureCourseExists(input.courseId)
+  async updateCourse(actor: CourseActor, input: UpdateCourseDto): Promise<AdminCourseResponse> {
+    const courseRecord = await this.courseRepository.findCourseById(input.courseId)
+    const course = this.ensureCourseExists(courseRecord)
     ensureCanManageCourse({ actor, course })
     ensureCourseCanBeEdited(course.status)
 
@@ -160,13 +165,17 @@ export class AdminCourseService {
     }
 
     if (input.teacherId) {
-      await this.ensureActiveTeacher(input.teacherId)
+      const teacher = await this.courseRepository.findActiveTeacherById(input.teacherId)
+      this.ensureActiveTeacher(teacher)
     }
 
+    const media = input.thumbnailMediaId
+      ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
+      : null
     const thumbnailMedia = input.thumbnailMediaId
-      ? await ensureActorCanUseImageMedia({
+      ? ensureActorCanUseImageMedia({
           actor,
-          mediaId: input.thumbnailMediaId,
+          media,
           label: 'Thumbnail media'
         })
       : null
@@ -193,8 +202,9 @@ export class AdminCourseService {
     return mapAdminCourseResponse(updatedCourse)
   }
 
-  async publishCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
-    const course = await this.ensureCourseExists(input.courseId)
+  async publishCourse(input: CourseIdDto): Promise<AdminCourseResponse> {
+    const courseRecord = await this.courseRepository.findCourseById(input.courseId)
+    const course = this.ensureCourseExists(courseRecord)
 
     if (course.status === CourseStatus.published) {
       return mapAdminCourseResponse(course)
@@ -212,8 +222,9 @@ export class AdminCourseService {
     return mapAdminCourseResponse(updatedCourse)
   }
 
-  async archiveCourse(input: CourseIdDto): Promise<AdminCourseResponseDto> {
-    const course = await this.ensureCourseExists(input.courseId)
+  async archiveCourse(input: CourseIdDto): Promise<AdminCourseResponse> {
+    const courseRecord = await this.courseRepository.findCourseById(input.courseId)
+    const course = this.ensureCourseExists(courseRecord)
 
     if (course.status === CourseStatus.archived) {
       return mapAdminCourseResponse(course)
@@ -228,4 +239,4 @@ export class AdminCourseService {
   }
 }
 
-export const adminCourseService = new AdminCourseService(courseRepository)
+export const adminCourseService = new AdminCourseService(courseRepository, mediaRepository)

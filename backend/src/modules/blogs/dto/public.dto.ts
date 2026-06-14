@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client'
 import z from 'zod'
 
 import type { listPublicBlogPostsQuerySchema } from '../validators/public.validator'
-import type { BlogAuthorDto } from './admin.dto'
+import type { BlogAuthorResponse } from './admin.dto'
 
 export type ListPublicBlogPostsDto = z.infer<typeof listPublicBlogPostsQuerySchema>
 
@@ -14,7 +14,7 @@ export type ListPublicBlogCategoriesDto = {
   limit: number
 }
 
-export type BlogPostSummaryDto = {
+export type BlogPostSummaryResponse = {
   id: string
   title: string
   slug: string
@@ -22,20 +22,20 @@ export type BlogPostSummaryDto = {
   category: string | null
   thumbnailMediaId: string | null
   thumbnailUrl: string | null
-  author: BlogAuthorDto
+  author: BlogAuthorResponse
   publishedAt: Date
   readingMinutes: number
   tags: string[]
   isFeatured: boolean
 }
 
-export type BlogPostDetailDto = BlogPostSummaryDto & {
+export type BlogPostDetailResponse = BlogPostSummaryResponse & {
   content: Prisma.JsonValue
-  relatedPosts: BlogPostSummaryDto[]
+  relatedPosts: BlogPostSummaryResponse[]
 }
 
-export type ListPublicBlogPostsResponseDto = {
-  items: BlogPostSummaryDto[]
+export type ListPublicBlogPostsResponse = {
+  items: BlogPostSummaryResponse[]
   pagination: {
     page: number
     limit: number
@@ -44,20 +44,20 @@ export type ListPublicBlogPostsResponseDto = {
   }
 }
 
-export type BlogTagSummaryDto = {
+export type BlogTagSummaryResponse = {
   name: string
   count: number
 }
 
-export type ListPublicBlogTagsResponseDto = {
-  items: BlogTagSummaryDto[]
+export type ListPublicBlogTagsResponse = {
+  items: BlogTagSummaryResponse[]
 }
 
-export type BlogCategorySummaryDto = {
+export type BlogCategorySummaryResponse = {
   name: string
   count: number
 }
 
-export type ListPublicBlogCategoriesResponseDto = {
-  items: BlogCategorySummaryDto[]
+export type ListPublicBlogCategoriesResponse = {
+  items: BlogCategorySummaryResponse[]
 }

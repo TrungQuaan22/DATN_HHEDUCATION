@@ -11,19 +11,19 @@ export type CreateTeacherDto = z.infer<typeof createTeacherBodySchema> & {
   actorId: string
 }
 
-export type CreateTeacherResponseDto = {
+export type CreateTeacherResponse = {
   id: string
   email: string
   fullName: string
   avatarMediaId: string | null
   avatarUrl: string | null
   role: 'teacher'
-  status: 'active' // teacher can be active immediately without verification for now
+  status: 'active'
 }
 
 export type ListUsersDto = z.infer<typeof listUsersQuerySchema>
 
-export type AdminUserItemDto = {
+export type AdminUserItemResponse = {
   id: string
   email: string
   fullName: string
@@ -35,8 +35,8 @@ export type AdminUserItemDto = {
   updatedAt: Date
 }
 
-export type ListUsersResponseDto = {
-  items: AdminUserItemDto[]
+export type ListUsersResponse = {
+  items: AdminUserItemResponse[]
   pagination: {
     page: number
     limit: number
@@ -52,15 +52,15 @@ export type ListUsersResponseDto = {
 
 export type ListTeacherOptionsDto = z.infer<typeof listTeacherOptionsQuerySchema>
 
-export type AdminTeacherOptionItemDto = {
+export type AdminTeacherOptionItemResponse = {
   id: string
   email: string
   fullName: string
   avatarUrl: string | null
 }
 
-export type ListTeacherOptionsResponseDto = {
-  items: AdminTeacherOptionItemDto[]
+export type ListTeacherOptionsResponse = {
+  items: AdminTeacherOptionItemResponse[]
   pagination: {
     page: number
     limit: number

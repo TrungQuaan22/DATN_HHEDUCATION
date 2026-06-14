@@ -1,98 +1,44 @@
-import type { Prisma } from '@prisma/client'
-
 import { AppError } from '~/common/error/app-error'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { adminPaymentTransactionRepository } from '../repositories/admin-payment-transaction.repository'
 import type { AdminPaymentTransactionRepositoryPort } from '../ports/admin-payment-transaction-repository.port'
 import type {
-  AdminPaymentTransactionDetailDto,
+  AdminPaymentTransactionDetailResponse,
   ListAdminPaymentTransactionsDto,
-  ListAdminPaymentTransactionsResponseDto
+  ListAdminPaymentTransactionsResponse
 } from '../dto'
-
-const buildPaymentTransactionWhere = (
-  input: ListAdminPaymentTransactionsDto
-): Prisma.PaymentTransactionWhereInput => {
-  const where: Prisma.PaymentTransactionWhereInput = {
-    provider: input.provider,
-    matchStatus: input.matchStatus,
-    direction: input.direction,
-    orderId: input.orderId,
-    paymentId: input.paymentId,
-    orderInvoiceNumber: input.orderInvoiceNumber,
-    transactionRef: input.transactionRef
-  }
-
-  if (input.createdFrom || input.createdTo) {
-    where.createdAt = {
-      gte: input.createdFrom,
-      lte: input.createdTo
-    }
-  }
-
-  if (input.search) {
-    where.OR = [
-      {
-        orderInvoiceNumber: {
-          contains: input.search,
-          mode: 'insensitive'
-        }
-      },
-      {
-        transactionRef: {
-          contains: input.search,
-          mode: 'insensitive'
-        }
-      },
-      {
-        providerEventId: {
-          contains: input.search,
-          mode: 'insensitive'
-        }
-      },
-      {
-        order: {
-          user: {
-            email: {
-              contains: input.search,
-              mode: 'insensitive'
-            }
-          }
-        }
-      },
-      {
-        order: {
-          user: {
-            fullName: {
-              contains: input.search,
-              mode: 'insensitive'
-            }
-          }
-        }
-      }
-    ]
-  }
-
-  return where
-}
+import {
+  mapAdminPaymentTransactionDetail,
+  mapAdminPaymentTransactionListItem
+} from '../mappers/admin-payment-transaction.mapper'
 
 export class AdminPaymentTransactionService {
   constructor(private readonly transactionRepository: AdminPaymentTransactionRepositoryPort) {}
 
   async listTransactions(
     input: ListAdminPaymentTransactionsDto
-  ): Promise<ListAdminPaymentTransactionsResponseDto> {
-    const where = buildPaymentTransactionWhere(input)
+  ): Promise<ListAdminPaymentTransactionsResponse> {
     const skip = (input.page - 1) * input.limit
 
     const [items, totalItems] = await this.transactionRepository.listTransactions({
-      where,
+      filters: {
+        provider: input.provider,
+        matchStatus: input.matchStatus,
+        direction: input.direction,
+        orderId: input.orderId,
+        paymentId: input.paymentId,
+        orderInvoiceNumber: input.orderInvoiceNumber,
+        transactionRef: input.transactionRef,
+        createdFrom: input.createdFrom,
+        createdTo: input.createdTo,
+        search: input.search
+      },
       skip,
       take: input.limit
     })
 
     return {
-      items,
+      items: items.map(mapAdminPaymentTransactionListItem),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -102,14 +48,14 @@ export class AdminPaymentTransactionService {
     }
   }
 
-  async getTransaction(transactionId: string): Promise<AdminPaymentTransactionDetailDto> {
+  async getTransaction(transactionId: string): Promise<AdminPaymentTransactionDetailResponse> {
     const transaction = await this.transactionRepository.getTransactionById(transactionId)
 
     if (!transaction) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Payment transaction not found')
     }
 
-    return transaction
+    return mapAdminPaymentTransactionDetail(transaction)
   }
 }
 

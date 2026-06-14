@@ -1,11 +1,7 @@
 import z from 'zod'
 
 import { listCatalogCoursesQuerySchema } from '../validators/public.validator'
-import type {
-  CourseChapterPublic,
-  CourseSummary,
-  PaginatedResponseShape
-} from './course-shared.types'
+import type { CourseChapterPublic, CourseSummary } from './course-shared.types'
 
 // Request DTO for GET /courses
 export type ListCatalogCoursesDto = z.infer<typeof listCatalogCoursesQuerySchema>
@@ -14,10 +10,18 @@ export type ListCatalogCoursesDto = z.infer<typeof listCatalogCoursesQuerySchema
 export type CatalogCourseItemDto = CourseSummary
 
 // Response DTO for GET /courses
-export type ListCatalogCoursesResponseDto = PaginatedResponseShape<CatalogCourseItemDto>
+export type ListCatalogCoursesResponse = {
+  items: CatalogCourseItemDto[]
+  pagination: {
+    page: number
+    limit: number
+    totalItems: number
+    totalPages: number
+  }
+}
 
 // Response DTO for GET /courses/:courseSlug
-export type CatalogCourseDetailDto = CatalogCourseItemDto & {
+export type CatalogCourseDetailResponse = CatalogCourseItemDto & {
   chapters: CourseChapterPublic[]
   relatedCourses: CatalogCourseItemDto[]
 }

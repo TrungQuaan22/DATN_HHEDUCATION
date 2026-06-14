@@ -2,7 +2,11 @@ import { type LessonType, type Prisma, type VideoType } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
-import type { AdminLessonRepositoryPort } from '../ports/admin-lesson-repository.port'
+import type {
+  AdminLessonRecord,
+  AdminLessonRepositoryPort,
+  AdminLessonWithChapterRecord
+} from '../ports/admin-lesson-repository.port'
 import { lessonVideoMediaSelect } from './shared'
 
 const getNextDeletedLessonOrderIndex = async (tx: Prisma.TransactionClient) => {
@@ -20,10 +24,13 @@ const getNextDeletedLessonOrderIndex = async (tx: Prisma.TransactionClient) => {
   return (deletedLessonOrder._min.orderIndex ?? 0) - 1
 }
 
-const moveFollowingLessonsUp = (tx: Prisma.TransactionClient, data: {
-  chapterId: string
-  deletedOrderIndex: number
-}) =>
+const moveFollowingLessonsUp = (
+  tx: Prisma.TransactionClient,
+  data: {
+    chapterId: string
+    deletedOrderIndex: number
+  }
+) =>
   tx.lesson.updateMany({
     where: {
       chapterId: data.chapterId,
@@ -61,9 +68,37 @@ const buildFinalLessonOrderUpdates = (lessonIds: string[]) => {
   })
 }
 
+function mapToLessonRecord(lesson: any): AdminLessonRecord {
+  return {
+    id: lesson.id,
+    chapterId: lesson.chapterId,
+    title: lesson.title,
+    type: lesson.type,
+    description: lesson.description,
+    videoType: lesson.videoType,
+    videoMediaId: lesson.videoMediaId,
+    videoMedia: lesson.videoMedia
+      ? {
+          id: lesson.videoMedia.id,
+          objectKey: lesson.videoMedia.objectKey,
+          originalName: lesson.videoMedia.originalName,
+          status: lesson.videoMedia.status,
+          durationSec: lesson.videoMedia.durationSec
+        }
+      : null,
+    youtubeUrl: lesson.youtubeUrl,
+    durationSec: lesson.durationSec,
+    allowPreview: lesson.allowPreview,
+    assessmentId: lesson.assessmentPlacements?.[0]?.assessmentId ?? null,
+    orderIndex: lesson.orderIndex,
+    createdAt: lesson.createdAt,
+    updatedAt: lesson.updatedAt
+  }
+}
+
 export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
-  findLessonById(lessonId: string) {
-    return prisma.lesson.findFirst({
+  async findLessonById(lessonId: string): Promise<AdminLessonWithChapterRecord | null> {
+    const lesson = await prisma.lesson.findFirst({
       where: {
         id: lessonId,
         deletedAt: null
@@ -90,9 +125,29 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         }
       }
     })
+
+    if (!lesson) return null
+
+    return {
+      ...mapToLessonRecord(lesson),
+      chapter: {
+        id: lesson.chapter.id,
+        courseId: lesson.chapter.courseId,
+        title: lesson.chapter.title,
+        orderIndex: lesson.chapter.orderIndex,
+        createdAt: lesson.chapter.createdAt,
+        updatedAt: lesson.chapter.updatedAt,
+        course: {
+          id: lesson.chapter.course.id,
+          teacherId: lesson.chapter.course.teacherId,
+          status: lesson.chapter.course.status,
+          deletedAt: lesson.chapter.course.deletedAt
+        }
+      }
+    }
   }
 
-  findAssessmentById(assessmentId: string) {
+  async findAssessmentById(assessmentId: string) {
     return prisma.assessment.findUnique({
       where: {
         id: assessmentId
@@ -103,7 +158,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
     })
   }
 
-  listChapterLessonIds(chapterId: string) {
+  async listChapterLessonIds(chapterId: string) {
     return prisma.lesson.findMany({
       where: {
         chapterId,
@@ -130,7 +185,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
     durationSec?: number | null
     allowPreview?: boolean
     assessmentId?: string | null
-  }) {
+  }): Promise<AdminLessonRecord> {
     return prisma.$transaction(async (tx) => {
       const aggregate = await tx.lesson.aggregate({
         where: {
@@ -187,7 +242,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         }
       })
 
-      return lesson
+      return mapToLessonRecord(lesson)
     })
   }
 
@@ -202,7 +257,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
     youtubeUrl?: string | null
     durationSec?: number | null
     assessmentId?: string | null
-  }) {
+  }): Promise<AdminLessonRecord> {
     return prisma.$transaction(async (tx) => {
       const current = await tx.lesson.findUniqueOrThrow({
         where: { id: data.lessonId },
@@ -215,7 +270,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
 
       const targetType = data.type ?? current.type
       const currentAssessmentId = current.assessmentPlacements[0]?.assessmentId ?? null
-      
+
       let newAssessmentId: string | null = currentAssessmentId
       if (data.assessmentId !== undefined) {
         newAssessmentId = data.assessmentId
@@ -254,7 +309,8 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
       }
 
       let finalVideoType = data.videoType !== undefined ? data.videoType : current.videoType
-      let finalVideoMediaId = data.videoMediaId !== undefined ? data.videoMediaId : current.videoMediaId
+      let finalVideoMediaId =
+        data.videoMediaId !== undefined ? data.videoMediaId : current.videoMediaId
       let finalYoutubeUrl = data.youtubeUrl !== undefined ? data.youtubeUrl : current.youtubeUrl
       let finalDurationSec = data.durationSec !== undefined ? data.durationSec : current.durationSec
 
@@ -292,11 +348,11 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         }
       })
 
-      return lesson
+      return mapToLessonRecord(lesson)
     })
   }
 
-  softDeleteLesson(data: { lessonId: string; courseId: string }) {
+  async softDeleteLesson(data: { lessonId: string; courseId: string }): Promise<AdminLessonRecord> {
     return prisma.$transaction(async (tx) => {
       const currentLesson = await tx.lesson.findUniqueOrThrow({
         where: {
@@ -316,6 +372,15 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         data: {
           deletedAt: new Date(),
           orderIndex: deletedOrderIndex
+        },
+        include: {
+          videoMedia: {
+            select: lessonVideoMediaSelect
+          },
+          assessmentPlacements: {
+            where: { type: 'lesson' },
+            select: { assessmentId: true }
+          }
         }
       })
 
@@ -335,11 +400,14 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         deletedOrderIndex: currentLesson.orderIndex
       })
 
-      return lesson
+      return mapToLessonRecord(lesson)
     })
   }
 
-  async reorderLessons(chapterId: string, lessonIds: string[]) {
+  async reorderLessons(
+    chapterId: string,
+    lessonIds: string[]
+  ): Promise<Array<{ id: string; orderIndex: number }>> {
     const operations = [
       ...buildTemporaryLessonOrderUpdates(lessonIds),
       ...buildFinalLessonOrderUpdates(lessonIds)

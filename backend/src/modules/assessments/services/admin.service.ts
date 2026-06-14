@@ -4,8 +4,6 @@ import {
   AssessmentType,
   AssessmentVisibility,
   GradingType,
-  Prisma,
-  Subject,
   SubmissionStatus,
   UserRole
 } from '@prisma/client'
@@ -24,6 +22,7 @@ import type {
   ListAdminAssessmentsDto
 } from '../dto'
 import { mapPlacementSummary } from '../mappers/assessment.mapper'
+import { addScores, zeroScore } from '../helpers/score.helper'
 import {
   canManageAssessment,
   ensureAssessmentCanPublish,
@@ -38,7 +37,6 @@ import {
   ensureSectionsCompatibleWithGradingType
 } from '../policies/assessment.policy'
 import type { AdminAssessmentRepositoryPort } from '../ports/admin-assessment-repository.port'
-import { adminAssessmentRepository } from '../repositories'
 import {
   ensureAssessmentExists,
   ensureAssessmentForPublishExists,
@@ -50,84 +48,6 @@ import {
   ensureItemsCanUseCourseTopics,
   ensurePlacementTargetIsValid
 } from '../ensures/assessment.ensure'
-
-const toDecimal = (value: number | string | Prisma.Decimal) => new Prisma.Decimal(value)
-const zero = () => new Prisma.Decimal(0)
-
-const buildCourseScopeWhere = (courseId: string): Prisma.AssessmentWhereInput => ({
-  placements: {
-    some: {
-      OR: [
-        {
-          type: AssessmentPlacementType.course,
-          courseId
-        },
-        {
-          type: AssessmentPlacementType.lesson,
-          lesson: {
-            chapter: {
-              courseId
-            }
-          }
-        }
-      ]
-    }
-  }
-})
-
-const buildAssessmentScopeWhere = (data: ListAdminAssessmentsDto): Prisma.AssessmentWhereInput => {
-  if (data.scope === 'public') {
-    return {
-      placements: {
-        some: {
-          type: AssessmentPlacementType.public_practice
-        }
-      }
-    }
-  }
-
-  if (data.scope === 'course' && data.courseId) {
-    return buildCourseScopeWhere(data.courseId)
-  }
-
-  if (data.scope === 'unplaced') {
-    return {
-      placements: {
-        none: {}
-      }
-    }
-  }
-
-  return {}
-}
-
-const buildTeacherAssessmentAccessWhere = (teacherId: string): Prisma.AssessmentWhereInput => ({
-  OR: [
-    { createdById: teacherId },
-    {
-      placements: {
-        some: {
-          OR: [
-            {
-              course: {
-                teacherId
-              }
-            },
-            {
-              lesson: {
-                chapter: {
-                  course: {
-                    teacherId
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    }
-  ]
-})
 
 const ensureNonOwnerKeepsPlacementTarget = (
   actor: AssessmentActorDto,
@@ -169,29 +89,26 @@ export class AdminAssessmentService {
 
   async listAdminAssessments(data: ListAdminAssessmentsDto & { actor: AssessmentActorDto }) {
     if (data.actor.role === UserRole.teacher && data.scope === 'course' && data.courseId) {
-      await ensureTeacherOwnsCourse(data.actor, data.courseId)
-    }
-
-    const teacherAccessWhere =
-      data.actor.role === UserRole.teacher ? buildTeacherAssessmentAccessWhere(data.actor.id) : undefined
-
-    const where: Prisma.AssessmentWhereInput = {
-      deletedAt: null,
-      visibility: data.visibility,
-      subject: data.subject,
-      grade: data.grade,
-      gradingType: data.gradingType,
-      AND: [buildAssessmentScopeWhere(data), ...(teacherAccessWhere ? [teacherAccessWhere] : [])]
+      const course = await this.repository.findCourseForPlacement(data.courseId)
+      ensureTeacherOwnsCourse(data.actor, course)
     }
 
     const [items, totalItems] = await this.repository.listAdminAssessments({
-      where,
+      filters: {
+        scope: data.scope,
+        courseId: data.courseId,
+        visibility: data.visibility,
+        subject: data.subject,
+        grade: data.grade,
+        gradingType: data.gradingType,
+        teacherId: data.actor.role === UserRole.teacher ? data.actor.id : undefined
+      },
       skip: (data.page - 1) * data.limit,
       take: data.limit
     })
 
     return {
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         id: item.id,
         title: item.title,
         subject: item.subject,
@@ -203,7 +120,7 @@ export class AdminAssessmentService {
         createdById: item.createdById,
         itemCount: item._count.items,
         submissionCount: item._count.submissions,
-        placements: item.placements.map((placement: any) => ({
+        placements: item.placements.map((placement) => ({
           id: placement.id,
           type: placement.type,
           slug: placement.slug,
@@ -223,7 +140,8 @@ export class AdminAssessmentService {
   }
 
   async getAdminAssessment(data: { actor: AssessmentActorDto; assessmentId: string }) {
-    const assessment = await ensureAssessmentForPublishExists(data.assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentForPublish(data.assessmentId)
+    const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
     ensureCanViewAssessment(data.actor, assessment)
 
@@ -240,7 +158,7 @@ export class AdminAssessmentService {
       submissionCount: assessment._count.submissions,
       sourceMediaId: assessment.sourceMediaId,
       sourceMedia: assessment.sourceMedia,
-      placements: assessment.placements.map((placement: any) => ({
+      placements: assessment.placements.map((placement) => ({
         id: placement.id,
         type: placement.type,
         slug: placement.slug,
@@ -251,13 +169,13 @@ export class AdminAssessmentService {
         closeTime: placement.closeTime,
         maxAttempts: placement.maxAttempts
       })),
-      sections: assessment.sections.map((section: any) => ({
+      sections: assessment.sections.map((section) => ({
         id: section.id,
         title: section.title,
         description: section.description,
         itemType: section.itemType,
         orderIndex: section.orderIndex,
-        items: section.items.map((item: any, index: number) => ({
+        items: section.items.map((item, index) => ({
           id: item.id,
           orderIndex: item.orderIndex,
           questionNumber: index + 1,
@@ -274,7 +192,7 @@ export class AdminAssessmentService {
                 id: item.question.id,
                 content: item.question.content,
                 explanation: item.question.explanation,
-                options: item.question.options.map((option: any) => ({
+                options: item.question.options.map((option) => ({
                   id: option.id,
                   content: option.content,
                   isCorrect: option.isCorrect,
@@ -301,7 +219,7 @@ export class AdminAssessmentService {
     })
 
     return {
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         id: item.id,
         assessmentId: item.assessmentId,
         placementId: item.placementId,
@@ -319,7 +237,7 @@ export class AdminAssessmentService {
         },
         student: item.student,
         essayCount: item.essayAnswers.length,
-        gradedEssayCount: item.essayAnswers.filter((answer: any) => answer.teacherScore !== null).length
+        gradedEssayCount: item.essayAnswers.filter((answer) => answer.teacherScore !== null).length
       })),
       pagination: {
         page: data.page,
@@ -331,7 +249,8 @@ export class AdminAssessmentService {
   }
 
   async getGradingSubmission(actor: AssessmentActorDto, submissionId: string) {
-    const submission = await ensureSubmissionForGradingExists(submissionId)
+    const submissionRecord = await this.repository.findSubmissionForGrading(submissionId)
+    const submission = ensureSubmissionForGradingExists(submissionRecord)
 
     ensureCanGradeSubmission(actor, submission)
 
@@ -352,13 +271,13 @@ export class AdminAssessmentService {
         subject: submission.assessment.subject,
         grade: submission.assessment.grade
       },
-      sections: submission.assessment.sections.map((section: any) => ({
+      sections: submission.assessment.sections.map((section) => ({
         id: section.id,
         title: section.title,
         description: section.description,
         itemType: section.itemType,
         orderIndex: section.orderIndex,
-        items: section.items.map((item: any, index: number) => ({
+        items: section.items.map((item, index) => ({
           id: item.id,
           itemType: item.itemType,
           orderIndex: item.orderIndex,
@@ -369,7 +288,7 @@ export class AdminAssessmentService {
             ? {
                 id: item.question.id,
                 content: item.question.content,
-                options: item.question.options.map((option: any) => ({
+                options: item.question.options.map((option) => ({
                   id: option.id,
                   content: option.content,
                   orderIndex: option.orderIndex,
@@ -379,7 +298,7 @@ export class AdminAssessmentService {
             : null
         }))
       })),
-      essayAnswers: submission.essayAnswers.map((answer: any) => ({
+      essayAnswers: submission.essayAnswers.map((answer) => ({
         id: answer.id,
         itemId: answer.itemId,
         answer: answer.answer,
@@ -406,7 +325,8 @@ export class AdminAssessmentService {
   }
 
   async updateAssessment(actor: AssessmentActorDto, assessmentId: string, data: Partial<CreateAssessmentDto>) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessment(actor, assessment)
 
@@ -449,11 +369,21 @@ export class AdminAssessmentService {
   }
 
   async createPlacement(actor: AssessmentActorDto, data: CreatePlacementDto) {
-    const assessment = await ensureAssessmentExists(data.assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(data.assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentPlacement(actor, assessment)
     ensureNonOwnerKeepsPlacementTarget(actor, assessment, data)
-    await ensurePlacementTargetIsValid(actor, assessment, data)
+
+    let course = null
+    if (data.type === AssessmentPlacementType.course && data.courseId) {
+      course = await this.repository.findCourseForPlacement(data.courseId)
+    }
+    let lesson = null
+    if (data.type === AssessmentPlacementType.lesson && data.lessonId) {
+      lesson = await this.repository.findLessonForPlacement(data.lessonId)
+    }
+    ensurePlacementTargetIsValid(actor, assessment, data, course, lesson)
 
     const placement = await this.repository.upsertSinglePlacement(data.assessmentId, {
       type: data.type,
@@ -473,18 +403,29 @@ export class AdminAssessmentService {
     assessmentId: string,
     data: Omit<CreatePlacementDto, 'assessmentId'>
   ) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentPlacement(actor, assessment)
     ensureNonOwnerKeepsPlacementTarget(actor, assessment, data)
-    await ensurePlacementTargetIsValid(actor, assessment, { ...data, assessmentId })
+
+    let course = null
+    if (data.type === AssessmentPlacementType.course && data.courseId) {
+      course = await this.repository.findCourseForPlacement(data.courseId)
+    }
+    let lesson = null
+    if (data.type === AssessmentPlacementType.lesson && data.lessonId) {
+      lesson = await this.repository.findLessonForPlacement(data.lessonId)
+    }
+    ensurePlacementTargetIsValid(actor, assessment, { ...data, assessmentId }, course, lesson)
 
     const placement = await this.repository.upsertSinglePlacement(assessmentId, data)
     return mapPlacementSummary(placement)
   }
 
   async deletePlacement(actor: AssessmentActorDto, assessmentId: string) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessment(actor, assessment)
     await this.repository.deleteSinglePlacement(assessmentId)
@@ -500,7 +441,8 @@ export class AdminAssessmentService {
     assessmentId: string,
     data: CreateAssessmentSectionDto
   ) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
     ensureSectionItemTypeAllowedByGradingType(assessment.gradingType, data.itemType)
@@ -519,11 +461,12 @@ export class AdminAssessmentService {
     sectionId: string,
     data: { title?: string; description?: string | null }
   ) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
 
-    const section = ensureSectionExists(assessment, sectionId)
+    ensureSectionExists(assessment, sectionId)
 
     return this.repository.updateSection({
       assessmentId,
@@ -533,7 +476,8 @@ export class AdminAssessmentService {
   }
 
   async deleteSection(actor: AssessmentActorDto, assessmentId: string, sectionId: string) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
 
@@ -553,7 +497,8 @@ export class AdminAssessmentService {
     sectionId: string,
     data: CreateAssessmentItemsDto
   ) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
 
@@ -571,7 +516,9 @@ export class AdminAssessmentService {
     )
 
     if (data.courseId) {
-      await ensureItemsCanUseCourseTopics(assessment, data.items, data.courseId)
+      const course = await this.repository.findCourseForPlacement(data.courseId)
+      const courseTopics = await this.repository.listTopicsByCourse(data.courseId)
+      ensureItemsCanUseCourseTopics(assessment, data.items, course, courseTopics)
     }
 
     const createdItems = await this.repository.createSectionItems({
@@ -595,7 +542,8 @@ export class AdminAssessmentService {
     itemId: string,
     data: Partial<CreateAssessmentItemsDto['items'][number]>
   ) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
 
@@ -617,7 +565,8 @@ export class AdminAssessmentService {
   }
 
   async deleteSectionItem(actor: AssessmentActorDto, assessmentId: string, itemId: string) {
-    const assessment = await ensureAssessmentExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
+    const assessment = ensureAssessmentExists(assessmentRecord)
 
     ensureCanManageAssessmentContent(actor, assessment)
 
@@ -631,7 +580,8 @@ export class AdminAssessmentService {
   }
 
   async publishAssessment(actor: AssessmentActorDto, assessmentId: string) {
-    const assessment = await ensureAssessmentForPublishExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentForPublish(assessmentId)
+    const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
     ensureCanManageAssessment(actor, assessment)
     ensureAssessmentCanPublish(assessment)
@@ -644,7 +594,8 @@ export class AdminAssessmentService {
     assessmentId: string,
     visibility: AssessmentVisibility
   ) {
-    const assessment = await ensureAssessmentForPublishExists(assessmentId)
+    const assessmentRecord = await this.repository.findAssessmentForPublish(assessmentId)
+    const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
     ensureCanManageAssessment(actor, assessment)
 
@@ -664,10 +615,11 @@ export class AdminAssessmentService {
   }
 
   async cloneAssessment(actor: AssessmentActorDto, assessmentId: string, data: CloneAssessmentDto) {
-    const source = await ensureAssessmentForPublishExists(assessmentId)
+    const sourceRecord = await this.repository.findAssessmentForPublish(assessmentId)
+    const source = ensureAssessmentForPublishExists(sourceRecord)
 
     const isPublicPractice = source.placements.some(
-      (placement: any) => placement.type === AssessmentPlacementType.public_practice
+      (placement) => placement.type === AssessmentPlacementType.public_practice
     )
 
     if (!isPublicPractice) {
@@ -691,7 +643,8 @@ export class AdminAssessmentService {
   }
 
   async gradeEssay(data: GradeEssayDto & { actor: AssessmentActorDto; gradedBy: string }) {
-    const submission = await ensureSubmissionForGradingExists(data.submissionId)
+    const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
+    const submission = ensureSubmissionForGradingExists(submissionRecord)
 
     ensureCanGradeSubmission(data.actor, submission)
 
@@ -699,7 +652,7 @@ export class AdminAssessmentService {
       throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission has not been submitted')
     }
 
-    const item = flattenSections(submission.assessment.sections).find((assessmentItem: any) => assessmentItem.id === data.itemId) as any
+    const item = flattenSections(submission.assessment.sections).find((assessmentItem) => assessmentItem.id === data.itemId)
 
     if (!item || item.itemType !== AssessmentItemType.essay) {
       throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Essay item not found in submission')
@@ -713,7 +666,8 @@ export class AdminAssessmentService {
   }
 
   async finalizeManualSubmission(data: { actor: AssessmentActorDto; submissionId: string }) {
-    const submission = await ensureSubmissionForGradingExists(data.submissionId)
+    const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
+    const submission = ensureSubmissionForGradingExists(submissionRecord)
 
     ensureCanGradeSubmission(data.actor, submission)
 
@@ -726,24 +680,24 @@ export class AdminAssessmentService {
     }
 
     const essayItemIds = flattenSections(submission.assessment.sections)
-      .filter((item: any) => item.itemType === AssessmentItemType.essay)
-      .map((item: any) => item.id)
-    const gradedEssayAnswers = submission.essayAnswers.filter((answer: any) =>
+      .filter((item) => item.itemType === AssessmentItemType.essay)
+      .map((item) => item.id)
+    const gradedEssayAnswers = submission.essayAnswers.filter((answer) =>
       essayItemIds.includes(answer.itemId)
     )
 
     if (
       gradedEssayAnswers.length !== essayItemIds.length ||
-      gradedEssayAnswers.some((answer: any) => answer.teacherScore === null)
+      gradedEssayAnswers.some((answer) => answer.teacherScore === null)
     ) {
       throw new AppError(409, ERROR_CODE.CONFLICT, 'All essay answers must be graded before finalize')
     }
 
     const essayScore = gradedEssayAnswers.reduce(
-      (sum: any, answer: any) => sum.plus(answer.teacherScore ?? 0),
-      zero()
+      (sum, answer) => addScores(sum, answer.teacherScore),
+      zeroScore()
     )
-    const finalScore = toDecimal(submission.autoScore ?? 0).plus(essayScore)
+    const finalScore = addScores(submission.autoScore, essayScore)
 
     const updatedSubmission = await this.repository.finalizeSubmission(submission.id, finalScore)
 
@@ -759,20 +713,20 @@ export class AdminAssessmentService {
       autoScore: updatedSubmission.autoScore?.toString() ?? null,
       finalScore: updatedSubmission.finalScore?.toString() ?? null,
       answers: {
-        mcq: (updatedSubmission.mcqAnswers ?? []).map((answer: any) => ({
+        mcq: (updatedSubmission.mcqAnswers ?? []).map((answer) => ({
           itemId: answer.itemId,
-          selectedOptionIds: answer.selectedOptions.map((option: any) => option.optionId)
+          selectedOptionIds: answer.selectedOptions.map((option) => option.optionId)
         })),
-        trueFalse: (updatedSubmission.tfAnswers ?? []).map((answer: any) => ({
+        trueFalse: (updatedSubmission.tfAnswers ?? []).map((answer) => ({
           itemId: answer.itemId,
           optionId: answer.optionId,
           selectedValue: answer.selectedValue
         })),
-        numeric: (updatedSubmission.numericAnswers ?? []).map((answer: any) => ({
+        numeric: (updatedSubmission.numericAnswers ?? []).map((answer) => ({
           itemId: answer.itemId,
           answerValue: answer.answerValue.toString()
         })),
-        essay: (updatedSubmission.essayAnswers ?? []).map((answer: any) => ({
+        essay: (updatedSubmission.essayAnswers ?? []).map((answer) => ({
           itemId: answer.itemId,
           answer: answer.answer
         }))
@@ -780,5 +734,3 @@ export class AdminAssessmentService {
     }
   }
 }
-
-export const adminAssessmentService = new AdminAssessmentService(adminAssessmentRepository)

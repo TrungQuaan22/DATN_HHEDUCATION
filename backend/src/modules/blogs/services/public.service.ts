@@ -6,47 +6,31 @@ import { AppError } from '~/common/error/app-error'
 import { applySearchCondition } from '~/common/utils/search'
 
 import type {
-  BlogPostDetailDto,
-  BlogPostSummaryDto,
+  BlogPostDetailResponse,
   ListPublicBlogCategoriesDto,
-  ListPublicBlogCategoriesResponseDto,
-  ListPublicBlogTagsDto,
-  ListPublicBlogTagsResponseDto,
+  ListPublicBlogCategoriesResponse,
   ListPublicBlogPostsDto,
-  ListPublicBlogPostsResponseDto
-} from '../dto'
-import { blogRepository, type PublishedBlogPost } from '../repository'
-import type { BlogRepositoryPort } from '../ports/blog-repository.port'
-import { mapBlogPostMedia } from '../mappers'
-import { createExcerptFromContent, getReadingMinutes, countTags, countCategories } from '../utils'
+  ListPublicBlogPostsResponse,
+  ListPublicBlogTagsDto,
+  ListPublicBlogTagsResponse
+} from '../dto/public.dto'
+import {
+  mapPublicBlogPostDetailResponse,
+  mapPublicBlogPostSummaryResponse
+} from '../mappers'
+import type { BlogRepositoryPort, BlogPostRecord } from '../ports/blog-repository.port'
+import { blogRepository } from '../repository'
+import { countCategories, countTags, getReadingMinutes } from '../utils'
 
-const mapPublishedPostSummary = (post: PublishedBlogPost): BlogPostSummaryDto => ({
-  ...mapBlogPostMedia({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category,
-    thumbnailMediaId: post.thumbnailMediaId,
-    thumbnailObjectKey: post.thumbnailObjectKey,
-    author: post.author,
-    tags: post.tags,
-    isFeatured: post.isFeatured
-  }),
-  excerpt: post.excerpt ?? createExcerptFromContent(post.content),
-  publishedAt: post.publishedAt ?? post.createdAt,
-  readingMinutes: getReadingMinutes(post.content)
-})
-
-const mapPublishedPostDetail = (post: PublishedBlogPost): BlogPostDetailDto => ({
-  ...mapPublishedPostSummary(post),
-  content: post.content,
-  relatedPosts: []
-})
+const mapPublishedPostSummary = (post: BlogPostRecord) => {
+  const readingMinutes = getReadingMinutes(post.content)
+  return mapPublicBlogPostSummaryResponse(post, readingMinutes)
+}
 
 export class PublicBlogService {
   constructor(private readonly repository: BlogRepositoryPort) {}
 
-  async listPosts(input: ListPublicBlogPostsDto): Promise<ListPublicBlogPostsResponseDto> {
+  async listPosts(input: ListPublicBlogPostsDto): Promise<ListPublicBlogPostsResponse> {
     let where: Prisma.BlogPostWhereInput = {
       status: BlogPostStatus.published,
       deletedAt: null,
@@ -83,7 +67,7 @@ export class PublicBlogService {
     }
   }
 
-  async listTags(input: ListPublicBlogTagsDto): Promise<ListPublicBlogTagsResponseDto> {
+  async listTags(input: ListPublicBlogTagsDto): Promise<ListPublicBlogTagsResponse> {
     const tagSources = await this.repository.listTagSources({
       status: BlogPostStatus.published,
       deletedAt: null,
@@ -99,7 +83,7 @@ export class PublicBlogService {
 
   async listCategories(
     input: ListPublicBlogCategoriesDto
-  ): Promise<ListPublicBlogCategoriesResponseDto> {
+  ): Promise<ListPublicBlogCategoriesResponse> {
     const categorySources = await this.repository.listCategorySources({
       status: BlogPostStatus.published,
       deletedAt: null,
@@ -113,7 +97,7 @@ export class PublicBlogService {
     }
   }
 
-  async getPost(slug: string): Promise<BlogPostDetailDto> {
+  async getPost(slug: string): Promise<BlogPostDetailResponse> {
     const post = await this.repository.findPublishedPostBySlug(slug)
 
     if (!post) {
@@ -151,10 +135,13 @@ export class PublicBlogService {
       take: 3
     })
 
-    return {
-      ...mapPublishedPostDetail(post),
-      relatedPosts: relatedPosts.map(mapPublishedPostSummary)
-    }
+    const readingMinutes = getReadingMinutes(post.content)
+    const mappedRelatedPosts = relatedPosts.map((rp) => ({
+      post: rp,
+      readingMinutes: getReadingMinutes(rp.content)
+    }))
+
+    return mapPublicBlogPostDetailResponse(post, readingMinutes, mappedRelatedPosts)
   }
 }
 

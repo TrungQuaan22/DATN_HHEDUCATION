@@ -1,17 +1,13 @@
+import type { CourseStatus, LessonType, MediaStatus, Subject, VideoType } from '@prisma/client'
 import z from 'zod'
+
+import type { GradeValue } from '~/common/constant/taxonomy'
 
 import {
   createCourseBodySchema,
   listAdminCoursesQuerySchema,
   updateCourseBodySchema
 } from '../validators/admin-courses.validator'
-import type {
-  AdminCourseChapter,
-  AdminCourseTopic,
-  AdminCourseTeacher,
-  CourseSummary,
-  PaginatedResponseShape
-} from './course-shared.types'
 
 // Request DTO for POST /admin/courses
 export type CreateCourseDto = z.infer<typeof createCourseBodySchema>
@@ -29,28 +25,90 @@ export type CourseIdDto = {
   courseId: string
 }
 
+export type AdminCourseTeacher = {
+  id: string
+  fullName: string
+  avatarUrl: string | null
+  email: string
+  avatarMediaId: string | null
+}
+
 // Response item for admin course summary APIs.
-// Admin includes internal ids, full teacher info, and enrollment count.
-export type AdminCourseSummary = Omit<
-  CourseSummary,
-  'teacher'
-> & {
+export type AdminCourseResponse = {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  subject: Subject
+  grade: GradeValue
   teacherId: string
   teacher: AdminCourseTeacher
+  thumbnailUrl: string | null
   thumbnailMediaId: string | null
+  price: number
+  salePrice: number | null
+  status: CourseStatus
+  isFeatured: boolean
+  totalLessons: number
   enrolledCount: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AdminCourseTopicResponse = {
+  id: string
+  name: string
+  parentId: string | null
+  courseId: string
+}
+
+export type AdminCourseLessonResponse = {
+  id: string
+  chapterId: string
+  title: string
+  type: LessonType
+  youtubeUrl: string | null
+  durationSec: number | null
+  allowPreview: boolean
+  orderIndex: number
+  description: string | null
+  videoType: VideoType | null
+  videoMediaId: string | null
+  assessmentId: string | null
+  videoMedia: {
+    id: string
+    url: string | null
+    originalName: string | null
+    status: MediaStatus
+    durationSec: number | null
+  } | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AdminCourseChapterResponse = {
+  id: string
+  courseId: string
+  title: string
+  orderIndex: number
+  lessons: AdminCourseLessonResponse[]
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Response DTO for GET /admin/courses/:courseId
-export type AdminCourseDetailResponseDto = AdminCourseSummary & {
-  topics: AdminCourseTopic[]
-  chapters: AdminCourseChapter[]
+export type AdminCourseDetailResponse = AdminCourseResponse & {
+  topics: AdminCourseTopicResponse[]
+  chapters: AdminCourseChapterResponse[]
 }
 
-// Response DTO for admin course mutations metadata: create, update, publish, archive.
-// These APIs return course summary only, without chapters/lessons.
-export type AdminCourseResponseDto = AdminCourseSummary
-
 // Response DTO for GET /admin/courses
-// This API returns paginated list of courses, includes unpublished and archived courses and pagination metadata. Each course item is course summary without chapters/lessons.
-export type ListAdminCoursesResponseDto = PaginatedResponseShape<AdminCourseSummary>
+export type ListAdminCoursesResponse = {
+  items: AdminCourseResponse[]
+  pagination: {
+    page: number
+    limit: number
+    totalItems: number
+    totalPages: number
+  }
+}

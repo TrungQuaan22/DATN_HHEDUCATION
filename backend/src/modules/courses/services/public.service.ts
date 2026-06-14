@@ -5,9 +5,9 @@ import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 
 import type {
-  CatalogCourseDetailDto,
+  CatalogCourseDetailResponse,
   ListCatalogCoursesDto,
-  ListCatalogCoursesResponseDto
+  ListCatalogCoursesResponse
 } from '../dto'
 import { publicCourseRepository as courseRepository } from '../repositories'
 import type { PublicCourseRepositoryPort } from '../ports/public-course-repository.port'
@@ -33,7 +33,7 @@ const buildCatalogCourseOrderBy = (
 export class PublicCourseService {
   constructor(private readonly courseRepository: PublicCourseRepositoryPort) {}
 
-  async listCatalogCourses(input: ListCatalogCoursesDto): Promise<ListCatalogCoursesResponseDto> {
+  async listCatalogCourses(input: ListCatalogCoursesDto): Promise<ListCatalogCoursesResponse> {
     let where: Prisma.CourseWhereInput = {
       status: CourseStatus.published,
       deletedAt: null,
@@ -72,7 +72,7 @@ export class PublicCourseService {
     }
   }
 
-  async getCatalogCourse(courseSlug: string): Promise<CatalogCourseDetailDto> {
+  async getCatalogCourse(courseSlug: string): Promise<CatalogCourseDetailResponse> {
     const course = await this.courseRepository.findPublishedCourseBySlug(courseSlug)
 
     if (!course) {

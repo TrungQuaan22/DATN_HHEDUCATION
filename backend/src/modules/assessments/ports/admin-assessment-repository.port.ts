@@ -6,7 +6,11 @@ import type {
   AssessmentVisibility,
   AssessmentItemType,
   AssessmentType,
-  UserRole
+  UserRole,
+  AssessmentSection,
+  AssessmentItem,
+  SubmissionEssayAnswer,
+  GradingType
 } from '@prisma/client'
 
 import type {
@@ -15,19 +19,40 @@ import type {
   CreatePlacementDto
 } from '../dto'
 
+import type {
+  AdminAssessmentListItem,
+  GradingSubmissionListItem,
+  AdminAssessmentDetail,
+  AssessmentForPublishDetail,
+  SectionItemDetail,
+  StudentSubmissionComplete
+} from '../types'
+
+export interface ListAdminAssessmentsFilters {
+  scope?: 'all' | 'public' | 'course' | 'unplaced'
+  courseId?: string
+  visibility?: AssessmentVisibility
+  subject?: Subject
+  grade?: number
+  gradingType?: GradingType
+  teacherId?: string
+  role?: UserRole
+}
+
+
 export interface AdminAssessmentRepositoryPort {
   listAdminAssessments(data: {
-    where: any
+    filters: ListAdminAssessmentsFilters
     skip: number
     take: number
-  }): Promise<[any[], number]>
+  }): Promise<[AdminAssessmentListItem[], number]>
 
   listGradingSubmissions(data: {
     actor: { id: string; role: UserRole }
     assessmentId?: string
     skip: number
     take: number
-  }): Promise<[any[], number]>
+  }): Promise<[GradingSubmissionListItem[], number]>
 
   createAssessment(data: CreateAssessmentDto): Promise<Assessment>
 
@@ -38,20 +63,20 @@ export interface AdminAssessmentRepositoryPort {
     title: string
     description?: string | null
     itemType: AssessmentItemType
-  }): Promise<any>
+  }): Promise<AssessmentSection & { items: AssessmentItem[] }>
 
   updateSection(data: {
     assessmentId: string
     sectionId: string
     title?: string
     description?: string | null
-  }): Promise<any>
+  }): Promise<AssessmentSection & { items: AssessmentItem[] }>
 
-  deleteSection(assessmentId: string, sectionId: string): Promise<any>
+  deleteSection(assessmentId: string, sectionId: string): Promise<AssessmentSection | null>
 
-  findAssessmentById(id: string): Promise<any>
+  findAssessmentById(id: string): Promise<AdminAssessmentDetail | null>
 
-  findAssessmentForPublish(id: string): Promise<any>
+  findAssessmentForPublish(id: string): Promise<AssessmentForPublishDetail | null>
 
   findDocumentMediaById(id: string): Promise<Media | null>
 
@@ -82,7 +107,7 @@ export interface AdminAssessmentRepositoryPort {
     courseId: string
   }>>
 
-  findSectionInAssessment(assessmentId: string, sectionId: string): Promise<any>
+  findSectionInAssessment(assessmentId: string, sectionId: string): Promise<(AssessmentSection & { items: AssessmentItem[] }) | null>
 
   createSectionItems(data: {
     assessmentId: string
@@ -90,29 +115,29 @@ export interface AdminAssessmentRepositoryPort {
     assessmentType: AssessmentType
     items: CreateAssessmentItemDto[]
     courseId?: string | null
-  }): Promise<any[] | null>
+  }): Promise<SectionItemDetail[] | null>
 
   updateSectionItem(data: {
     assessmentId: string
     itemId: string
     item: Partial<CreateAssessmentItemDto>
-  }): Promise<any>
+  }): Promise<SectionItemDetail | null>
 
-  deleteSectionItem(assessmentId: string, itemId: string): Promise<any>
+  deleteSectionItem(assessmentId: string, itemId: string): Promise<{ id: string; questionId: string | null } | null>
 
   publishAssessment(id: string): Promise<Assessment>
 
   updateVisibility(id: string, visibility: AssessmentVisibility): Promise<Assessment>
 
-  createPlacement(data: CreatePlacementDto): Promise<any>
+  createPlacement(data: CreatePlacementDto): Promise<AssessmentPlacement & { assessment: Assessment }>
 
-  upsertSinglePlacement(assessmentId: string, data: Omit<CreatePlacementDto, 'assessmentId'>): Promise<any>
+  upsertSinglePlacement(assessmentId: string, data: Omit<CreatePlacementDto, 'assessmentId'>): Promise<AssessmentPlacement & { assessment: Assessment }>
 
-  deleteSinglePlacement(assessmentId: string): Promise<any>
+  deleteSinglePlacement(assessmentId: string): Promise<Assessment | { id: string; visibility: AssessmentVisibility } | null>
 
   findDuplicatePlacement(data: CreatePlacementDto): Promise<AssessmentPlacement | null>
 
-  findSubmissionForGrading(submissionId: string): Promise<any>
+  findSubmissionForGrading(submissionId: string): Promise<StudentSubmissionComplete | null>
 
   cloneAssessment(data: {
     assessmentId: string
@@ -126,7 +151,7 @@ export interface AdminAssessmentRepositoryPort {
     teacherScore: number
     teacherNote?: string | null
     gradedBy: string
-  }): Promise<any>
+  }): Promise<SubmissionEssayAnswer>
 
-  finalizeSubmission(submissionId: string, finalScore: any): Promise<any>
+  finalizeSubmission(submissionId: string, finalScore: number | string): Promise<StudentSubmissionComplete>
 }

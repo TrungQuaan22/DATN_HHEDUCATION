@@ -7,11 +7,11 @@ export type BlogAuthorRecord = {
   avatarObjectKey: string | null
 }
 
-export type BlogPostWithAuthor = {
+export type BlogPostRecord = {
   id: string
   title: string
   slug: string
-  excerpt: string | null
+  excerpt: string
   category: string | null
   tags: string[]
   content: Prisma.JsonValue
@@ -25,8 +25,6 @@ export type BlogPostWithAuthor = {
   createdAt: Date
   updatedAt: Date
 }
-
-export type PublishedBlogPost = BlogPostWithAuthor
 
 export type CreateBlogPostRecordInput = {
   title: string
@@ -56,30 +54,30 @@ export type UpdateBlogPostRecordInput = {
 
 export interface BlogRepositoryPort {
   findActivePostBySlug(slug: string): Promise<{ id: string } | null>
-  findActivePostById(blogPostId: string): Promise<BlogPostWithAuthor | null>
-  findPublishedPostBySlug(slug: string): Promise<PublishedBlogPost | null>
+  findActivePostById(blogPostId: string): Promise<BlogPostRecord | null>
+  findPublishedPostBySlug(slug: string): Promise<BlogPostRecord | null>
   listPublishedPostSummaries(data: {
     where: Prisma.BlogPostWhereInput
     take: number
-  }): Promise<PublishedBlogPost[]>
+  }): Promise<BlogPostRecord[]>
   listAdminPosts(data: {
     where: Prisma.BlogPostWhereInput
     skip: number
     take: number
-  }): Promise<[BlogPostWithAuthor[], number]>
+  }): Promise<[BlogPostRecord[], number]>
   listPublishedPosts(data: {
     where: Prisma.BlogPostWhereInput
     skip: number
     take: number
-  }): Promise<[PublishedBlogPost[], number]>
+  }): Promise<[BlogPostRecord[], number]>
   listTagSources(where: Prisma.BlogPostWhereInput): Promise<Array<{ tags: string[] }>>
   listCategorySources(where: Prisma.BlogPostWhereInput): Promise<Array<{ category: string | null }>>
-  createPost(data: CreateBlogPostRecordInput): Promise<BlogPostWithAuthor>
-  updatePost(data: UpdateBlogPostRecordInput): Promise<BlogPostWithAuthor>
+  createPost(data: CreateBlogPostRecordInput): Promise<BlogPostRecord>
+  updatePost(data: UpdateBlogPostRecordInput): Promise<BlogPostRecord>
   updateStatus(data: {
     blogPostId: string
     status: BlogPostStatus
     publishedAt?: Date | null
-  }): Promise<BlogPostWithAuthor>
+  }): Promise<BlogPostRecord>
   softDeletePost(blogPostId: string): Promise<{ id: string }>
 }

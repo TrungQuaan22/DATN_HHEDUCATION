@@ -2,6 +2,7 @@ import {
   AssessmentItemType,
   AssessmentPlacementType,
   AssessmentVisibility,
+  Enrollment,
   Prisma,
   Subject,
   SubmissionStatus
@@ -12,11 +13,18 @@ import { prisma } from '~/config/db'
 import type { SaveAnswerDto } from '../dto'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
 import {
-  placementAccessInclude,
   runtimeAssessmentInclude,
   runtimeAssessmentPreviewInclude,
   answerInclude
 } from './shared'
+import type {
+  StudentPlacementListItem,
+  RuntimePlacement,
+  RuntimePreviewPlacement,
+  SubmissionWorkspaceGate,
+  SubmissionDetail,
+  StudentSubmissionComplete
+} from '../types'
 
 export class PrismaStudentAssessmentRepository implements StudentAssessmentRepositoryPort {
   listStudentAssessmentPlacements(data: {
@@ -26,7 +34,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     status?: SubmissionStatus | 'not_started'
     skip: number
     take: number
-  }) {
+  }): Promise<[StudentPlacementListItem[], number]> {
     const enrolledPlacementWhere: Prisma.AssessmentPlacementWhereInput = {
       OR: [
         {
@@ -144,7 +152,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     ])
   }
 
-  findRuntimePlacementById(placementId: string) {
+  findRuntimePlacementById(placementId: string): Promise<RuntimePlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         id: placementId,
@@ -157,7 +165,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findRuntimePreviewPlacementById(placementId: string) {
+  findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         id: placementId,
@@ -174,7 +182,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     submissionId: string
     userId: string
     placementId: string
-  }) {
+  }): Promise<SubmissionWorkspaceGate | null> {
     return prisma.submission.findFirst({
       where: {
         id: data.submissionId,
@@ -207,7 +215,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findEnrollmentForPlacement(userId: string, placementId: string) {
+  findEnrollmentForPlacement(userId: string, placementId: string): Promise<Enrollment | null> {
     return prisma.enrollment.findFirst({
       where: {
         userId,
@@ -222,7 +230,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findEnrollmentForLessonPlacement(userId: string, placementId: string) {
+  findEnrollmentForLessonPlacement(userId: string, placementId: string): Promise<Enrollment | null> {
     return prisma.enrollment.findFirst({
       where: {
         userId,
@@ -245,7 +253,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  countAttempts(userId: string, placementId: string) {
+  countAttempts(userId: string, placementId: string): Promise<number> {
     return prisma.submission.count({
       where: {
         studentId: userId,
@@ -254,7 +262,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findDoingSubmissionForPlacement(userId: string, placementId: string) {
+  findDoingSubmissionForPlacement(userId: string, placementId: string): Promise<SubmissionDetail | null> {
     return prisma.submission.findFirst({
       where: {
         studentId: userId,
@@ -282,7 +290,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     assessmentId: string
     placementId: string
     attemptNumber: number
-  }) {
+  }): Promise<SubmissionDetail> {
     return prisma.submission.create({
       data: {
         studentId: data.userId,
@@ -303,7 +311,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findSubmissionForStudent(submissionId: string, userId: string) {
+  findSubmissionForStudent(submissionId: string, userId: string): Promise<StudentSubmissionComplete | null> {
     return prisma.submission.findFirst({
       where: {
         id: submissionId,
@@ -313,7 +321,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  async saveAnswers(submissionId: string, answers: SaveAnswerDto[]) {
+  async saveAnswers(submissionId: string, answers: SaveAnswerDto[]): Promise<void> {
     await prisma.$transaction(async (tx) => {
       for (const answer of answers) {
         if (answer.type === AssessmentItemType.mcq) {
@@ -423,20 +431,20 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
 
   async updateAutoGrading(data: {
     submissionId: string
-    mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }>
-    tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }>
-    numericResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }>
-    autoScore: Prisma.Decimal
+    mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
+    tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
+    numericResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
+    autoScore: string
     status: SubmissionStatus
-    finalScore: Prisma.Decimal | null
-  }) {
+    finalScore: string | null
+  }): Promise<StudentSubmissionComplete> {
     return prisma.$transaction(async (tx) => {
       for (const result of data.mcqResults) {
         await tx.submissionMcqAnswer.update({
           where: { id: result.answerId },
           data: {
             isCorrect: result.isCorrect,
-            pointEarned: result.pointEarned
+            pointEarned: new Prisma.Decimal(result.pointEarned)
           }
         })
       }
@@ -446,7 +454,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
           where: { id: result.answerId },
           data: {
             isCorrect: result.isCorrect,
-            pointEarned: result.pointEarned
+            pointEarned: new Prisma.Decimal(result.pointEarned)
           }
         })
       }
@@ -456,7 +464,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
           where: { id: result.answerId },
           data: {
             isCorrect: result.isCorrect,
-            pointEarned: result.pointEarned
+            pointEarned: new Prisma.Decimal(result.pointEarned)
           }
         })
       }
@@ -468,8 +476,8 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
         data: {
           submitTime: new Date(),
           status: data.status,
-          autoScore: data.autoScore,
-          finalScore: data.finalScore
+          autoScore: new Prisma.Decimal(data.autoScore),
+          finalScore: data.finalScore === null ? null : new Prisma.Decimal(data.finalScore)
         },
         include: answerInclude
       })

@@ -55,9 +55,10 @@ export class IdempotencyService implements IdempotencyPort {
     })
 
     if (!created) {
-      const existing = await this.repository.findByScopeAndKey({
+      const existing = await this.repository.findByScopeKeyAndUser({
         scope: input.scope,
-        key: input.key
+        key: input.key,
+        userId: input.userId
       })
 
       if (!existing) {
@@ -89,11 +90,21 @@ export class IdempotencyService implements IdempotencyPort {
         )
       }
 
-      await this.repository.markProcessing({
+      const marked = await this.repository.markProcessing({
         scope: input.scope,
         key: input.key,
-        processingAt: now
+        userId: input.userId,
+        processingAt: now,
+        staleProcessingAt: existing.processingAt
       })
+
+      if (!marked) {
+        throw new AppError(
+          409,
+          ERROR_CODE.CONFLICT,
+          'Request with this idempotency key is still processing'
+        )
+      }
     }
 
     let result: { statusCode: number; body: T }
@@ -101,9 +112,10 @@ export class IdempotencyService implements IdempotencyPort {
     try {
       result = await handler()
     } catch (error) {
-      await this.repository.deleteByScopeAndKey({
+      await this.repository.deleteByScopeKeyAndUser({
         scope: input.scope,
-        key: input.key
+        key: input.key,
+        userId: input.userId
       })
 
       throw error
@@ -112,6 +124,7 @@ export class IdempotencyService implements IdempotencyPort {
     await this.repository.saveResponse({
       scope: input.scope,
       key: input.key,
+      userId: input.userId,
       statusCode: result.statusCode,
       responseBody: result.body
     })

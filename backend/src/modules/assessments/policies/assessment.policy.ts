@@ -12,6 +12,8 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 
 import type { CreateAssessmentItemDto } from '../dto'
+import type { AssessmentItemUnion } from '../types'
+
 
 export type AssessmentActor = {
   id: string
@@ -234,25 +236,25 @@ export const ensureImportItemsAreValid = (
   void mode
 
   for (const item of items) {
-    const data = item as any
+    const data = item as AssessmentItemUnion
 
     if (item.maxScore <= 0) {
       throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Item maxScore must be positive')
     }
 
     if (item.itemType === 'mcq') {
-      const isExamMcq = 'optionCount' in data
+      const isExamMcq = 'optionCount' in data && typeof data.optionCount === 'number'
       const optionLabels =
         isExamMcq
-          ? Array.from({ length: data.optionCount }, (_, index) => toExamOptionLabel(index))
-          : data.options.map((option: { content: string }) => option.content)
+          ? Array.from({ length: data.optionCount || 0 }, (_, index) => toExamOptionLabel(index))
+          : (data.options || []).map((option: { content: string }) => option.content)
       const optionSet = new Set(optionLabels)
       const correctOptions =
         isExamMcq
-          ? data.correctOptions
-          : data.options
-              .map((option: { isCorrect: boolean }, index: number) => (option.isCorrect ? optionLabels[index] : null))
-              .filter((option: string | null): option is string => Boolean(option))
+          ? data.correctOptions || []
+          : (data.options || [])
+              .map((option, index) => (option.isCorrect ? optionLabels[index] : null))
+              .filter((option): option is string => Boolean(option))
       const correctSet = new Set(correctOptions)
 
       if (optionLabels.length < 2 || optionSet.size !== optionLabels.length) {
@@ -274,7 +276,7 @@ export const ensureImportItemsAreValid = (
       }
     }
 
-    if (item.itemType === 'true_false' && data.statements.length === 0) {
+    if (item.itemType === 'true_false' && (data.statements || []).length === 0) {
       throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'True/False item must have statements')
     }
   }

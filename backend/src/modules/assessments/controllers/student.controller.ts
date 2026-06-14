@@ -3,10 +3,8 @@ import type z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import {
-  studentAssessmentService,
-  type StudentAssessmentService
-} from '../services/student.service'
+import type { StudentAssessmentService } from '../services/student.service'
+import { studentAssessmentService } from '../wiring'
 import type {
   listStudentAssessmentsSchema,
   placementWorkspaceSchema,

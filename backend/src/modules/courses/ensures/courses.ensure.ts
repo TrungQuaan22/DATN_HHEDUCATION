@@ -4,73 +4,9 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 
-import {
-  adminChapterRepository,
-  adminCourseRepository,
-  adminLessonRepository
-} from '../repositories'
-
 export type CourseActor = {
   id: string
   role: UserRole
-}
-
-export const ensureCourseExists = async (courseId: string) => {
-  const course = await adminCourseRepository.findCourseById(courseId)
-
-  if (!course) {
-    throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
-  }
-
-  return course
-}
-
-export const ensureCourseDetailExists = async (courseId: string) => {
-  const course = await adminCourseRepository.findCourseDetailById(courseId)
-
-  if (!course) {
-    throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
-  }
-
-  return course
-}
-
-export const ensureActiveTeacher = async (teacherId: string) => {
-  const teacher = await adminCourseRepository.findActiveTeacherById(teacherId)
-
-  if (!teacher) {
-    throw new AppError(400, ERROR_CODE.INVALID_COURSE_TEACHER, ERROR_MESSAGE.INVALID_COURSE_TEACHER)
-  }
-}
-
-export const ensureChapterExists = async (chapterId: string) => {
-  const chapter = await adminChapterRepository.findChapterById(chapterId)
-
-  if (!chapter) {
-    throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
-  }
-
-  return chapter
-}
-
-export const ensureLessonExists = async (lessonId: string) => {
-  const lesson = await adminLessonRepository.findLessonById(lessonId)
-
-  if (!lesson) {
-    throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
-  }
-
-  return lesson
-}
-
-export const ensureAssessmentExists = async (assessmentId: string) => {
-  const assessment = await adminLessonRepository.findAssessmentById(assessmentId)
-
-  if (!assessment) {
-    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
-  }
-
-  return assessment
 }
 
 export const ensureCourseCanBeEdited = (status: CourseStatus) => {

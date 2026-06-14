@@ -1,10 +1,10 @@
 import type {
   LoginDto,
-  LoginResponseDto,
+  LoginResponse,
   RefreshTokenDto,
-  RefreshTokenResponseDto,
+  RefreshTokenResponse,
   RegisterDto,
-  RegisterResponseDto
+  RegisterResponse
 } from './dto'
 import { authRepository } from './repository'
 import { ERROR_CODE } from '~/common/constant/error-code'
@@ -13,7 +13,7 @@ import { AppError } from '~/common/error/app-error'
 import { isWithinRefreshTokenRetryGrace, type RefreshTokenPayload } from './utils'
 import { TokenType } from '~/common/constant/enums'
 import { UserRole, UserStatus } from '@prisma/client'
-import { mapUserAvatar } from '~/modules/users/mappers'
+import { mapAuthUserToLoginUser, mapAuthUserToRegisterResponse } from './mappers/auth.mapper'
 import type {
   AuthRepositoryPort,
   AuthSessionWithUserRecord
@@ -94,7 +94,7 @@ export class AuthService {
     }
   }
 
-  async register(input: RegisterDto): Promise<RegisterResponseDto> {
+  async register(input: RegisterDto): Promise<RegisterResponse> {
     const existed = await this.repository.findUserByEmail(input.email)
 
     if (existed) {
@@ -107,20 +107,11 @@ export class AuthService {
       email: input.email,
       passwordHash
     })
-    const mappedUser = mapUserAvatar(user)
 
-    return {
-      id: mappedUser.id,
-      email: mappedUser.email,
-      fullName: mappedUser.fullName,
-      avatarMediaId: mappedUser.avatarMediaId,
-      avatarUrl: mappedUser.avatarUrl,
-      role: UserRole.student,
-      status: UserStatus.active
-    }
+    return mapAuthUserToRegisterResponse(user)
   }
 
-  async login(input: LoginDto): Promise<LoginResponseDto> {
+  async login(input: LoginDto): Promise<LoginResponse> {
     const user = await this.repository.findUserByEmail(input.email)
 
     if (!user) {
@@ -145,7 +136,7 @@ export class AuthService {
     }
 
     const tokens = await this.tokenService.createLoginTokens({ userId: user.id, role: user.role })
-    const mappedUser = mapUserAvatar(user)
+    const loginUser = mapAuthUserToLoginUser(user)
 
     await this.repository.createSession({
       id: tokens.sessionId,
@@ -157,15 +148,7 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: {
-        id: mappedUser.id,
-        email: mappedUser.email,
-        fullName: mappedUser.fullName,
-        avatarMediaId: mappedUser.avatarMediaId,
-        avatarUrl: mappedUser.avatarUrl,
-        role: mappedUser.role,
-        status: mappedUser.status
-      }
+      user: loginUser
     }
   }
 
@@ -183,7 +166,7 @@ export class AuthService {
    * @returns An object containing the new access token and refresh token
    * @throws AppError with appropriate status code and error message for various failure scenarios (e.g., invalid token, account banned, token reuse)
    */
-  async refreshToken(input: RefreshTokenDto): Promise<RefreshTokenResponseDto> {
+  async refreshToken(input: RefreshTokenDto): Promise<RefreshTokenResponse> {
     const payload = await this.verifyRefreshPayload(input.refreshToken)
 
     const rawSession = await this.repository.findSessionById(payload.sessionId)

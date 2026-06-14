@@ -2,35 +2,37 @@ import { BlogPostStatus, UserRole, type Prisma } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
-import { AppError } from '~/common/error/app-error'
 import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { AppError } from '~/common/error/app-error'
+import { mediaRepository } from '~/modules/media/repository'
+import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 import { applySearchCondition, normalizeText } from '~/common/utils/search'
 import { createSlugFromText } from '~/common/utils/slug'
 
 import type {
-  AdminBlogPostDto,
-  AdminBlogPostSummaryDto,
+  AdminBlogPostResponse,
+  AdminBlogPostSummaryResponse,
   BlogPostIdDto,
   CreateBlogPostDto,
   ListAdminBlogCategoriesDto,
-  ListAdminBlogCategoriesResponseDto,
-  ListAdminBlogTagsDto,
-  ListAdminBlogTagsResponseDto,
+  ListAdminBlogCategoriesResponse,
   ListAdminBlogPostsDto,
-  ListAdminBlogPostsResponseDto,
+  ListAdminBlogPostsResponse,
+  ListAdminBlogTagsDto,
+  ListAdminBlogTagsResponse,
   UpdateBlogPostDto
-} from '../dto'
-import { blogRepository, type BlogPostWithAuthor } from '../repository'
-import type { BlogRepositoryPort } from '../ports/blog-repository.port'
-import { mapBlogPostMedia } from '../mappers'
-import { createExcerptFromContent, getReadingMinutes, countTags, countCategories } from '../utils'
+} from '../dto/admin.dto'
+import { mapAdminBlogPostResponse, mapAdminBlogPostSummaryResponse } from '../mappers'
+import type { BlogRepositoryPort, BlogPostRecord } from '../ports/blog-repository.port'
+import { blogRepository } from '../repository'
+import { countCategories, countTags, getReadingMinutes } from '../utils'
 
 const canManagePost = ({
   post,
   actorId,
   actorRole
 }: {
-  post: BlogPostWithAuthor
+  post: BlogPostRecord
   actorId: string
   actorRole: UserRole
 }): boolean => {
@@ -42,7 +44,7 @@ const ensureCanManagePost = ({
   actorId,
   actorRole
 }: {
-  post: BlogPostWithAuthor
+  post: BlogPostRecord
   actorId: string
   actorRole: UserRole
 }) => {
@@ -51,53 +53,14 @@ const ensureCanManagePost = ({
   }
 }
 
-const mapBlogPost = (post: BlogPostWithAuthor): AdminBlogPostDto => {
-  const mappedPost = mapBlogPostMedia({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category,
-    tags: post.tags,
-    thumbnailMediaId: post.thumbnailMediaId,
-    thumbnailObjectKey: post.thumbnailObjectKey,
-    author: post.author,
-    status: post.status,
-    isFeatured: post.isFeatured,
-    publishedAt: post.publishedAt,
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt
-  })
-
-  return {
-    ...mappedPost,
-    excerpt: post.excerpt ?? createExcerptFromContent(post.content),
-    content: post.content,
-    readingMinutes: getReadingMinutes(post.content)
-  }
+const mapBlogPost = (post: BlogPostRecord): AdminBlogPostResponse => {
+  const readingMinutes = getReadingMinutes(post.content)
+  return mapAdminBlogPostResponse(post, readingMinutes)
 }
 
-const mapBlogPostSummary = (post: BlogPostWithAuthor): AdminBlogPostSummaryDto => {
-  const mappedPost = mapBlogPostMedia({
-    id: post.id,
-    title: post.title,
-    slug: post.slug,
-    category: post.category,
-    tags: post.tags,
-    thumbnailMediaId: post.thumbnailMediaId,
-    thumbnailObjectKey: post.thumbnailObjectKey,
-    author: post.author,
-    status: post.status,
-    isFeatured: post.isFeatured,
-    publishedAt: post.publishedAt,
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt
-  })
-
-  return {
-    ...mappedPost,
-    excerpt: post.excerpt ?? createExcerptFromContent(post.content),
-    readingMinutes: getReadingMinutes(post.content)
-  }
+const mapBlogPostSummary = (post: BlogPostRecord): AdminBlogPostSummaryResponse => {
+  const readingMinutes = getReadingMinutes(post.content)
+  return mapAdminBlogPostSummaryResponse(post, readingMinutes)
 }
 
 const createBlogPostSlug = async (
@@ -119,12 +82,7 @@ const createBlogPostSlug = async (
   return slug
 }
 
-const ensureActiveBlogPost = async (
-  repository: BlogRepositoryPort,
-  blogPostId: string
-): Promise<BlogPostWithAuthor> => {
-  const post = await repository.findActivePostById(blogPostId)
-
+const ensureActiveBlogPost = (post: BlogPostRecord | null): BlogPostRecord => {
   if (!post) {
     throw new AppError(404, ERROR_CODE.BLOG_POST_NOT_FOUND, ERROR_MESSAGE.BLOG_POST_NOT_FOUND)
   }
@@ -132,34 +90,44 @@ const ensureActiveBlogPost = async (
   return post
 }
 
-const resolveThumbnailObjectKey = async (data: {
-  actorId: string
-  actorRole: UserRole
-  thumbnailMediaId?: string | null
-}): Promise<string | null | undefined> => {
+const resolveThumbnailObjectKey = async (
+  mediaRepository: MediaRepositoryPort,
+  data: {
+    actorId: string
+    actorRole: UserRole
+    thumbnailMediaId?: string | null
+  }
+): Promise<string | null | undefined> => {
   if (data.thumbnailMediaId === undefined) {
     return undefined
   }
   if (data.thumbnailMediaId === null) {
     return null
   }
-  const thumbnailMedia = await ensureActorCanUseImageMedia({
+  const media = await mediaRepository.findMediaById(data.thumbnailMediaId)
+  const thumbnailMedia = ensureActorCanUseImageMedia({
     actor: { id: data.actorId, role: data.actorRole },
-    mediaId: data.thumbnailMediaId,
+    media,
     label: 'Blog thumbnail media'
   })
   return thumbnailMedia?.objectKey ?? null
 }
 
 export class AdminBlogService {
-  constructor(private readonly repository: BlogRepositoryPort) {}
+  constructor(
+    private readonly repository: BlogRepositoryPort,
+    private readonly mediaRepository: MediaRepositoryPort
+  ) {}
 
-  async createPost(input: CreateBlogPostDto): Promise<AdminBlogPostDto> {
+  async createPost(input: CreateBlogPostDto): Promise<AdminBlogPostResponse> {
     const slug = await createBlogPostSlug(this.repository, input.title, input.slug)
+    const media = input.thumbnailMediaId
+      ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
+      : null
     const thumbnailMedia = input.thumbnailMediaId
-      ? await ensureActorCanUseImageMedia({
+      ? ensureActorCanUseImageMedia({
           actor: { id: input.authorId, role: input.actorRole },
-          mediaId: input.thumbnailMediaId,
+          media,
           label: 'Blog thumbnail media'
         })
       : null
@@ -174,7 +142,7 @@ export class AdminBlogService {
     return mapBlogPost(post)
   }
 
-  async listPosts(input: ListAdminBlogPostsDto): Promise<ListAdminBlogPostsResponseDto> {
+  async listPosts(input: ListAdminBlogPostsDto): Promise<ListAdminBlogPostsResponse> {
     let where: Prisma.BlogPostWhereInput = {
       deletedAt: null,
       status: input.status,
@@ -209,7 +177,7 @@ export class AdminBlogService {
     }
   }
 
-  async listTags(input: ListAdminBlogTagsDto): Promise<ListAdminBlogTagsResponseDto> {
+  async listTags(input: ListAdminBlogTagsDto): Promise<ListAdminBlogTagsResponse> {
     const tagSources = await this.repository.listTagSources({
       deletedAt: null,
       authorId: input.actorRole === UserRole.admin ? undefined : input.actorId
@@ -222,7 +190,7 @@ export class AdminBlogService {
 
   async listCategories(
     input: ListAdminBlogCategoriesDto
-  ): Promise<ListAdminBlogCategoriesResponseDto> {
+  ): Promise<ListAdminBlogCategoriesResponse> {
     const categorySources = await this.repository.listCategorySources({
       deletedAt: null,
       authorId: input.actorRole === UserRole.admin ? undefined : input.actorId
@@ -233,21 +201,23 @@ export class AdminBlogService {
     }
   }
 
-  async getPost(input: BlogPostIdDto): Promise<AdminBlogPostDto> {
-    const post = await ensureActiveBlogPost(this.repository, input.blogPostId)
+  async getPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
+    const postRecord = await this.repository.findActivePostById(input.blogPostId)
+    const post = ensureActiveBlogPost(postRecord)
     ensureCanManagePost({ post, actorId: input.actorId, actorRole: input.actorRole })
     return mapBlogPost(post)
   }
 
-  async updatePost(input: UpdateBlogPostDto): Promise<AdminBlogPostDto> {
-    const post = await ensureActiveBlogPost(this.repository, input.blogPostId)
+  async updatePost(input: UpdateBlogPostDto): Promise<AdminBlogPostResponse> {
+    const postRecord = await this.repository.findActivePostById(input.blogPostId)
+    const post = ensureActiveBlogPost(postRecord)
     ensureCanManagePost({ post, actorId: input.actorId, actorRole: input.actorRole })
 
     if (input.slug && input.slug !== post.slug) {
       await createBlogPostSlug(this.repository, input.title ?? post.title, input.slug)
     }
 
-    const thumbnailObjectKey = await resolveThumbnailObjectKey({
+    const thumbnailObjectKey = await resolveThumbnailObjectKey(this.mediaRepository, {
       actorId: input.actorId,
       actorRole: input.actorRole,
       thumbnailMediaId: input.thumbnailMediaId
@@ -262,8 +232,9 @@ export class AdminBlogService {
     return mapBlogPost(updatedPost)
   }
 
-  async publishPost(input: BlogPostIdDto): Promise<AdminBlogPostDto> {
-    const post = await ensureActiveBlogPost(this.repository, input.blogPostId)
+  async publishPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
+    const postRecord = await this.repository.findActivePostById(input.blogPostId)
+    const post = ensureActiveBlogPost(postRecord)
     ensureCanManagePost({ post, actorId: input.actorId, actorRole: input.actorRole })
 
     const updatedPost = await this.repository.updateStatus({
@@ -275,8 +246,9 @@ export class AdminBlogService {
     return mapBlogPost(updatedPost)
   }
 
-  async unpublishPost(input: BlogPostIdDto): Promise<AdminBlogPostDto> {
-    const post = await ensureActiveBlogPost(this.repository, input.blogPostId)
+  async unpublishPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
+    const postRecord = await this.repository.findActivePostById(input.blogPostId)
+    const post = ensureActiveBlogPost(postRecord)
     ensureCanManagePost({ post, actorId: input.actorId, actorRole: input.actorRole })
 
     const updatedPost = await this.repository.updateStatus({
@@ -289,7 +261,8 @@ export class AdminBlogService {
   }
 
   async deletePost(input: BlogPostIdDto): Promise<{ id: string; deleted: true }> {
-    const post = await ensureActiveBlogPost(this.repository, input.blogPostId)
+    const postRecord = await this.repository.findActivePostById(input.blogPostId)
+    const post = ensureActiveBlogPost(postRecord)
     ensureCanManagePost({ post, actorId: input.actorId, actorRole: input.actorRole })
 
     const deletedPost = await this.repository.softDeletePost(input.blogPostId)
@@ -300,4 +273,4 @@ export class AdminBlogService {
   }
 }
 
-export const adminBlogService = new AdminBlogService(blogRepository)
+export const adminBlogService = new AdminBlogService(blogRepository, mediaRepository)

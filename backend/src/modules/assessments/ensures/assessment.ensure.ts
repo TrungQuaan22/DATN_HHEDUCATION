@@ -1,21 +1,13 @@
-import {
-  AssessmentItemType,
-  AssessmentPlacementType,
-  AssessmentVisibility,
-  LessonType,
-  Subject,
-  UserRole
-} from '@prisma/client'
+import { AssessmentPlacementType, LessonType, Subject, UserRole } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 
 import type { CreatePlacementDto } from '../dto'
-import { adminAssessmentRepository, studentAssessmentRepository } from '../repositories'
 
-export const ensureAssessmentExists = async (assessmentId: string) => {
-  const assessment = await adminAssessmentRepository.findAssessmentById(assessmentId)
-
+export const ensureAssessmentExists = <TAssessment>(
+  assessment: TAssessment | null
+): TAssessment => {
   if (!assessment) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
   }
@@ -23,9 +15,9 @@ export const ensureAssessmentExists = async (assessmentId: string) => {
   return assessment
 }
 
-export const ensureAssessmentForPublishExists = async (assessmentId: string) => {
-  const assessment = await adminAssessmentRepository.findAssessmentForPublish(assessmentId)
-
+export const ensureAssessmentForPublishExists = <TAssessment>(
+  assessment: TAssessment | null
+): TAssessment => {
   if (!assessment) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment not found')
   }
@@ -33,11 +25,13 @@ export const ensureAssessmentForPublishExists = async (assessmentId: string) => 
   return assessment
 }
 
-export const ensureSectionExists = (
-  assessment: any,
+export const ensureSectionExists = <
+  TSection extends { id: string }
+>(
+  assessment: { sections: TSection[] },
   sectionId: string
 ) => {
-  const section = assessment.sections.find((s: any) => s.id === sectionId)
+  const section = assessment.sections.find((s) => s.id === sectionId)
 
   if (!section) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Section not found')
@@ -46,11 +40,13 @@ export const ensureSectionExists = (
   return section
 }
 
-export const ensureSectionBelongsToAssessment = (
-  assessment: any,
+export const ensureSectionBelongsToAssessment = <
+  TSection extends { id: string }
+>(
+  assessment: { sections: TSection[] },
   sectionId: string
 ) => {
-  const section = assessment.sections.find((s: any) => s.id === sectionId)
+  const section = assessment.sections.find((s) => s.id === sectionId)
 
   if (!section) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Section does not belong to this assessment')
@@ -59,12 +55,14 @@ export const ensureSectionBelongsToAssessment = (
   return section
 }
 
-export const ensureItemExists = (
-  assessment: any,
+export const ensureItemExists = <
+  TItem extends { id: string }
+>(
+  assessment: { sections: Array<{ items: TItem[] }> },
   itemId: string
-) => {
-  const items = assessment.sections.flatMap((section: any) => section.items)
-  const item = items.find((i: any) => i.id === itemId)
+): TItem => {
+  const items = assessment.sections.flatMap((section) => section.items)
+  const item = items.find((i) => i.id === itemId)
 
   if (!item) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment item not found')
@@ -73,9 +71,9 @@ export const ensureItemExists = (
   return item
 }
 
-export const ensureSubmissionForGradingExists = async (submissionId: string) => {
-  const submission = await adminAssessmentRepository.findSubmissionForGrading(submissionId)
-
+export const ensureSubmissionForGradingExists = <TSubmission>(
+  submission: TSubmission | null
+): TSubmission => {
   if (!submission) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Submission not found')
   }
@@ -83,9 +81,9 @@ export const ensureSubmissionForGradingExists = async (submissionId: string) => 
   return submission
 }
 
-export const ensureSubmissionForStudentExists = async (submissionId: string, userId: string) => {
-  const submission = await studentAssessmentRepository.findSubmissionForStudent(submissionId, userId)
-
+export const ensureSubmissionForStudentExists = <TSubmission>(
+  submission: TSubmission | null
+): TSubmission => {
   if (!submission) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Submission not found')
   }
@@ -93,31 +91,28 @@ export const ensureSubmissionForStudentExists = async (submissionId: string, use
   return submission
 }
 
-export const ensureTeacherOwnsCourse = async (
+export const ensureTeacherOwnsCourse = (
   actor: { id: string; role: UserRole },
-  courseId: string
+  course: { teacherId: string } | null
 ) => {
   if (actor.role === UserRole.admin) {
     return
   }
-
-  const course = await adminAssessmentRepository.findCourseForPlacement(courseId)
 
   if (!course || course.teacherId !== actor.id) {
     throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only use courses you manage')
   }
 }
 
-export const ensureItemsCanUseCourseTopics = async (
+export const ensureItemsCanUseCourseTopics = (
   assessment: {
     subject: Subject
     grade: number
   },
   items: Array<{ topicId?: string | null; topicName?: string | null }>,
-  courseId: string
+  course: { subject: Subject; grade: number } | null,
+  courseTopics: Array<{ id: string }>
 ) => {
-  const course = await adminAssessmentRepository.findCourseForPlacement(courseId)
-
   if (!course) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Course not found')
   }
@@ -141,7 +136,6 @@ export const ensureItemsCanUseCourseTopics = async (
     return
   }
 
-  const courseTopics = await adminAssessmentRepository.listTopicsByCourse(courseId)
   const courseTopicIds = new Set(courseTopics.map((topic) => topic.id))
 
   if (topicIds.some((topicId) => !courseTopicIds.has(topicId))) {
@@ -149,13 +143,20 @@ export const ensureItemsCanUseCourseTopics = async (
   }
 }
 
-export const ensurePlacementTargetIsValid = async (
+export const ensurePlacementTargetIsValid = (
   actor: { id: string; role: UserRole },
   assessment: {
     subject: Subject
     grade: number
   },
-  data: CreatePlacementDto
+  data: CreatePlacementDto,
+  course: { teacherId: string; subject: Subject; grade: number } | null,
+  lesson: {
+    type: string
+    chapter: {
+      course: { teacherId: string; subject: Subject; grade: number }
+    }
+  } | null
 ) => {
   if (data.openTime && data.closeTime && new Date(data.openTime) >= new Date(data.closeTime)) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'openTime must be earlier than closeTime')
@@ -186,8 +187,6 @@ export const ensurePlacementTargetIsValid = async (
       throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Course placement cannot bind lessonId')
     }
 
-    const course = await adminAssessmentRepository.findCourseForPlacement(data.courseId)
-
     if (!course) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Course not found')
     }
@@ -211,8 +210,6 @@ export const ensurePlacementTargetIsValid = async (
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Lesson placement derives course access from lesson')
   }
 
-  const lesson = await adminAssessmentRepository.findLessonForPlacement(data.lessonId)
-
   if (!lesson) {
     throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Lesson not found')
   }
@@ -221,13 +218,13 @@ export const ensurePlacementTargetIsValid = async (
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Lesson placement requires a quiz lesson')
   }
 
-  const course = lesson.chapter.course
+  const lessonCourse = lesson.chapter.course
 
-  if (actor.role === UserRole.teacher && course.teacherId !== actor.id) {
+  if (actor.role === UserRole.teacher && lessonCourse.teacherId !== actor.id) {
     throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only assign assessments to your lessons')
   }
 
-  if (course.subject !== assessment.subject || course.grade !== assessment.grade) {
+  if (lessonCourse.subject !== assessment.subject || lessonCourse.grade !== assessment.grade) {
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Assessment subject/grade must match lesson course')
   }
 }
@@ -247,14 +244,15 @@ export const ensurePlacementAvailable = (placement: {
   }
 }
 
-export const ensurePlacementAccess = async (
+export const ensurePlacementAccess = (
   userId: string | undefined,
   placement: {
     id: string
     type: AssessmentPlacementType
     openTime: Date | null
     closeTime: Date | null
-  }
+  },
+  enrollment: unknown | null
 ) => {
   ensurePlacementAvailable(placement)
 
@@ -266,17 +264,12 @@ export const ensurePlacementAccess = async (
     return
   }
 
-  const enrollment =
-    placement.type === AssessmentPlacementType.course
-      ? await studentAssessmentRepository.findEnrollmentForPlacement(userId, placement.id)
-      : await studentAssessmentRepository.findEnrollmentForLessonPlacement(userId, placement.id)
-
   if (!enrollment) {
     throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Assessment requires course enrollment')
   }
 }
 
-export const ensureSubmissionAccess = async (
+export const ensureSubmissionAccess = (
   userId: string,
   submission: {
     placement: {
@@ -285,11 +278,12 @@ export const ensureSubmissionAccess = async (
       openTime: Date | null
       closeTime: Date | null
     } | null
-  }
+  },
+  enrollment: unknown | null
 ) => {
   if (!submission.placement) {
     return
   }
 
-  await ensurePlacementAccess(userId, submission.placement)
+  ensurePlacementAccess(userId, submission.placement, enrollment)
 }

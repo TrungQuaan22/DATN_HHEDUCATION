@@ -2,40 +2,49 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
 import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
-import { mapUserAvatar } from '../mappers'
+import { mapUserProfileToResponse } from '../mappers'
 
 import type {
-  GetMeResponseDto,
+  GetMeResponse,
   UpdateMeDto,
-  UpdateMeResponseDto
+  UpdateMeResponse
 } from '../dto'
 import { userRepository } from '../repository'
 import type { UserRepositoryPort } from '../ports/user-repository.port'
+import { mediaRepository } from '~/modules/media/repository'
+import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 export class UserService {
-  constructor(private readonly repository: UserRepositoryPort) {}
+  constructor(
+    private readonly repository: UserRepositoryPort,
+    private readonly mediaRepository: MediaRepositoryPort
+  ) {}
 
-  async getMe(userId: string): Promise<GetMeResponseDto> {
+  async getMe(userId: string): Promise<GetMeResponse> {
     const user = await this.repository.findUserProfileById(userId)
 
     if (!user) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, ERROR_MESSAGE.NOT_FOUND)
     }
 
-    return mapUserAvatar(user)
+    return mapUserProfileToResponse(user)
   }
 
-  async updateMe(input: UpdateMeDto): Promise<UpdateMeResponseDto> {
+  async updateMe(input: UpdateMeDto): Promise<UpdateMeResponse> {
     const user = await this.repository.findUserProfileById(input.userId)
 
     if (!user) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, ERROR_MESSAGE.NOT_FOUND)
     }
 
+    const media = input.avatarMediaId
+      ? await this.mediaRepository.findMediaById(input.avatarMediaId)
+      : null
+
     const avatarMedia = input.avatarMediaId
-      ? await ensureActorCanUseImageMedia({
+      ? ensureActorCanUseImageMedia({
           actor: { id: input.userId, role: user.role },
-          mediaId: input.avatarMediaId,
+          media,
           label: 'Avatar media'
         })
       : null
@@ -45,8 +54,8 @@ export class UserService {
       avatarObjectKey: input.avatarMediaId === undefined ? undefined : avatarMedia?.objectKey ?? null
     })
 
-    return mapUserAvatar(updatedUser)
+    return mapUserProfileToResponse(updatedUser)
   }
 }
 
-export const userService = new UserService(userRepository)
+export const userService = new UserService(userRepository, mediaRepository)

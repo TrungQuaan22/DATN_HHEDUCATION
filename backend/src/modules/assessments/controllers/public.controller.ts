@@ -3,10 +3,8 @@ import type z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import {
-  publicAssessmentService,
-  type PublicAssessmentService
-} from '../services/public.service'
+import type { PublicAssessmentService } from '../services/public.service'
+import { publicAssessmentService } from '../wiring'
 import type {
   listPublicPlacementsSchema,
   placementIdSchema,

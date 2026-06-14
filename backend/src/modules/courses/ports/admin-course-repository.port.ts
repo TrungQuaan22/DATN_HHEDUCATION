@@ -1,89 +1,84 @@
-import type { CourseStatus, Prisma, Subject } from '@prisma/client'
+import type { CourseStatus, LessonType, MediaStatus, Prisma, Subject, VideoType } from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 
-import type { AdminCourseDetailResponseDto, AdminCourseSummary } from '../dto'
-
-export type AdminCourseTeacherRecord = Omit<AdminCourseSummary['teacher'], 'avatarUrl'> & {
+export type AdminCourseTeacherRecord = {
+  id: string
+  fullName: string
+  email: string
   avatarObjectKey: string | null
+  avatarMediaId: string | null
 }
 
-export type AdminCourseRecord = Omit<
-  AdminCourseSummary,
-  'teacher' | 'thumbnailUrl' | 'enrolledCount'
-> & {
-  thumbnailObjectKey: string | null
+export type AdminCourseRecord = {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  subject: Subject
+  grade: GradeValue
+  teacherId: string
   teacher: AdminCourseTeacherRecord
-  _count?: {
-    enrollments: number
-  }
+  thumbnailObjectKey: string | null
+  thumbnailMediaId: string | null
+  price: number
+  salePrice: number | null
+  status: CourseStatus
+  isFeatured: boolean
+  totalLessons: number
+  enrolledCount: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AdminCourseTopicRecord = {
+  id: string
+  name: string
+  parentId: string | null
+  courseId: string
+}
+
+export type AdminCourseLessonRecord = {
+  id: string
+  chapterId: string
+  title: string
+  type: LessonType
+  description: string | null
+  videoType: VideoType | null
+  videoMediaId: string | null
+  youtubeUrl: string | null
+  durationSec: number | null
+  allowPreview: boolean
+  orderIndex: number
+  videoMedia: {
+    id: string
+    objectKey: string
+    originalName: string | null
+    status: MediaStatus
+    durationSec: number | null
+  } | null
+  assessmentId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AdminCourseChapterRecord = {
+  id: string
+  courseId: string
+  title: string
+  orderIndex: number
+  lessons: AdminCourseLessonRecord[]
+  createdAt: Date
+  updatedAt: Date
 }
 
 export type AdminCourseDetailRecord = AdminCourseRecord & {
-  topics: Array<{
-    id: string
-    name: string
-    parentId: string | null
-    courseId: string
-  }>
-  chapters: Array<{
-    id: string
-    courseId: string
-    title: string
-    orderIndex: number
-    createdAt: Date
-    updatedAt: Date
-    lessons: Array<{
-      id: string
-      chapterId: string
-      title: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['title']
-      type: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['type']
-      description: string | null
-      videoType: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['videoType']
-      videoMediaId: string | null
-      youtubeUrl: string | null
-      durationSec: number | null
-      allowPreview: boolean
-      orderIndex: number
-      createdAt: Date
-      updatedAt: Date
-      videoMedia: {
-        id: string
-        objectKey: string
-        originalName: string | null
-        status: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['videoMedia'] extends infer T
-          ? T extends { status: infer S }
-            ? S
-            : never
-          : never
-        durationSec: number | null
-      } | null
-      assessmentPlacements: Array<{
-        assessmentId: string
-      }>
-    }>
-  }>
-}
-
-export type UnreadySystemVideoLessonRecord = {
-  id: string
-  title: string
-  videoMediaId: string | null
-  videoMedia: {
-    status: string
-  } | null
-  chapter: {
-    id: string
-    title: string
-  }
+  topics: AdminCourseTopicRecord[]
+  chapters: AdminCourseChapterRecord[]
 }
 
 export interface AdminCourseRepositoryPort {
   findActiveCourseBySlug(slug: string): Promise<{ id: string } | null>
-  findDraftOrPublishedCourseByTitle(data: {
-    title: string
-    excludeCourseId?: string
-  }): Promise<{ id: string } | null>
   findActiveTeacherById(teacherId: string): Promise<{ id: string } | null>
   findCourseById(courseId: string): Promise<AdminCourseRecord | null>
   findCourseDetailById(courseId: string): Promise<AdminCourseDetailRecord | null>
@@ -119,5 +114,4 @@ export interface AdminCourseRepositoryPort {
     isFeatured?: boolean
   }): Promise<AdminCourseRecord>
   updateCourseStatus(courseId: string, status: CourseStatus): Promise<AdminCourseRecord>
-  listUnreadySystemVideoLessons(courseId: string): Promise<UnreadySystemVideoLessonRecord[]>
 }

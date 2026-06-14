@@ -1,6 +1,5 @@
 import type { LessonType, MediaStatus, VideoType } from '@prisma/client'
 
-import type { ReorderLessonsResponseDto } from '../dto'
 import type { AdminChapterWithCourseRecord } from './admin-chapter-repository.port'
 
 export type AdminLessonRecord = {
@@ -21,7 +20,7 @@ export type AdminLessonRecord = {
   youtubeUrl: string | null
   durationSec: number | null
   allowPreview: boolean
-  assessmentPlacements: Array<{ assessmentId: string }>
+  assessmentId: string | null
   orderIndex: number
   createdAt: Date
   updatedAt: Date
@@ -64,5 +63,5 @@ export interface AdminLessonRepositoryPort {
   reorderLessons(
     chapterId: string,
     lessonIds: string[]
-  ): Promise<ReorderLessonsResponseDto['items']>
+  ): Promise<Array<{ id: string; orderIndex: number }>>
 }

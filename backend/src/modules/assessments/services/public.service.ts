@@ -1,4 +1,4 @@
-import { Subject } from '@prisma/client'
+import { AssessmentPlacementType, Subject } from '@prisma/client'
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
@@ -8,12 +8,13 @@ import {
   mapRuntimePlacementPreview
 } from '../mappers/assessment.mapper'
 import type { PublicAssessmentRepositoryPort } from '../ports/public-assessment-repository.port'
-import { publicAssessmentRepository } from '../repositories'
+import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
 import {
   ensurePlacementAccess
 } from '../ensures/assessment.ensure'
+import type { SubmissionSummary } from '../types'
 
-const mapSubmissionSummaryForRuntime = (submission: any) => ({
+const mapSubmissionSummaryForRuntime = (submission: SubmissionSummary) => ({
   id: submission.id,
   assessmentId: submission.assessmentId,
   placementId: submission.placementId,
@@ -26,7 +27,10 @@ const mapSubmissionSummaryForRuntime = (submission: any) => ({
 })
 
 export class PublicAssessmentService {
-  constructor(private readonly repository: PublicAssessmentRepositoryPort) {}
+  constructor(
+    private readonly repository: PublicAssessmentRepositoryPort,
+    private readonly studentRepository: StudentAssessmentRepositoryPort
+  ) {}
 
   async listPublicPlacements(data: {
     subject?: Subject
@@ -61,7 +65,12 @@ export class PublicAssessmentService {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment placement not found')
     }
 
-    await ensurePlacementAccess(data.userId, placement)
+    const enrollment = data.userId
+      ? placement.type === AssessmentPlacementType.course
+        ? await this.studentRepository.findEnrollmentForPlacement(data.userId, placement.id)
+        : await this.studentRepository.findEnrollmentForLessonPlacement(data.userId, placement.id)
+      : null
+    ensurePlacementAccess(data.userId, placement, enrollment)
     const submissions =
       'submissions' in placement && Array.isArray(placement.submissions)
         ? placement.submissions.map(mapSubmissionSummaryForRuntime)
@@ -80,9 +89,12 @@ export class PublicAssessmentService {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment placement not found')
     }
 
-    await ensurePlacementAccess(data.userId, placement)
+    const enrollment = data.userId
+      ? placement.type === AssessmentPlacementType.course
+        ? await this.studentRepository.findEnrollmentForPlacement(data.userId, placement.id)
+        : await this.studentRepository.findEnrollmentForLessonPlacement(data.userId, placement.id)
+      : null
+    ensurePlacementAccess(data.userId, placement, enrollment)
     return mapRuntimePlacementPreview(placement)
   }
 }
-
-export const publicAssessmentService = new PublicAssessmentService(publicAssessmentRepository)

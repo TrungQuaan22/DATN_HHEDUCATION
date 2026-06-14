@@ -2,7 +2,9 @@ import {
   AssessmentPlacementType,
   AssessmentVisibility,
   Prisma,
-  Subject
+  Subject,
+  AssessmentPlacement,
+  Assessment
 } from '@prisma/client'
 
 import { prisma } from '~/config/db'
@@ -12,6 +14,11 @@ import {
   runtimeAssessmentInclude,
   runtimeAssessmentPreviewInclude
 } from './shared'
+import type {
+  RuntimePlacement,
+  RuntimePreviewPlacement,
+  RuntimePreviewPlacementForStudent
+} from '../types'
 
 export class PrismaPublicAssessmentRepository implements PublicAssessmentRepositoryPort {
   listPublicPlacements(data: {
@@ -19,7 +26,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     grade?: number
     skip: number
     take: number
-  }) {
+  }): Promise<[Array<AssessmentPlacement & { assessment: Assessment }>, number]> {
     const where: Prisma.AssessmentPlacementWhereInput = {
       type: AssessmentPlacementType.public_practice,
       assessment: {
@@ -44,7 +51,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     ])
   }
 
-  findRuntimePreviewPlacementById(placementId: string) {
+  findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         id: placementId,
@@ -57,7 +64,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
-  findRuntimePreviewPlacementByIdForStudent(placementId: string, userId: string) {
+  findRuntimePreviewPlacementByIdForStudent(placementId: string, userId: string): Promise<RuntimePreviewPlacementForStudent | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         id: placementId,
@@ -91,7 +98,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
-  findRuntimePlacementBySlug(slug: string) {
+  findRuntimePlacementBySlug(slug: string): Promise<RuntimePlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         slug,
@@ -105,7 +112,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
-  findRuntimePreviewPlacementBySlug(slug: string) {
+  findRuntimePreviewPlacementBySlug(slug: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
         slug,

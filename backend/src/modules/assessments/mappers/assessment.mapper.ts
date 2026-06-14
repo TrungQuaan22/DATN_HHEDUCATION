@@ -1,48 +1,22 @@
-import type {
-  Assessment,
-  AssessmentItem,
-  AssessmentPlacement,
-  AssessmentSection,
-  Media,
-  Question,
-  QuestionOption
-} from '@prisma/client'
+import type { Assessment, AssessmentItem } from '@prisma/client'
+
 import { mapMediaUrl } from '~/common/mappers/media.mapper'
+import type {
+  AssessmentPlacementSummaryResponse,
+  AssessmentSummaryResponse,
+  RuntimeAssessmentResponse
+} from '../dto/assessment.dto'
+import type {
+  PlacementWithAssessment,
+  RuntimePlacement,
+  RuntimePreviewPlacement,
+  RuntimePreviewSection,
+  RuntimeSection
+} from '../types'
 
-type PlacementWithAssessment = AssessmentPlacement & {
+export const mapAssessmentSummary = (
   assessment: Assessment
-}
-
-type RuntimeItem = AssessmentItem & {
-  question:
-    | (Question & {
-        options: QuestionOption[]
-      })
-    | null
-}
-
-type RuntimeSection = AssessmentSection & {
-  items: RuntimeItem[]
-}
-
-type RuntimePreviewSection = AssessmentSection & {
-  items: AssessmentItem[]
-}
-
-type RuntimePlacement = AssessmentPlacement & {
-  assessment: Assessment & {
-    sourceMedia: Media | null
-    sections: RuntimeSection[]
-  }
-}
-
-type RuntimePreviewPlacement = AssessmentPlacement & {
-  assessment: Assessment & {
-    sections: RuntimePreviewSection[]
-  }
-}
-
-export const mapAssessmentSummary = (assessment: Assessment) => ({
+): AssessmentSummaryResponse => ({
   id: assessment.id,
   title: assessment.title,
   subject: assessment.subject,
@@ -52,7 +26,9 @@ export const mapAssessmentSummary = (assessment: Assessment) => ({
   visibility: assessment.visibility
 })
 
-export const mapPlacementSummary = (placement: PlacementWithAssessment) => ({
+export const mapPlacementSummary = (
+  placement: PlacementWithAssessment
+): AssessmentPlacementSummaryResponse => ({
   id: placement.id,
   type: placement.type,
   slug: placement.slug,
@@ -60,7 +36,7 @@ export const mapPlacementSummary = (placement: PlacementWithAssessment) => ({
   assessment: mapAssessmentSummary(placement.assessment)
 })
 
-const mapAnswerMode = (item: AssessmentItem) =>
+const mapAnswerMode = (item: AssessmentItem): 'single' | 'multiple' | null =>
   item.itemType === 'mcq' &&
   item.scoringConfig &&
   typeof item.scoringConfig === 'object' &&
@@ -117,7 +93,9 @@ const mapWorkspaceSection = (section: RuntimeSection) => ({
   }))
 })
 
-export const mapRuntimePlacementPreview = (placement: RuntimePreviewPlacement) => ({
+export const mapRuntimePlacementPreview = (
+  placement: RuntimePreviewPlacement
+): RuntimeAssessmentResponse => ({
   ...mapPlacementSummary(placement),
   openTime: placement.openTime,
   closeTime: placement.closeTime,
@@ -126,7 +104,9 @@ export const mapRuntimePlacementPreview = (placement: RuntimePreviewPlacement) =
   sections: placement.assessment.sections.map(mapPreviewSection)
 })
 
-export const mapRuntimePlacement = (placement: RuntimePlacement) => ({
+export const mapRuntimePlacement = (
+  placement: RuntimePlacement
+): RuntimeAssessmentResponse => ({
   ...mapPlacementSummary(placement),
   openTime: placement.openTime,
   closeTime: placement.closeTime,

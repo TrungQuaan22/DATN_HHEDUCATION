@@ -10,11 +10,44 @@ import {
 import type { GradeValue } from '~/common/constant/taxonomy'
 import { prisma } from '~/config/db'
 
-import type { AdminCourseRepositoryPort } from '../ports/admin-course-repository.port'
+import type {
+  AdminCourseDetailRecord,
+  AdminCourseRecord,
+  AdminCourseRepositoryPort
+} from '../ports/admin-course-repository.port'
 import { adminTeacherSelect, lessonVideoMediaSelect } from './shared'
 
+function mapToCourseRecord(course: any): AdminCourseRecord {
+  return {
+    id: course.id,
+    title: course.title,
+    slug: course.slug,
+    description: course.description,
+    subject: course.subject,
+    grade: course.grade as GradeValue,
+    teacherId: course.teacherId,
+    teacher: {
+      id: course.teacher.id,
+      fullName: course.teacher.fullName,
+      email: course.teacher.email,
+      avatarObjectKey: course.teacher.avatarObjectKey,
+      avatarMediaId: course.teacher.avatarMediaId
+    },
+    thumbnailObjectKey: course.thumbnailObjectKey,
+    thumbnailMediaId: course.thumbnailMediaId,
+    price: course.price,
+    salePrice: course.salePrice,
+    status: course.status,
+    isFeatured: course.isFeatured,
+    totalLessons: course.totalLessons,
+    enrolledCount: course._count?.enrollments ?? 0,
+    createdAt: course.createdAt,
+    updatedAt: course.updatedAt
+  }
+}
+
 export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
-  findActiveCourseBySlug(slug: string) {
+  async findActiveCourseBySlug(slug: string) {
     return prisma.course.findFirst({
       where: {
         slug,
@@ -26,26 +59,9 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     })
   }
 
-  findDraftOrPublishedCourseByTitle(data: { title: string; excludeCourseId?: string }) {
-    return prisma.course.findFirst({
-      where: {
-        title: {
-          equals: data.title,
-          mode: 'insensitive'
-        },
-        status: {
-          in: [CourseStatus.draft, CourseStatus.published]
-        },
-        deletedAt: null,
-        id: data.excludeCourseId ? { not: data.excludeCourseId } : undefined
-      },
-      select: {
-        id: true
-      }
-    })
-  }
 
-  findActiveTeacherById(teacherId: string) {
+
+  async findActiveTeacherById(teacherId: string) {
     return prisma.user.findFirst({
       where: {
         id: teacherId,
@@ -59,8 +75,8 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     })
   }
 
-  findCourseById(courseId: string) {
-    return prisma.course.findFirst({
+  async findCourseById(courseId: string): Promise<AdminCourseRecord | null> {
+    const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         deletedAt: null
@@ -76,10 +92,13 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         }
       }
     })
+
+    if (!course) return null
+    return mapToCourseRecord(course)
   }
 
-  findCourseDetailById(courseId: string) {
-    return prisma.course.findFirst({
+  async findCourseDetailById(courseId: string): Promise<AdminCourseDetailRecord | null> {
+    const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         deletedAt: null
@@ -150,10 +169,54 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         }
       }
     })
+
+    if (!course) return null
+
+    return {
+      ...mapToCourseRecord(course),
+      topics: course.topics,
+      chapters: course.chapters.map((chapter) => ({
+        id: chapter.id,
+        courseId: chapter.courseId,
+        title: chapter.title,
+        orderIndex: chapter.orderIndex,
+        createdAt: chapter.createdAt,
+        updatedAt: chapter.updatedAt,
+        lessons: chapter.lessons.map((lesson) => ({
+          id: lesson.id,
+          chapterId: lesson.chapterId,
+          title: lesson.title,
+          type: lesson.type,
+          description: lesson.description,
+          videoType: lesson.videoType,
+          videoMediaId: lesson.videoMediaId,
+          youtubeUrl: lesson.youtubeUrl,
+          durationSec: lesson.durationSec,
+          allowPreview: lesson.allowPreview,
+          orderIndex: lesson.orderIndex,
+          createdAt: lesson.createdAt,
+          updatedAt: lesson.updatedAt,
+          videoMedia: lesson.videoMedia
+            ? {
+                id: lesson.videoMedia.id,
+                objectKey: lesson.videoMedia.objectKey,
+                originalName: lesson.videoMedia.originalName,
+                status: lesson.videoMedia.status,
+                durationSec: lesson.videoMedia.durationSec
+              }
+            : null,
+          assessmentId: lesson.assessmentPlacements[0]?.assessmentId ?? null
+        }))
+      }))
+    }
   }
 
-  listAdminCourses(data: { where: Prisma.CourseWhereInput; skip: number; take: number }) {
-    return prisma.$transaction([
+  async listAdminCourses(data: {
+    where: Prisma.CourseWhereInput
+    skip: number
+    take: number
+  }): Promise<[AdminCourseRecord[], number]> {
+    const [courses, total] = await prisma.$transaction([
       prisma.course.findMany({
         where: data.where,
         skip: data.skip,
@@ -174,9 +237,11 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         where: data.where
       })
     ])
+
+    return [courses.map(mapToCourseRecord), total]
   }
 
-  createCourse(data: {
+  async createCourse(data: {
     title: string
     slug: string
     description?: string
@@ -188,8 +253,8 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     price: number
     salePrice?: number | null
     isFeatured?: boolean
-  }) {
-    return prisma.course.create({
+  }): Promise<AdminCourseRecord> {
+    const course = await prisma.course.create({
       data: {
         title: data.title,
         slug: data.slug,
@@ -214,9 +279,11 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         }
       }
     })
+
+    return mapToCourseRecord(course)
   }
 
-  updateCourse(data: {
+  async updateCourse(data: {
     courseId: string
     title?: string
     description?: string | null
@@ -228,8 +295,8 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     price?: number
     salePrice?: number | null
     isFeatured?: boolean
-  }) {
-    return prisma.course.update({
+  }): Promise<AdminCourseRecord> {
+    const course = await prisma.course.update({
       where: {
         id: data.courseId
       },
@@ -256,10 +323,12 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         }
       }
     })
+
+    return mapToCourseRecord(course)
   }
 
-  updateCourseStatus(courseId: string, status: CourseStatus) {
-    return prisma.course.update({
+  async updateCourseStatus(courseId: string, status: CourseStatus): Promise<AdminCourseRecord> {
+    const course = await prisma.course.update({
       where: {
         id: courseId
       },
@@ -277,61 +346,11 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         }
       }
     })
+
+    return mapToCourseRecord(course)
   }
 
-  listUnreadySystemVideoLessons(courseId: string) {
-    return prisma.lesson.findMany({
-      where: {
-        deletedAt: null,
-        type: 'video',
-        videoType: 'system',
-        chapter: {
-          courseId,
-          deletedAt: null
-        },
-        OR: [
-          {
-            videoMediaId: null
-          },
-          {
-            videoMedia: {
-              is: {
-                status: {
-                  not: MediaStatus.ready
-                }
-              }
-            }
-          }
-        ]
-      },
-      orderBy: [
-        {
-          chapter: {
-            orderIndex: 'asc'
-          }
-        },
-        {
-          orderIndex: 'asc'
-        }
-      ],
-      select: {
-        id: true,
-        title: true,
-        videoMediaId: true,
-        videoMedia: {
-          select: {
-            status: true
-          }
-        },
-        chapter: {
-          select: {
-            id: true,
-            title: true
-          }
-        }
-      }
-    })
-  }
+
 }
 
 export const adminCourseRepository = new PrismaAdminCourseRepository()

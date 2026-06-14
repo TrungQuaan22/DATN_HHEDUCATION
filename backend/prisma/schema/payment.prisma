@@ -147,7 +147,7 @@ model IdempotencyKey {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   scope        String   @db.VarChar(100)
   key          String   @db.VarChar(255)
-  userId       String?  @map("user_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
   requestHash  String   @map("request_hash") @db.VarChar(128)
   statusCode   Int?     @map("status_code")
   responseBody Json?    @map("response_body")
@@ -155,10 +155,9 @@ model IdempotencyKey {
   createdAt    DateTime @default(now()) @map("created_at")
   expiresAt    DateTime @map("expires_at")
 
-  user User? @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([scope, key])
-  @@index([userId])
+  @@unique([userId, scope, key])
   @@index([expiresAt])
   @@map("idempotency_keys")
 }

@@ -8,10 +8,7 @@ import {
 
 import { prisma } from '~/config/db'
 
-import {
-  ADMIN_PAYMENT_TRANSACTION_LIST_SELECT,
-  type NormalizedPaymentEvent
-} from '../dto'
+import type { NormalizedPaymentEvent } from '../dto'
 
 type TransactionClient = Prisma.TransactionClient
 
@@ -42,27 +39,6 @@ const buildReviewMetadata = (
 }
 
 export const paymentRepository = {
-  // --- Admin Payment Transactions ---
-  async listTransactions(data: {
-    where: Prisma.PaymentTransactionWhereInput
-    skip: number
-    take: number
-  }) {
-    return prisma.$transaction([
-      prisma.paymentTransaction.findMany({
-        where: data.where,
-        select: ADMIN_PAYMENT_TRANSACTION_LIST_SELECT,
-        orderBy: {
-          createdAt: 'desc'
-        },
-        skip: data.skip,
-        take: data.take
-      }),
-      prisma.paymentTransaction.count({
-        where: data.where
-      })
-    ])
-  },
 
   // --- Webhook Events ---
   createWebhookEvent(

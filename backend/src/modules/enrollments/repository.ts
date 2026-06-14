@@ -1,4 +1,4 @@
-import { EnrollmentSource } from '@prisma/client'
+import { Prisma, EnrollmentSource } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 import type { EnrollmentRepositoryPort } from './ports/enrollment-repository.port'
@@ -64,6 +64,10 @@ export class PrismaEnrollmentRepository implements EnrollmentRepositoryPort {
         enrolledAt: true
       }
     })
+  }
+
+  isUniqueConstraintError(error: unknown): boolean {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'
   }
 }
 

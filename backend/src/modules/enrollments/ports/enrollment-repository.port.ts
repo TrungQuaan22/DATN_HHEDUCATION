@@ -33,4 +33,5 @@ export interface EnrollmentRepositoryPort {
     courseId: string
     manualReason?: string
   }): Promise<ManualEnrollmentRecord>
+  isUniqueConstraintError(error: unknown): boolean
 }

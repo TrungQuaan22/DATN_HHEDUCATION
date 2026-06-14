@@ -1,4 +1,9 @@
-import type { Subject } from '@prisma/client'
+import type { Subject, AssessmentPlacement, Assessment } from '@prisma/client'
+import type {
+  RuntimePlacement,
+  RuntimePreviewPlacement,
+  RuntimePreviewPlacementForStudent
+} from '../types'
 
 export interface PublicAssessmentRepositoryPort {
   listPublicPlacements(data: {
@@ -6,13 +11,13 @@ export interface PublicAssessmentRepositoryPort {
     grade?: number
     skip: number
     take: number
-  }): Promise<[any[], number]>
+  }): Promise<[Array<AssessmentPlacement & { assessment: Assessment }>, number]>
 
-  findRuntimePreviewPlacementById(placementId: string): Promise<any>
+  findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null>
 
-  findRuntimePreviewPlacementByIdForStudent(placementId: string, userId: string): Promise<any>
+  findRuntimePreviewPlacementByIdForStudent(placementId: string, userId: string): Promise<RuntimePreviewPlacementForStudent | null>
 
-  findRuntimePlacementBySlug(slug: string): Promise<any>
+  findRuntimePlacementBySlug(slug: string): Promise<RuntimePlacement | null>
 
-  findRuntimePreviewPlacementBySlug(slug: string): Promise<any>
+  findRuntimePreviewPlacementBySlug(slug: string): Promise<RuntimePreviewPlacement | null>
 }

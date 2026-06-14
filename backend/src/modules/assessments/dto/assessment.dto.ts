@@ -58,7 +58,17 @@ export type CreatePlacementDto = {
   orderIndex?: number | null
 }
 
-export type UpsertPlacementDto = Omit<CreatePlacementDto, 'assessmentId'>
+export type UpsertPlacementDto = {
+  type: AssessmentPlacementType
+  courseId?: string | null
+  lessonId?: string | null
+  openTime?: string | null
+  closeTime?: string | null
+  maxAttempts?: number | null
+  slug?: string | null
+  isFeatured?: boolean
+  orderIndex?: number | null
+}
 
 export type CloneAssessmentDto = {
   title?: string
@@ -172,7 +182,7 @@ export type GradeEssayDto = {
   teacherNote?: string | null
 }
 
-export type AssessmentSummaryDto = {
+export type AssessmentSummaryResponse = {
   id: string
   title: string
   subject: Subject
@@ -182,18 +192,26 @@ export type AssessmentSummaryDto = {
   visibility: string
 }
 
-export type AssessmentPlacementSummaryDto = {
+export type AssessmentPlacementSummaryResponse = {
   id: string
   type: AssessmentPlacementType
   slug: string | null
   isFeatured: boolean
-  assessment: AssessmentSummaryDto
+  assessment: AssessmentSummaryResponse
 }
 
-export type RuntimeAssessmentDto = AssessmentPlacementSummaryDto & {
+export type RuntimeAssessmentResponse = {
+  id: string
+  type: AssessmentPlacementType
+  slug: string | null
+  isFeatured: boolean
+  assessment: AssessmentSummaryResponse
+  openTime: Date | null
+  closeTime: Date | null
+  maxAttempts: number | null
   timeLimitMinutes: number | null
-  sourceMediaId: string | null
-  sourceMediaUrl: string | null
+  sourceMediaId?: string | null
+  sourceMediaUrl?: string | null
   sections: Array<{
     id: string
     itemType: AssessmentItemType
@@ -216,13 +234,13 @@ export type RuntimeAssessmentDto = AssessmentPlacementSummaryDto & {
           content: unknown
           orderIndex: number
         }>
-    } | null
+      } | null
     }>
   }>
-  submissions?: AssessmentSubmissionRuntimeDto[]
+  submissions?: AssessmentSubmissionRuntimeResponse[]
 }
 
-export type AssessmentSubmissionRuntimeDto = {
+export type AssessmentSubmissionRuntimeResponse = {
   id: string
   assessmentId: string
   placementId: string | null

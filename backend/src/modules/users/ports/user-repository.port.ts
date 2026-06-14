@@ -1,4 +1,4 @@
-import type { Prisma, UserRole, UserStatus } from '@prisma/client'
+import type { UserRole, UserStatus } from '@prisma/client'
 
 export type UserProfileRecord = {
   id: string
@@ -20,13 +20,15 @@ export type TeacherOptionRecord = {
 }
 
 export type ListUsersInput = {
-  where: Prisma.UserWhereInput
+  role?: UserRole
+  status?: UserStatus
+  search?: string
   skip: number
   take: number
 }
 
 export type ListTeacherOptionsInput = {
-  where: Prisma.UserWhereInput
+  search?: string
   skip: number
   take: number
 }

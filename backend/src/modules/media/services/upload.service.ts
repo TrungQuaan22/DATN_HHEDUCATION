@@ -8,9 +8,9 @@ import { buildMediaPublicUrl } from '~/common/utils/media'
 
 import type {
   CompleteUploadDto,
-  CompleteUploadResponseDto,
+  CompleteUploadResponse,
   CreatePresignedUploadDto,
-  CreatePresignedUploadResponseDto
+  CreatePresignedUploadResponse
 } from '../dto'
 import { mediaRepository } from '../repository'
 import { transcodeService } from './transcode.service'
@@ -74,7 +74,7 @@ export class MediaUploadService {
   private async createUploadRecord(
     userId: string,
     input: CreatePresignedUploadDto
-  ): Promise<CreatePresignedUploadResponseDto> {
+  ): Promise<CreatePresignedUploadResponse> {
     const objectKey = buildObjectKey(input)
     const media = await this.repository.createMedia({
       type: getMediaType(input.resourceType),
@@ -99,69 +99,69 @@ export class MediaUploadService {
     }
   }
 
-  private async completeUploadRecord(mediaId: string): Promise<CompleteUploadResponseDto> {
+  private async completeUploadRecord(mediaId: string): Promise<CompleteUploadResponse> {
     const media = await this.repository.findMediaById(mediaId)
 
-  if (!media || media.status === MediaStatus.deleted) {
-    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
-  }
-
-  if (media.status === MediaStatus.ready || media.status === MediaStatus.processing) {
-    return {
-      mediaId: media.id,
-      objectKey: media.objectKey,
-      status: media.status,
-      contentType: media.mimeType,
-      fileSize: media.sizeBytes,
-      etag: media.etag ?? null,
-      publicUrl: buildMediaPublicUrl(media.objectKey)
+    if (!media || media.status === MediaStatus.deleted) {
+      throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Media not found')
     }
-  }
 
-  let metadata
+    if (media.status === MediaStatus.ready || media.status === MediaStatus.processing) {
+      return {
+        mediaId: media.id,
+        objectKey: media.objectKey,
+        status: media.status,
+        contentType: media.mimeType,
+        fileSize: media.sizeBytes,
+        etag: media.etag ?? null,
+        publicUrl: buildMediaPublicUrl(media.objectKey)
+      }
+    }
 
-  try {
-    metadata = await this.storage.headObject(media.objectKey)
-  } catch {
-    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Uploaded object not found')
-  }
+    let metadata
 
-  if (!metadata) {
-    throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Uploaded object not found')
-  }
+    try {
+      metadata = await this.storage.headObject(media.objectKey)
+    } catch {
+      throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Uploaded object not found')
+    }
 
-  const nextStatus = media.type === 'video' ? MediaStatus.uploaded : MediaStatus.ready
+    if (!metadata) {
+      throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Uploaded object not found')
+    }
 
-  const updatedMedia = await this.repository.updateMediaById(media.id, {
-    status: nextStatus,
-    mimeType: metadata.contentType ?? media.mimeType,
-    sizeBytes: metadata.contentLength ?? media.sizeBytes,
-    etag: metadata.etag ?? null
-  })
+    const nextStatus = media.type === 'video' ? MediaStatus.uploaded : MediaStatus.ready
 
-  if (updatedMedia.type === MediaType.video) {
-    setImmediate(() => {
-      this.transcoder.startHlsTranscoding(updatedMedia.id).catch((error) => {
-        console.error(`[Transcode Trigger Failed] MediaId ${updatedMedia.id}:`, error)
-      })
+    const updatedMedia = await this.repository.updateMediaById(media.id, {
+      status: nextStatus,
+      mimeType: metadata.contentType ?? media.mimeType,
+      sizeBytes: metadata.contentLength ?? media.sizeBytes,
+      etag: metadata.etag ?? null
     })
-  }
 
-  return {
-    mediaId: updatedMedia.id,
-    objectKey: updatedMedia.objectKey,
-    status: updatedMedia.status,
-    contentType: updatedMedia.mimeType,
-    fileSize: updatedMedia.sizeBytes,
-    etag: updatedMedia.etag ?? null,
-    publicUrl: buildMediaPublicUrl(updatedMedia.objectKey)
-  }
+    if (updatedMedia.type === MediaType.video) {
+      setImmediate(() => {
+        this.transcoder.startHlsTranscoding(updatedMedia.id).catch((error) => {
+          console.error(`[Transcode Trigger Failed] MediaId ${updatedMedia.id}:`, error)
+        })
+      })
+    }
+
+    return {
+      mediaId: updatedMedia.id,
+      objectKey: updatedMedia.objectKey,
+      status: updatedMedia.status,
+      contentType: updatedMedia.mimeType,
+      fileSize: updatedMedia.sizeBytes,
+      etag: updatedMedia.etag ?? null,
+      publicUrl: buildMediaPublicUrl(updatedMedia.objectKey)
+    }
   }
 
   async createUpload(
     user: { id: string; role: UserRole },
     input: CreatePresignedUploadDto
-  ): Promise<CreatePresignedUploadResponseDto> {
+  ): Promise<CreatePresignedUploadResponse> {
     ensureCanUploadResourceType(user, input.resourceType)
 
     return this.createUploadRecord(user.id, input)
@@ -170,7 +170,7 @@ export class MediaUploadService {
   async completeUpload(
     user: { id: string; role: UserRole },
     input: CompleteUploadDto
-  ): Promise<CompleteUploadResponseDto> {
+  ): Promise<CompleteUploadResponse> {
     const media = await this.repository.findMediaById(input.mediaId)
 
     if (!media || media.status === MediaStatus.deleted) {

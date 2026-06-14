@@ -1,7 +1,7 @@
 import {
   AssessmentItemType,
+  AssessmentPlacementType,
   AssessmentVisibility,
-  Prisma,
   SubmissionStatus
 } from '@prisma/client'
 
@@ -16,20 +16,23 @@ import {
   mapRuntimePlacement
 } from '../mappers/assessment.mapper'
 import {
+  addScores,
+  multiplyScore,
+  scoresAreEqual,
+  zeroScore
+} from '../helpers/score.helper'
+import {
   calculateTrueFalseRatio,
   isSameSet
 } from '../policies/assessment.policy'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
-import { studentAssessmentRepository } from '../repositories'
 import {
   ensureSubmissionForStudentExists,
   ensurePlacementAccess,
   ensurePlacementAvailable,
   ensureSubmissionAccess
 } from '../ensures/assessment.ensure'
-
-const toDecimal = (value: number | string | Prisma.Decimal) => new Prisma.Decimal(value)
-const zero = () => new Prisma.Decimal(0)
+import type { SubmissionDetail, StudentPlacementListItem, StudentSubmissionComplete } from '../types'
 
 const ensureSubmissionIsDoing = (status: SubmissionStatus) => {
   if (status !== SubmissionStatus.doing) {
@@ -69,7 +72,7 @@ const getQuestionOptions = (item: {
 const flattenSections = <TItem>(sections: Array<{ items: TItem[] }>): TItem[] =>
   sections.flatMap((section) => section.items)
 
-const mapSubmissionForRuntime = (submission: any) => ({
+const mapSubmissionForRuntime = (submission: SubmissionDetail) => ({
   id: submission.id,
   assessmentId: submission.assessmentId,
   placementId: submission.placementId,
@@ -80,20 +83,20 @@ const mapSubmissionForRuntime = (submission: any) => ({
   autoScore: submission.autoScore?.toString() ?? null,
   finalScore: submission.finalScore?.toString() ?? null,
   answers: {
-    mcq: (submission.mcqAnswers ?? []).map((answer: any) => ({
+    mcq: (submission.mcqAnswers ?? []).map((answer) => ({
       itemId: answer.itemId,
-      selectedOptionIds: answer.selectedOptions.map((option: any) => option.optionId)
+      selectedOptionIds: answer.selectedOptions.map((option) => option.optionId)
     })),
-    trueFalse: (submission.tfAnswers ?? []).map((answer: any) => ({
+    trueFalse: (submission.tfAnswers ?? []).map((answer) => ({
       itemId: answer.itemId,
       optionId: answer.optionId,
       selectedValue: answer.selectedValue
     })),
-    numeric: (submission.numericAnswers ?? []).map((answer: any) => ({
+    numeric: (submission.numericAnswers ?? []).map((answer) => ({
       itemId: answer.itemId,
       answerValue: answer.answerValue.toString()
     })),
-    essay: (submission.essayAnswers ?? []).map((answer: any) => ({
+    essay: (submission.essayAnswers ?? []).map((answer) => ({
       itemId: answer.itemId,
       answer: answer.answer
     }))
@@ -114,7 +117,7 @@ export class StudentAssessmentService {
     })
 
     return {
-      items: placements.map((placement: any) => {
+      items: placements.map((placement: StudentPlacementListItem) => {
         const latestSubmission = placement.submissions[0] ?? null
         const course = placement.course ?? placement.lesson?.chapter.course ?? null
 
@@ -198,7 +201,11 @@ export class StudentAssessmentService {
     }
 
     const placement = await this.repository.findRuntimePlacementById(data.placementId)
-    const activeSubmission = await ensureSubmissionForStudentExists(data.submissionId, data.userId)
+    const submissionRecord = await this.repository.findSubmissionForStudent(
+      data.submissionId,
+      data.userId
+    )
+    const activeSubmission = ensureSubmissionForStudentExists(submissionRecord)
 
     if (!placement) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment placement not found')
@@ -223,7 +230,12 @@ export class StudentAssessmentService {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment placement not found')
     }
 
-    await ensurePlacementAccess(data.userId, placement)
+    const enrollment = data.userId
+      ? placement.type === AssessmentPlacementType.course
+        ? await this.repository.findEnrollmentForPlacement(data.userId, placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(data.userId, placement.id)
+      : null
+    ensurePlacementAccess(data.userId, placement, enrollment)
     ensurePlacementAvailable(placement)
 
     const doingSubmission = await this.repository.findDoingSubmissionForPlacement(data.userId, placement.id)
@@ -249,10 +261,20 @@ export class StudentAssessmentService {
   }
 
   async saveAnswers(data: { userId: string; submissionId: string; answers: SaveAnswerDto[] }) {
-    const submission = await ensureSubmissionForStudentExists(data.submissionId, data.userId)
+    const submissionRecord = await this.repository.findSubmissionForStudent(
+      data.submissionId,
+      data.userId
+    )
+    const submission = ensureSubmissionForStudentExists(submissionRecord)
 
     ensureSubmissionIsDoing(submission.status)
-    await ensureSubmissionAccess(data.userId, submission)
+
+    const enrollment = submission.placement
+      ? submission.placement.type === AssessmentPlacementType.course
+        ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(data.userId, submission.placement.id)
+      : null
+    ensureSubmissionAccess(data.userId, submission, enrollment)
     this.ensureAnswersBelongToAssessment(data.answers, flattenSections(submission.assessment.sections))
 
     await this.repository.saveAnswers(data.submissionId, data.answers)
@@ -260,13 +282,23 @@ export class StudentAssessmentService {
   }
 
   async submitAttempt(data: { userId: string; submissionId: string }) {
-    const submission = await ensureSubmissionForStudentExists(data.submissionId, data.userId)
+    const submissionRecord = await this.repository.findSubmissionForStudent(
+      data.submissionId,
+      data.userId
+    )
+    const submission = ensureSubmissionForStudentExists(submissionRecord)
 
     ensureSubmissionIsDoing(submission.status)
-    await ensureSubmissionAccess(data.userId, submission)
+
+    const enrollment = submission.placement
+      ? submission.placement.type === AssessmentPlacementType.course
+        ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(data.userId, submission.placement.id)
+      : null
+    ensureSubmissionAccess(data.userId, submission, enrollment)
 
     const grading = this.calculateObjectiveScore(submission)
-    const hasEssay = flattenSections(submission.assessment.sections).some((item: any) => item.itemType === AssessmentItemType.essay)
+    const hasEssay = flattenSections(submission.assessment.sections).some((item) => item.itemType === AssessmentItemType.essay)
     const status = hasEssay ? SubmissionStatus.submitted : SubmissionStatus.completed
     const finalScore = hasEssay ? null : grading.autoScore
 
@@ -288,7 +320,7 @@ export class StudentAssessmentService {
     items: Array<{
       id: string
       itemType: AssessmentItemType
-      scoringConfig: Prisma.JsonValue
+      scoringConfig: unknown
       question: { options: Array<{ id: string }> } | null
     }>
   ) {
@@ -336,42 +368,42 @@ export class StudentAssessmentService {
     }
   }
 
-  private calculateObjectiveScore(submission: any) {
+  private calculateObjectiveScore(submission: StudentSubmissionComplete) {
     if (!submission) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Submission not found')
     }
 
-    const mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }> = []
-    const tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }> = []
-    const numericResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: Prisma.Decimal }> = []
-    let autoScore = zero()
+    const mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }> = []
+    const tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }> = []
+    const numericResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }> = []
+    let autoScore = zeroScore()
 
-    const items = flattenSections(submission.assessment.sections) as any[]
+    const items = flattenSections(submission.assessment.sections)
 
     for (const item of items) {
       if (item.itemType === AssessmentItemType.mcq) {
-        const answer = submission.mcqAnswers.find((mcqAnswer: any) => mcqAnswer.itemId === item.id)
-        const selectedOptionIds = answer?.selectedOptions.map((option: any) => option.optionId) ?? []
+        const answer = submission.mcqAnswers.find((mcqAnswer) => mcqAnswer.itemId === item.id)
+        const selectedOptionIds = answer?.selectedOptions.map((option) => option.optionId) ?? []
         const correctOptionIds = getQuestionOptions(item)
           .filter((option) => option.isCorrect)
           .map((option) => option.id)
         const isCorrect = isSameSet(selectedOptionIds, correctOptionIds)
-        const pointEarned = isCorrect ? toDecimal(item.maxScore) : zero()
+        const pointEarned = isCorrect ? item.maxScore.toString() : zeroScore()
 
         if (answer) {
           mcqResults.push({ answerId: answer.id, isCorrect, pointEarned })
         }
 
-        autoScore = autoScore.plus(pointEarned)
+        autoScore = addScores(autoScore, pointEarned)
       }
 
       if (item.itemType === AssessmentItemType.true_false) {
         const options = getQuestionOptions(item)
-        const answers = submission.tfAnswers.filter((tfAnswer: any) => tfAnswer.itemId === item.id)
+        const answers = submission.tfAnswers.filter((tfAnswer) => tfAnswer.itemId === item.id)
         let correctCount = 0
 
         for (const option of options) {
-          const answer = answers.find((tfAnswer: any) => tfAnswer.optionId === option.id)
+          const answer = answers.find((tfAnswer) => tfAnswer.optionId === option.id)
           const isCorrect = Boolean(answer && answer.selectedValue === option.isCorrect)
 
           if (isCorrect) {
@@ -379,11 +411,12 @@ export class StudentAssessmentService {
           }
 
           if (answer) {
-            tfResults.push({ answerId: answer.id, isCorrect, pointEarned: zero() })
+            tfResults.push({ answerId: answer.id, isCorrect, pointEarned: zeroScore() })
           }
         }
 
-        const pointEarned = toDecimal(item.maxScore).mul(
+        const pointEarned = multiplyScore(
+          item.maxScore,
           calculateTrueFalseRatio(correctCount, options.length)
         )
         const firstAnswer = answers[0]
@@ -396,24 +429,24 @@ export class StudentAssessmentService {
           }
         }
 
-        autoScore = autoScore.plus(pointEarned)
+        autoScore = addScores(autoScore, pointEarned)
       }
 
       if (item.itemType === AssessmentItemType.numeric) {
-        const answer = submission.numericAnswers.find((numericAnswer: any) => numericAnswer.itemId === item.id)
+        const answer = submission.numericAnswers.find((numericAnswer) => numericAnswer.itemId === item.id)
         const correctAnswer = item.correctAnswer as { value?: number } | null
         const isCorrect = Boolean(
           answer &&
             correctAnswer?.value !== undefined &&
-            answer.answerValue.equals(toDecimal(correctAnswer.value))
+            scoresAreEqual(answer.answerValue, correctAnswer.value)
         )
-        const pointEarned = isCorrect ? toDecimal(item.maxScore) : zero()
+        const pointEarned = isCorrect ? item.maxScore.toString() : zeroScore()
 
         if (answer) {
           numericResults.push({ answerId: answer.id, isCorrect, pointEarned })
         }
 
-        autoScore = autoScore.plus(pointEarned)
+        autoScore = addScores(autoScore, pointEarned)
       }
     }
 
@@ -425,5 +458,3 @@ export class StudentAssessmentService {
     }
   }
 }
-
-export const studentAssessmentService = new StudentAssessmentService(studentAssessmentRepository)

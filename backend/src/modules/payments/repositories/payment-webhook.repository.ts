@@ -62,14 +62,19 @@ class PrismaPaymentWebhookTransaction implements PaymentWebhookTransactionPort {
     userId: string
     courseIds: string[]
   }): Promise<void> {
-    await this.tx.order.update({
+    const result = await this.tx.order.updateMany({
       where: {
-        id: data.orderId
+        id: data.orderId,
+        status: OrderStatus.pending
       },
       data: {
         status: OrderStatus.completed
       }
     })
+
+    if (result.count === 0) {
+      throw new Error('Order is not pending')
+    }
 
     await this.tx.enrollment.createMany({
       data: data.courseIds.map((courseId) => ({

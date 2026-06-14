@@ -1,5 +1,5 @@
-import { UserRole } from '@prisma/client'
-import type { Prisma, UserStatus } from '@prisma/client'
+import { UserRole, UserStatus } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 import type {
@@ -37,16 +37,29 @@ export class PrismaUserRepository implements UserRepositoryPort {
   }
 
   listUsers(data: ListUsersInput) {
+    const where: Prisma.UserWhereInput = {
+      role: data.role,
+      status: data.status,
+      deletedAt: null
+    }
+
+    if (data.search) {
+      where.OR = [
+        { email: { contains: data.search, mode: 'insensitive' } },
+        { fullName: { contains: data.search, mode: 'insensitive' } }
+      ]
+    }
+
     return prisma.$transaction([
       prisma.user.findMany({
-        where: data.where,
+        where,
         skip: data.skip,
         take: data.take,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         select: userListSelect
       }),
       prisma.user.count({
-        where: data.where
+        where
       })
     ])
   }
@@ -76,16 +89,26 @@ export class PrismaUserRepository implements UserRepositoryPort {
   }
 
   listTeacherOptions(data: ListTeacherOptionsInput) {
+    const where: Prisma.UserWhereInput = {
+      role: UserRole.teacher,
+      status: UserStatus.active,
+      deletedAt: null
+    }
+
+    if (data.search) {
+      where.fullName = { contains: data.search, mode: 'insensitive' }
+    }
+
     return prisma.$transaction([
       prisma.user.findMany({
-        where: data.where,
+        where,
         skip: data.skip,
         take: data.take,
         orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
         select: teacherOptionSelect
       }),
       prisma.user.count({
-        where: data.where
+        where
       })
     ])
   }

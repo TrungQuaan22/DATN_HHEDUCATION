@@ -1,141 +1,113 @@
 import { mapMediaUrl } from '~/common/mappers/media.mapper'
-import { mapUserAvatar } from '~/modules/users/mappers'
 
 import type {
-  AdminCourseDetailResponseDto,
-  AdminCourseSummary
-} from '../dto'
+  AdminCourseDetailResponse,
+  AdminCourseResponse
+} from '../dto/admin-courses.dto'
+import type { CourseSummary } from '../dto/course-shared.types'
+import type {
+  AdminCourseDetailRecord,
+  AdminCourseRecord
+} from '../ports/admin-course-repository.port'
+import type { CatalogCourseRecord } from '../ports/public-course-repository.port'
 
-type CourseMediaFields = {
-  thumbnailObjectKey?: string | null
-  teacher: {
-    avatarObjectKey?: string | null
-  }
-}
-
-type CourseCountFields = {
-  _count?: {
-    enrollments: number
-  }
-}
-
-type AdminCourseSummaryFields = Omit<
-  AdminCourseSummary,
-  'teacher' | 'thumbnailUrl' | 'enrolledCount'
-> &
-  CourseCountFields & {
-    thumbnailObjectKey?: string | null
-    teacher: Omit<AdminCourseSummary['teacher'], 'avatarUrl'> & {
-      avatarObjectKey?: string | null
-    }
-  }
-
-type AdminCourseDetailFields = AdminCourseSummaryFields & {
-    topics: Array<{
-      id: string
-      name: string
-      parentId: string | null
-      courseId: string
-    }>
-    chapters: Array<{
-      id: string
-      courseId: string
-      title: string
-      orderIndex: number
-      createdAt: Date
-      updatedAt: Date
-      lessons: Array<{
-        id: string
-        chapterId: string
-        title: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['title']
-        type: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['type']
-        description: string | null
-        videoType: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['videoType']
-        videoMediaId: string | null
-        youtubeUrl: string | null
-        durationSec: number | null
-        allowPreview: boolean
-        orderIndex: number
-        createdAt: Date
-        updatedAt: Date
-        videoMedia: {
-          id: string
-          objectKey: string
-          originalName: string | null
-          status: AdminCourseDetailResponseDto['chapters'][number]['lessons'][number]['videoMedia'] extends infer T
-            ? T extends { status: infer S }
-              ? S
-              : never
-            : never
-          durationSec: number | null
-        } | null
-        assessmentPlacements: Array<{
-          assessmentId: string
-        }>
-      }>
-    }>
-  }
-
-// Chuyen object key noi bo cua course/teacher thanh URL public cho response API.
-// Dau vao la record Prisma con thumbnailObjectKey va teacher.avatarObjectKey.
-// Dau ra loai bo object key noi bo, thay bang thumbnailUrl va teacher.avatarUrl.
-export const mapCourseMedia = <T extends CourseMediaFields>(
-  course: T
-): Omit<T, 'thumbnailObjectKey' | 'teacher'> & {
-  thumbnailUrl: string | null
-  teacher: Omit<T['teacher'], 'avatarObjectKey'> & { avatarUrl: string | null }
-} => {
-  const { thumbnailObjectKey, teacher, ...rest } = course
-
-  return {
-    ...rest,
-    teacher: mapUserAvatar(teacher),
-    thumbnailUrl: mapMediaUrl(thumbnailObjectKey)
-  }
-}
-
-// Mapper cho API admin course; admin cung can URL anh dung duoc thay vi object key noi bo.
 export const mapAdminCourseResponse = (
-  course: AdminCourseSummaryFields
-): AdminCourseSummary => {
-  const mappedCourse = mapCourseMedia(course)
-  const { _count, ...rest } = mappedCourse
-
+  course: AdminCourseRecord
+): AdminCourseResponse => {
   return {
-    ...rest,
-    enrolledCount: _count?.enrollments ?? 0
+    id: course.id,
+    title: course.title,
+    slug: course.slug,
+    description: course.description,
+    subject: course.subject,
+    grade: course.grade,
+    teacherId: course.teacherId,
+    teacher: {
+      id: course.teacher.id,
+      fullName: course.teacher.fullName,
+      email: course.teacher.email,
+      avatarMediaId: course.teacher.avatarMediaId,
+      avatarUrl: mapMediaUrl(course.teacher.avatarObjectKey)
+    },
+    thumbnailUrl: mapMediaUrl(course.thumbnailObjectKey),
+    thumbnailMediaId: course.thumbnailMediaId,
+    price: course.price,
+    salePrice: course.salePrice,
+    status: course.status,
+    isFeatured: course.isFeatured,
+    totalLessons: course.totalLessons,
+    enrolledCount: course.enrolledCount,
+    createdAt: course.createdAt,
+    updatedAt: course.updatedAt
   }
 }
 
 export const mapAdminCourseDetailResponse = (
-  course: AdminCourseDetailFields
-): AdminCourseDetailResponseDto => {
+  course: AdminCourseDetailRecord
+): AdminCourseDetailResponse => {
   const mappedCourse = mapAdminCourseResponse(course)
 
   return {
     ...mappedCourse,
     topics: course.topics,
     chapters: course.chapters.map((chapter) => ({
-      ...chapter,
-      lessons: chapter.lessons.map((lesson) => {
-        const { assessmentPlacements, videoMedia, ...lessonFields } = lesson
-
-        return {
-          ...lessonFields,
-          assessmentId: assessmentPlacements[0]?.assessmentId ?? null,
-          videoMedia: videoMedia
-            ? {
-                id: videoMedia.id,
-                url: mapMediaUrl(videoMedia.objectKey),
-                originalName: videoMedia.originalName,
-                status: videoMedia.status,
-                durationSec: videoMedia.durationSec
-              }
-            : null
-        }
-      })
+      id: chapter.id,
+      courseId: chapter.courseId,
+      title: chapter.title,
+      orderIndex: chapter.orderIndex,
+      createdAt: chapter.createdAt,
+      updatedAt: chapter.updatedAt,
+      lessons: chapter.lessons.map((lesson) => ({
+        id: lesson.id,
+        chapterId: lesson.chapterId,
+        title: lesson.title,
+        type: lesson.type,
+        description: lesson.description,
+        videoType: lesson.videoType,
+        videoMediaId: lesson.videoMediaId,
+        youtubeUrl: lesson.youtubeUrl,
+        durationSec: lesson.durationSec,
+        allowPreview: lesson.allowPreview,
+        orderIndex: lesson.orderIndex,
+        createdAt: lesson.createdAt,
+        updatedAt: lesson.updatedAt,
+        videoMedia: lesson.videoMedia
+          ? {
+              id: lesson.videoMedia.id,
+              url: mapMediaUrl(lesson.videoMedia.objectKey),
+              originalName: lesson.videoMedia.originalName,
+              status: lesson.videoMedia.status,
+              durationSec: lesson.videoMedia.durationSec
+            }
+          : null,
+        assessmentId: lesson.assessmentId
+      }))
     }))
   }
 }
 
-export const mapCatalogCourseResponse = mapCourseMedia
+export const mapCatalogCourseResponse = (
+  course: CatalogCourseRecord
+): CourseSummary => {
+  return {
+    id: course.id,
+    title: course.title,
+    slug: course.slug,
+    description: course.description,
+    subject: course.subject,
+    grade: course.grade,
+    teacher: {
+      id: course.teacher.id,
+      fullName: course.teacher.fullName,
+      avatarUrl: mapMediaUrl(course.teacher.avatarObjectKey)
+    },
+    thumbnailUrl: mapMediaUrl(course.thumbnailObjectKey),
+    price: course.price,
+    salePrice: course.salePrice,
+    status: course.status,
+    isFeatured: course.isFeatured,
+    totalLessons: course.totalLessons,
+    createdAt: course.createdAt,
+    updatedAt: course.updatedAt
+  }
+}
