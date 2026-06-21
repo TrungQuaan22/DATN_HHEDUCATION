@@ -3,6 +3,7 @@ import { CourseStatus, LessonType, UserRole, VideoType } from '@prisma/client'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
+import type { LearningLessonForProgressRecord } from '../ports/learning-course-repository.port'
 
 export type CourseActor = {
   id: string
@@ -118,5 +119,21 @@ export const ensureExactReorderIds = (expectedIds: string[], receivedIds: string
         ERROR_MESSAGE.INVALID_REORDER_PAYLOAD
       )
     }
+  }
+}
+
+export function ensureLessonAvailable(
+  lesson: LearningLessonForProgressRecord | null
+): asserts lesson is LearningLessonForProgressRecord {
+  if (!lesson || lesson.chapter.course.deletedAt) {
+    throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, 'Lesson not found')
+  }
+}
+
+export function ensureUserIsEnrolled<T>(
+  enrollment: T | null
+): asserts enrollment is T {
+  if (!enrollment) {
+    throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You are not enrolled in this course')
   }
 }

@@ -21,10 +21,7 @@ import {
   scoresAreEqual,
   zeroScore
 } from '../helpers/score.helper'
-import {
-  calculateTrueFalseRatio,
-  isSameSet
-} from '../policies/assessment.policy'
+import { Submission } from '../entities/submission.entity'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
 import {
   ensureSubmissionForStudentExists,
@@ -387,7 +384,8 @@ export class StudentAssessmentService {
         const correctOptionIds = getQuestionOptions(item)
           .filter((option) => option.isCorrect)
           .map((option) => option.id)
-        const isCorrect = isSameSet(selectedOptionIds, correctOptionIds)
+        const submissionEntity = new Submission({ id: submission.id })
+        const isCorrect = submissionEntity.isSameSet(selectedOptionIds, correctOptionIds)
         const pointEarned = isCorrect ? item.maxScore.toString() : zeroScore()
 
         if (answer) {
@@ -415,9 +413,10 @@ export class StudentAssessmentService {
           }
         }
 
+        const submissionEntity = new Submission({ id: submission.id })
         const pointEarned = multiplyScore(
           item.maxScore,
-          calculateTrueFalseRatio(correctCount, options.length)
+          submissionEntity.calculateTrueFalseRatio(correctCount, options.length)
         )
         const firstAnswer = answers[0]
 

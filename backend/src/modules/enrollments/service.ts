@@ -4,6 +4,7 @@ import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 import { ensureCourseIsPublished } from '~/modules/courses/ensures/courses.ensure'
+import { Enrollment } from './entities/enrollment.entity'
 
 import type { CreateManualEnrollmentDto, ManualEnrollmentResponse } from './dto'
 import { enrollmentRepository } from './repository'
@@ -21,13 +22,7 @@ export class EnrollmentService {
   }
 
   private ensureActiveStudentForEnrollment(user: { role: UserRole; status: UserStatus } | null) {
-    if (!user) {
-      throw new AppError(404, ERROR_CODE.USER_NOT_FOUND, ERROR_MESSAGE.USER_NOT_FOUND)
-    }
-
-    if (user.role !== UserRole.student || user.status !== UserStatus.active) {
-      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'User must be an active student')
-    }
+    Enrollment.validateUserForEnrollment(user)
   }
 
   private ensureUserIsNotEnrolledInCourse(existingEnrollment: unknown | null) {

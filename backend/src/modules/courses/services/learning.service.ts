@@ -3,7 +3,8 @@ import { MediaStatus } from '@prisma/client'
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import * as policy from '../policies/learning-progress.policy'
+import { ensureLessonAvailable, ensureUserIsEnrolled } from '../ensures/courses.ensure'
+import { LearningProgress } from '../entities/learning-progress.entity'
 
 import type {
   LearningCourseOverviewDto,
@@ -138,20 +139,20 @@ export class LearningCourseService {
     const now = new Date()
 
     const lesson = await this.courseRepository.findLessonForProgress(data.lessonId)
-    policy.ensureLessonAvailable(lesson)
+    ensureLessonAvailable(lesson)
 
     const courseId = lesson.chapter.courseId
     const enrollment = await this.courseRepository.findEnrollment(data.userId, courseId)
-    policy.ensureUserIsEnrolled(enrollment)
+    ensureUserIsEnrolled(enrollment)
 
-    const durationSec = policy.getLessonDuration(lesson)
-    policy.validateProgressRange(data.watchedSeconds, data.lastPositionSec, durationSec)
+    const durationSec = LearningProgress.getLessonDuration(lesson)
+    LearningProgress.validateProgressRange(data.watchedSeconds, data.lastPositionSec, durationSec)
 
     const existingProgress = await this.courseRepository.findLessonProgress(
       data.userId,
       data.lessonId
     )
-    const progressState = policy.calculateProgressState({
+    const progressState = LearningProgress.calculateProgressState({
       existingProgress,
       watchedSeconds: data.watchedSeconds,
       lastPositionSec: data.lastPositionSec,
