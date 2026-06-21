@@ -11,6 +11,7 @@ import type {
   PaymentWebhookRepositoryPort,
   PaymentWebhookTransactionPort
 } from '../ports/payment-webhook-repository.port'
+import { PaymentMatch } from '../entities/payment-match.entity'
 
 const buildReviewMetadata = (
   event: NormalizedPaymentEvent,
@@ -42,97 +43,79 @@ const finalizeSuccessfulPayment = async (
     paymentTransactionId: string
   }
 ) => {
-  const payment = data.order.payments[0]
+  const match = new PaymentMatch(data.event, data.order)
+  const evaluation = match.evaluateMatch()
+  const payment = match.targetPayment
 
-  if (!payment || payment.status !== PaymentStatus.pending) {
-    const reviewPayment = await transaction.createManualReviewPayment({
-      event: data.event,
-      reason: 'payment_not_pending',
-      orderId: data.order.id,
-      expectedAmount: data.order.totalAmount,
-      orderStatus: data.order.status,
-      expiredAt: data.order.expiresAt
-    })
-
-    await transaction.updatePaymentTransaction({
-      id: data.paymentTransactionId,
-      orderId: data.order.id,
-      paymentId: reviewPayment.id,
-      matchStatus: PaymentTransactionMatchStatus.manual_review,
-      metadata: buildReviewMetadata(data.event, {
+  if (evaluation.status === 'manual_review') {
+    if (evaluation.reason === 'payment_not_pending') {
+      const reviewPayment = await transaction.createManualReviewPayment({
+        event: data.event,
         reason: 'payment_not_pending',
+        orderId: data.order.id,
         expectedAmount: data.order.totalAmount,
         orderStatus: data.order.status,
         expiredAt: data.order.expiresAt
       })
-    })
-    return
+
+      await transaction.updatePaymentTransaction({
+        id: data.paymentTransactionId,
+        orderId: data.order.id,
+        paymentId: reviewPayment.id,
+        matchStatus: PaymentTransactionMatchStatus.manual_review,
+        metadata: match.buildReviewMetadata('payment_not_pending')
+      })
+      return
+    }
+
+    if (evaluation.reason === 'under_paid') {
+      const metadata = match.buildReviewMetadata('under_paid')
+
+      await transaction.updatePayment(payment.id, {
+        status: PaymentStatus.manual_review,
+        transactionRef: data.event.transactionRef,
+        paidAt: data.event.paidAt,
+        metadata
+      })
+
+      await transaction.updatePaymentTransaction({
+        id: data.paymentTransactionId,
+        orderId: data.order.id,
+        paymentId: payment.id,
+        matchStatus: PaymentTransactionMatchStatus.manual_review,
+        metadata
+      })
+      return
+    }
+
+    if (evaluation.reason === 'late_success') {
+      const metadata = match.buildReviewMetadata('late_success')
+
+      await transaction.updatePayment(payment.id, {
+        status: PaymentStatus.late_success,
+        transactionRef: data.event.transactionRef,
+        paidAt: data.event.paidAt,
+        metadata
+      })
+
+      await transaction.updatePaymentTransaction({
+        id: data.paymentTransactionId,
+        orderId: data.order.id,
+        paymentId: payment.id,
+        matchStatus: PaymentTransactionMatchStatus.manual_review,
+        metadata
+      })
+      return
+    }
   }
 
-  if (data.event.amount < data.order.totalAmount) {
-    const metadata = buildReviewMetadata(data.event, {
-      reason: 'under_paid',
-      expectedAmount: data.order.totalAmount
-    })
-
-    await transaction.updatePayment(payment.id, {
-      status: PaymentStatus.manual_review,
-      transactionRef: data.event.transactionRef,
-      paidAt: data.event.paidAt,
-      metadata
-    })
-
-    await transaction.updatePaymentTransaction({
-      id: data.paymentTransactionId,
-      orderId: data.order.id,
-      paymentId: payment.id,
-      matchStatus: PaymentTransactionMatchStatus.manual_review,
-      metadata
-    })
-    return
-  }
-
-  const now = new Date()
-
-  if (data.order.expiresAt <= now || data.order.status !== OrderStatus.pending) {
-    const metadata = buildReviewMetadata(data.event, {
-      reason: 'late_success',
-      expectedAmount: data.order.totalAmount,
-      orderStatus: data.order.status,
-      expiredAt: data.order.expiresAt
-    })
-
-    await transaction.updatePayment(payment.id, {
-      status: PaymentStatus.late_success,
-      transactionRef: data.event.transactionRef,
-      paidAt: data.event.paidAt,
-      metadata
-    })
-
-    await transaction.updatePaymentTransaction({
-      id: data.paymentTransactionId,
-      orderId: data.order.id,
-      paymentId: payment.id,
-      matchStatus: PaymentTransactionMatchStatus.manual_review,
-      metadata
-    })
-    return
-  }
-
-  const metadata = {
-    expectedAmount: data.order.totalAmount,
-    receivedAmount: data.event.amount,
-    orderInvoiceNumber: data.event.orderInvoiceNumber,
-    transactionRef: data.event.transactionRef,
-    gateway: data.event.gateway,
-    accountNumber: data.event.accountNumber
-  }
+  const metadata = match.buildSuccessMetadata()
 
   await transaction.updatePayment(payment.id, {
     status: PaymentStatus.success,
     amount: data.event.amount,
     transactionRef: data.event.transactionRef,
-    paidAt: data.event.paidAt ?? now,
+    paidAt: data.event.paidAt ?? new Date(),
     metadata
   })
 
