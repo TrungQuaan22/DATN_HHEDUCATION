@@ -5,10 +5,7 @@ import type {
   AdminBlogPostSummaryResponse,
   BlogAuthorResponse
 } from '../dto/admin.dto'
-import type {
-  BlogPostDetailResponse,
-  BlogPostSummaryResponse
-} from '../dto/public.dto'
+import type { BlogPostDetailResponse, BlogPostSummaryResponse } from '../dto/public.dto'
 import type { BlogAuthorRecord, BlogPostRecord } from '../ports/blog-repository.port'
 
 const mapAuthor = (author: BlogAuthorRecord): BlogAuthorResponse => ({
@@ -44,8 +41,25 @@ export const mapAdminBlogPostSummaryResponse = (
   post: BlogPostRecord,
   readingMinutes: number
 ): AdminBlogPostSummaryResponse => {
-  const { content, ...rest } = mapAdminBlogPostResponse(post, readingMinutes)
-  return rest
+  const response = mapAdminBlogPostResponse(post, readingMinutes)
+
+  return {
+    id: response.id,
+    title: response.title,
+    slug: response.slug,
+    excerpt: response.excerpt,
+    category: response.category,
+    tags: response.tags,
+    author: response.author,
+    thumbnailMediaId: response.thumbnailMediaId,
+    thumbnailUrl: response.thumbnailUrl,
+    status: response.status,
+    isFeatured: response.isFeatured,
+    publishedAt: response.publishedAt,
+    readingMinutes: response.readingMinutes,
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt
+  }
 }
 
 export const mapPublicBlogPostSummaryResponse = (

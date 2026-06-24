@@ -27,7 +27,9 @@ export function mapAdminOrderPayment(record: AdminOrderPaymentRecord): AdminOrde
   }
 }
 
-export function mapAdminOrderListItem(record: AdminOrderListItemRecord): AdminOrderListItemResponse {
+export function mapAdminOrderListItem(
+  record: AdminOrderListItemRecord
+): AdminOrderListItemResponse {
   return {
     id: record.id,
     orderInvoiceNumber: record.orderInvoiceNumber,

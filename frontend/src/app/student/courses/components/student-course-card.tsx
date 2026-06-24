@@ -16,6 +16,7 @@ import {
   PREFETCH_STALE_TIME_MS,
   useIntentPrefetch,
 } from "@/lib/utils/prefetch";
+import { SafeImg } from "@/components/media/safe-image";
 
 const prefetchedCourseSlugs = new Set<string>();
 
@@ -103,7 +104,7 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
       {/* Thumbnail Header */}
       <div className="h-40 bg-off-black bg-gradient-to-br from-brand-pink/10 to-brand-dark flex flex-col items-center justify-center p-6 relative">
         {course.thumbnailUrl ? (
-          <img
+          <SafeImg
             alt={course.title}
             src={course.thumbnailUrl}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
@@ -115,7 +116,7 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
           />
         )}
         <span
-          className={`absolute top-3 right-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider border z-10 ${getSubjectBadgeStyles(
+          className={`absolute top-3 right-3 text-xs font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider border z-10 ${getSubjectBadgeStyles(
             course.subject
           )}`}
         >
@@ -126,20 +127,20 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
       {/* Content body */}
       <div className="p-5 flex-grow flex flex-col gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-text">
+          <div className="flex items-center gap-1 text-xs font-semibold text-muted-text">
             <GraduationCap size={14} />
             <span>
               Lớp {course.grade} • {course.teacher.fullName}
             </span>
           </div>
-          <h3 className="text-[15px] font-bold text-cream group-hover:text-brand-pink transition-colors line-clamp-2 mt-1">
+          <h3 className="text-base font-bold text-cream group-hover:text-brand-pink transition-colors line-clamp-2 mt-1">
             {course.title}
           </h3>
         </div>
 
         {/* Progress Tracker */}
         <div className="space-y-1.5 mt-auto">
-          <div className="flex justify-between text-[11px] font-semibold text-muted-text">
+          <div className="flex justify-between text-xs font-semibold text-muted-text">
             <span>
               {course.completedLessons > 0
                 ? `Đã học ${course.completedLessons} / ${course.totalLessons} bài`
@@ -171,7 +172,7 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
 
         <Link
           href={learningHref}
-          className="w-full text-center bg-brand-pink text-brand-dark hover:scale-[1.02] active:scale-[0.98] font-bold text-[12px] py-2.5 rounded transition-all cursor-pointer flex items-center justify-center gap-1 uppercase"
+          className="w-full text-center bg-brand-pink text-brand-dark hover:scale-[1.02] active:scale-[0.98] font-bold text-xs py-2.5 rounded transition-all cursor-pointer flex items-center justify-center gap-1 uppercase"
         >
           Vào học ngay
           <ArrowRight size={14} />

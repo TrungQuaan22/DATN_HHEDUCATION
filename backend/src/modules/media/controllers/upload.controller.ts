@@ -4,14 +4,9 @@ import z from 'zod'
 import { sendSuccess } from '~/common/http/response'
 
 import type { CompleteUploadDto, CreatePresignedUploadDto } from '../dto'
-import {
-  type MediaUploadService,
-  mediaUploadService
-} from '../services/upload.service'
-import {
-  completeUploadSchema,
-  createPresignedUploadSchema
-} from '../validators/upload.validator'
+import type { MediaUploadService } from '../services/upload.service'
+import { mediaUploadService } from '../wiring'
+import { completeUploadSchema, createPresignedUploadSchema } from '../validators/upload.validator'
 
 type CreatePresignedUploadValidated = z.infer<typeof createPresignedUploadSchema>
 type CompleteUploadValidated = z.infer<typeof completeUploadSchema>

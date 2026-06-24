@@ -89,41 +89,41 @@ export type AssessmentItemBaseDto = {
   topicId?: string | null
   topicName?: string | null
   explanation?: string | null
-  difficulty: QuestionDifficulty
-  maxScore: number
+  difficulty?: QuestionDifficulty
+  maxScore?: number
 }
 
 export type QuizMcqItemDto = AssessmentItemBaseDto & {
-  contentLabel: string
-  options: Array<{ content: string; isCorrect: boolean }>
-  mode: 'single' | 'multiple'
+  contentLabel?: string | null
+  options?: Array<{ content?: string | null; isCorrect?: boolean }>
+  mode?: 'single' | 'multiple'
 }
 
 export type ExamMcqItemDto = AssessmentItemBaseDto & {
-  optionCount: number
-  correctOptions: string[]
+  optionCount?: number
+  correctOptions?: string[]
 }
 
 export type QuizTrueFalseItemDto = AssessmentItemBaseDto & {
-  contentLabel: string
-  statements: Array<{ label: string; correctValue: boolean }>
+  contentLabel?: string | null
+  statements?: Array<{ label?: string | null; correctValue?: boolean }>
 }
 
 export type ExamTrueFalseItemDto = AssessmentItemBaseDto & {
-  statements: Array<{ correctValue: boolean }>
+  statements?: Array<{ correctValue?: boolean }>
 }
 
 export type QuizNumericItemDto = AssessmentItemBaseDto & {
-  contentLabel: string
-  correctAnswer: number
+  contentLabel?: string | null
+  correctAnswer?: number | null
 }
 
 export type ExamNumericItemDto = AssessmentItemBaseDto & {
-  correctAnswer: number
+  correctAnswer?: number | null
 }
 
 export type QuizEssayItemDto = AssessmentItemBaseDto & {
-  contentLabel: string
+  contentLabel?: string | null
   rubric?: unknown
 }
 

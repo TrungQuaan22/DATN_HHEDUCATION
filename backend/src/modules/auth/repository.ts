@@ -64,16 +64,22 @@ export class PrismaAuthRepository implements AuthRepositoryPort {
     })
   }
 
-  rotateSessionRefreshToken(data: RotateSessionRefreshTokenInput) {
-    return prisma.userSession.update({
-      where: { id: data.id },
+  async rotateSessionRefreshToken(data: RotateSessionRefreshTokenInput): Promise<boolean> {
+    const result = await prisma.userSession.updateMany({
+      where: {
+        id: data.sessionId,
+        refreshTokenHash: data.expectedRefreshTokenHash,
+        isRevoked: false
+      },
       data: {
-        refreshTokenHash: data.refreshTokenHash,
-        previousRefreshTokenHash: data.previousRefreshTokenHash,
-        previousTokenRotatedAt: new Date(),
+        refreshTokenHash: data.newRefreshTokenHash,
+        previousRefreshTokenHash: null,
+        previousTokenRotatedAt: null,
         expiresAt: data.expiresAt
       }
     })
+
+    return result.count === 1
   }
 
   revokeSession(id: string) {

@@ -53,8 +53,8 @@ export class PrismaUserRepository implements UserRepositoryPort {
     return prisma.$transaction([
       prisma.user.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         select: userListSelect
       }),
@@ -102,8 +102,8 @@ export class PrismaUserRepository implements UserRepositoryPort {
     return prisma.$transaction([
       prisma.user.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
         select: teacherOptionSelect
       }),

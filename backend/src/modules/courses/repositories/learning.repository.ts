@@ -5,7 +5,9 @@ import type { LearningCourseRepositoryPort } from '../ports/learning-course-repo
 import { lessonVideoMediaSelect, publicTeacherSelect } from './shared'
 
 export class PrismaLearningCourseRepository implements LearningCourseRepositoryPort {
-  listEnrolledCourses(data: { userId: string; skip: number; take: number }) {
+  listEnrolledCourses(data: { userId: string; page: number; limit: number }) {
+    const skip = (data.page - 1) * data.limit
+
     const where = {
       userId: data.userId,
       course: {
@@ -20,8 +22,8 @@ export class PrismaLearningCourseRepository implements LearningCourseRepositoryP
         orderBy: {
           enrolledAt: 'desc'
         },
-        skip: data.skip,
-        take: data.take,
+        skip,
+        take: data.limit,
         select: {
           enrolledAt: true,
           course: {
@@ -232,6 +234,31 @@ export class PrismaLearningCourseRepository implements LearningCourseRepositoryP
                 title: true,
                 type: true,
                 gradingType: true
+              }
+            }
+          }
+        },
+        materials: {
+          where: {
+            isPublic: true,
+            deletedAt: null
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            contentText: true,
+            media: {
+              select: {
+                id: true,
+                objectKey: true,
+                originalName: true,
+                mimeType: true,
+                sizeBytes: true,
+                status: true
               }
             }
           }

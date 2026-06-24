@@ -75,6 +75,7 @@ export type AdminCourseLessonResponse = {
   videoType: VideoType | null
   videoMediaId: string | null
   assessmentId: string | null
+  hasRagError: boolean
   videoMedia: {
     id: string
     url: string | null

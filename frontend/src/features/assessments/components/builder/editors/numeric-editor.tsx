@@ -12,7 +12,7 @@ export function NumericEditor({ item, onUpdateItem }: NumericEditorProps) {
   return (
     <div className="bg-admin-deep p-4 rounded-lg border border-admin-border/60">
       <div className="space-y-1">
-        <label className="text-[10px] font-bold text-admin-muted uppercase block">
+        <label className="text-xs font-bold text-admin-muted uppercase block">
           Đáp án số chuẩn
         </label>
         <input

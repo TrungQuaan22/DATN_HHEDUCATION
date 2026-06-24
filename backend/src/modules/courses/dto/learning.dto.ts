@@ -6,6 +6,7 @@ import type {
   Subject,
   VideoType
 } from '@prisma/client'
+import type { LessonMaterialType } from '@prisma/client'
 
 export type LearningCourseItemDto = {
   id: string
@@ -92,7 +93,20 @@ export type LearningLessonDetailResponse = {
     status: MediaStatus
     durationSec: number | null
   } | null
-  materials: Array<never>
+  materials: Array<{
+    id: string
+    title: string
+    type: LessonMaterialType
+    contentText: string | null
+    downloadUrl: string | null
+    media: {
+      id: string
+      originalName: string | null
+      mimeType: string
+      sizeBytes: number
+      status: MediaStatus
+    } | null
+  }>
   progress: {
     watchedSeconds: number
     lastPositionSec: number

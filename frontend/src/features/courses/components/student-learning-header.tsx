@@ -33,7 +33,7 @@ export function StudentLearningHeader({
       <div className="flex min-w-0 items-center gap-3">
         <Link
           href="/student"
-          className="hidden shrink-0 text-[16px] font-bold tracking-tight text-cream hover:opacity-90 sm:inline-flex"
+          className="hidden shrink-0 text-base font-bold tracking-tight text-cream hover:opacity-90 sm:inline-flex"
         >
           HH <span className="font-extrabold text-brand-pink">Education</span>
         </Link>
@@ -56,7 +56,7 @@ export function StudentLearningHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border-dark bg-off-black px-3 py-1 text-[11px] font-semibold text-muted-text lg:inline-flex">
+        <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border-dark bg-off-black px-3 py-1 text-xs font-semibold text-muted-text lg:inline-flex">
           <Award size={13} className="animate-pulse text-brand-pink" />
           Đã hoàn thành: {course.completedLessons}/{course.totalLessons} bài học (
           {courseProgressPercentage}%)

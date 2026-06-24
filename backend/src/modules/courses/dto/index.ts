@@ -1,6 +1,7 @@
 export * from './admin-chapters.dto'
 export * from './admin-courses.dto'
 export * from './admin-lessons.dto'
+export * from './admin-lesson-materials.dto'
 export * from './course-shared.types'
 export * from './learning.dto'
 export * from './public.dto'

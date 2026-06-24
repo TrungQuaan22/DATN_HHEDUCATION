@@ -2,10 +2,13 @@ import type { BlogPostStatus, Prisma, UserRole } from '@prisma/client'
 import z from 'zod'
 
 import type {
+  createBlogCategoryBodySchema,
   createBlogPostBodySchema,
   listAdminBlogPostsQuerySchema,
   updateBlogPostBodySchema
 } from '../validators/admin.validator'
+
+export type CreateBlogCategoryDto = z.infer<typeof createBlogCategoryBodySchema>
 
 export type CreateBlogPostDto = z.infer<typeof createBlogPostBodySchema> & {
   authorId: string
@@ -53,7 +56,7 @@ export type AdminBlogPostResponse = {
   title: string
   slug: string
   excerpt: string
-  category: string | null
+  category: BlogCategoryResponse | null
   tags: string[]
   content: Prisma.JsonValue
   author: BlogAuthorResponse
@@ -72,7 +75,7 @@ export type AdminBlogPostSummaryResponse = {
   title: string
   slug: string
   excerpt: string
-  category: string | null
+  category: BlogCategoryResponse | null
   tags: string[]
   author: BlogAuthorResponse
   thumbnailMediaId: string | null
@@ -104,8 +107,13 @@ export type ListAdminBlogTagsResponse = {
   items: AdminBlogTagSummaryResponse[]
 }
 
-export type AdminBlogCategorySummaryResponse = {
+export type BlogCategoryResponse = {
+  id: string
   name: string
+  slug: string
+}
+
+export type AdminBlogCategorySummaryResponse = BlogCategoryResponse & {
   count: number
 }
 

@@ -1,7 +1,7 @@
 import { AppError } from '~/common/error/app-error'
 import { ERROR_CODE } from '~/common/constant/error-code'
+
 import type { AdminOrderDetailResponse, ListAdminOrdersDto, ListAdminOrdersResponse } from '../dto'
-import { adminOrderRepository } from '../repositories/admin-order.repository'
 import type { AdminOrderRepositoryPort } from '../ports/admin-order-repository.port'
 import { mapAdminOrderDetail, mapAdminOrderListItem } from '../mappers/admin-order.mapper'
 
@@ -42,5 +42,3 @@ export class AdminOrderService {
     return mapAdminOrderDetail(order)
   }
 }
-
-export const adminOrderService = new AdminOrderService(adminOrderRepository)

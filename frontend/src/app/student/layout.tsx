@@ -21,19 +21,39 @@ export default function StudentLayout({
   const { data: user } = useMeQuery();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("student-sidebar-collapsed");
+      setIsSidebarCollapsed(stored === "true");
+    }
+  }, []);
+
+  const handleToggleCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("student-sidebar-collapsed", String(next));
+      return next;
+    });
+  };
 
   // Authentication check
   useEffect(() => {
-    if (hasHydrated && !isAuthenticated) {
-      router.push("/login");
+    if (hasHydrated) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role === "admin" || user?.role === "teacher") {
+        router.push("/admin");
+      }
     }
-  }, [hasHydrated, isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, user?.role, router]);
 
-  if (!hasHydrated || !isAuthenticated) {
+  if (!hasHydrated || !isAuthenticated || user?.role === "admin" || user?.role === "teacher") {
     return (
       <div className="min-h-screen bg-brand-dark flex items-center justify-center">
         <p className="text-muted-text animate-pulse">
-          Đang kiểm tra quyền truy cập...
+          Đang chuyển hướng...
         </p>
       </div>
     );
@@ -65,12 +85,18 @@ export default function StudentLayout({
         pathname={pathname}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
       />
 
       {/* -------------------- MAIN PAGE WRAPPER -------------------- */}
-      <div className="flex-1 md:ml-[260px] flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+        isSidebarCollapsed ? "md:ml-20" : "md:ml-[260px]"
+      }`}>
         {/* -------------------- TOPNAVBAR -------------------- */}
-        <header className="fixed top-0 right-0 h-[64px] left-0 md:left-[260px] bg-brand-dark/95 backdrop-blur-md z-20 border-b border-border-dark/60 px-6 flex items-center justify-between transition-colors duration-200">
+        <header className={`fixed top-0 right-0 h-[64px] left-0 bg-brand-dark/95 backdrop-blur-md z-20 border-b border-border-dark/60 px-6 flex items-center justify-between transition-all duration-300 ${
+          isSidebarCollapsed ? "md:left-20" : "md:left-[260px]"
+        }`}>
           {/* Mobile Sidebar Toggle & Breadcrumb */}
           <div className="flex items-center gap-3">
             <button
@@ -79,7 +105,7 @@ export default function StudentLayout({
             >
               <Menu size={20} />
             </button>
-            <div className="hidden sm:flex items-center gap-2 text-[12px] font-semibold text-muted-text">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-muted-text">
               <span>Không gian học tập</span>
               <ChevronRight size={14} className="text-muted-text/60" />
               <span className="text-brand-pink uppercase tracking-wider font-extrabold">

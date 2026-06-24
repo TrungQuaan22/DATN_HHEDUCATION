@@ -17,3 +17,4 @@ Thumbs.db
 skills-lock.json
 .stitch/
 *.md
+.venv/

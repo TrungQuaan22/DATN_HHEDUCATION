@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { GripVertical, PlayCircle, FileText, HelpCircle, Edit, Trash2 } from "lucide-react";
+import { GripVertical, PlayCircle, FileText, HelpCircle, Edit, Trash2, AlertCircle } from "lucide-react";
 import { AdminCourseLesson } from "../types";
 
 interface LessonNodeProps {
@@ -74,7 +74,7 @@ export default function LessonNode({
 
               {/* Preview badge */}
               {lesson.allowPreview && (
-                <span className="bg-admin-pink/10 text-admin-pink text-[9px] font-bold px-1.5 py-0.5 rounded border border-admin-pink/20">
+                <span className="bg-admin-pink/10 text-admin-pink text-xs font-bold px-1.5 py-0.5 rounded border border-admin-pink/20">
                   Học thử
                 </span>
               )}
@@ -83,16 +83,16 @@ export default function LessonNode({
               {lesson.type === "video" && (
                 <>
                   {lesson.videoType === "system" ? (
-                    <span className="bg-emerald-500/10 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    <span className="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
                       Video Hệ thống
                     </span>
                   ) : (
-                    <span className="bg-red-500/10 text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-500/20">
+                    <span className="bg-red-500/10 text-red-400 text-xs font-bold px-1.5 py-0.5 rounded border border-red-500/20">
                       YouTube
                     </span>
                   )}
                   {lesson.durationSec && (
-                    <span className="text-[11px] text-admin-muted">
+                    <span className="text-xs text-admin-muted">
                       ({formatDuration(lesson.durationSec)})
                     </span>
                   )}
@@ -101,8 +101,16 @@ export default function LessonNode({
 
               {/* Quiz badge */}
               {lesson.type === "quiz" && (
-                <span className="bg-blue-500/10 text-blue-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-500/20">
+                <span className="bg-blue-500/10 text-blue-400 text-xs font-bold px-1.5 py-0.5 rounded border border-blue-500/20">
                   Quiz
+                </span>
+              )}
+
+              {/* RAG error badge */}
+              {lesson.hasRagError && (
+                <span className="bg-red-500/10 text-red-400 text-xs font-bold px-1.5 py-0.5 rounded border border-red-500/20 flex items-center gap-1 animate-pulse" title="Tài liệu của bài học này nạp vào AI Tutor bị lỗi. Vui lòng vào Chỉnh sửa bài học này để thử lại.">
+                  <AlertCircle size={11} className="flex-shrink-0" />
+                  Lỗi AI RAG
                 </span>
               )}
             </div>

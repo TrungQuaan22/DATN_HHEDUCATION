@@ -1,0 +1,99 @@
+enum ChunkSourceType {
+  lesson_description
+  material
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+model KnowledgeChunk {
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId            String          @map("course_id") @db.Uuid
+  lessonId            String?         @map("lesson_id") @db.Uuid
+  materialId          String?         @map("material_id") @db.Uuid
+  sourceType          ChunkSourceType @map("source_type")
+  chunkIndex          Int             @map("chunk_index")
+  content             String          @db.Text
+  contentHash         String          @map("content_hash") @db.VarChar(128)
+  tokenCount          Int?            @map("token_count")
+  pageNumber          Int?            @map("page_number")
+  startTimeSec        Int?            @map("start_time_sec")
+  endTimeSec          Int?            @map("end_time_sec")
+  embeddingProvider   String?         @map("embedding_provider") @db.VarChar(50)
+  embeddingModel      String?         @map("embedding_model") @db.VarChar(100)
+  embeddingDimensions Int?            @map("embedding_dimensions")
+  indexedAt           DateTime?       @map("indexed_at")
+  createdAt           DateTime        @default(now()) @map("created_at")
+
+  course    Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson    Lesson?             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  material  LessonMaterial?     @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  citations TutorChatCitation[]
+
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([materialId])
+  @@index([sourceType, lessonId])
+  @@map("knowledge_chunks")
+}
+
+model TutorChatSession {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId     String    @map("student_id") @db.Uuid
+  courseId      String    @map("course_id") @db.Uuid
+  lessonId      String?   @map("lesson_id") @db.Uuid
+  title         String?   @db.VarChar(255)
+  summary       String?   @db.Text
+  lastMessageAt DateTime? @map("last_message_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  student  User               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course   Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson   Lesson?            @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  messages TutorChatMessage[]
+
+  @@index([studentId, updatedAt])
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("tutor_chat_sessions")
+}
+
+model TutorChatMessage {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId  String              @map("session_id") @db.Uuid
+  role       ChatRole
+  content    String              @db.Text
+  tokenCount Int?                @map("token_count")
+  provider   String?             @db.VarChar(50)
+  modelName  String?             @map("model_name") @db.VarChar(100)
+  latencyMs  Int?                @map("latency_ms")
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  session   TutorChatSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  citations TutorChatCitation[]
+
+  @@index([sessionId, createdAt])
+  @@map("tutor_chat_messages")
+}
+
+model TutorChatCitation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageId   String   @map("message_id") @db.Uuid
+  chunkId     String   @map("chunk_id") @db.Uuid
+  rank        Int
+  score       Decimal? @db.Decimal(8, 5)
+  quote       String?  @db.Text
+  sourceTitle String?  @map("source_title") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  message TutorChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  chunk   KnowledgeChunk   @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, chunkId])
+  @@index([chunkId])
+  @@map("tutor_chat_citations")
+}

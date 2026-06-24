@@ -1,7 +1,6 @@
+import type { Prisma } from '@prisma/client'
+
 import type { OrderStatus, PaymentStatus } from './order-repository.port'
-
-export type JsonValue = string | number | boolean | null | { [key: string]: any } | any[]
-
 
 export type ListAdminOrdersFilters = {
   status?: OrderStatus
@@ -23,7 +22,7 @@ export type AdminOrderPaymentRecord = {
   checkoutUrl: string | null
   qrCodeUrl: string | null
   expiresAt: Date | null
-  metadata: JsonValue
+  metadata: Prisma.JsonValue
   status: PaymentStatus
   createdAt: Date
   paidAt: Date | null
@@ -69,7 +68,7 @@ export type AdminOrderDetailRecord = AdminOrderListItemRecord & {
     direction: 'inbound' | 'outbound'
     transactionDate: Date | null
     matchStatus: string
-    metadata: JsonValue
+    metadata: Prisma.JsonValue
     createdAt: Date
     paymentId: string | null
   }>

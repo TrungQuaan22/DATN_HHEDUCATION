@@ -40,10 +40,10 @@ export default function AdminSidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-admin-deep border-r border-admin-border/30 flex flex-col py-6 z-50 text-admin-cream">
       {/* Brand logo */}
       <div className="px-6 mb-8">
-        <h1 className="text-[20px] font-bold text-admin-cream tracking-tight font-serif">
+        <h1 className="text-xl font-bold text-admin-cream tracking-tight font-serif">
           HH <span className="text-admin-pink">Education</span>
         </h1>
-        <p className="text-[10px] text-admin-muted font-semibold uppercase tracking-widest mt-0.5">
+        <p className="text-xs text-admin-muted font-semibold uppercase tracking-widest mt-0.5">
           Admin Terminal
         </p>
       </div>
@@ -65,7 +65,7 @@ export default function AdminSidebar() {
               }`}
             >
               <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-admin-muted'}`} />
-              <span className="text-[14px]">{item.label}</span>
+              <span className="text-sm">{item.label}</span>
             </Link>
           );
         })}
@@ -88,7 +88,7 @@ export default function AdminSidebar() {
               }`}
             >
               <Icon className="w-5 h-5 text-admin-muted" />
-              <span className="text-[14px]">{item.label}</span>
+              <span className="text-sm">{item.label}</span>
             </Link>
           );
         })}

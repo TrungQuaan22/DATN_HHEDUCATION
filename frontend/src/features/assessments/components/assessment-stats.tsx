@@ -26,7 +26,7 @@ export function AssessmentStats({ stats }: AssessmentStatsProps) {
           className="rounded-xl border border-admin-border bg-admin-surface-low p-4 flex items-center justify-between shadow-sm"
         >
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-admin-muted block mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-admin-muted block mb-1">
               {stat.label}
             </span>
             <div className="text-2xl font-black text-admin-cream">{stat.value}</div>

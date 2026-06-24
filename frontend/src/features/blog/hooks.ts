@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBlogCategories, getBlogPosts, getBlogPostDetail } from "./api";
-import { BlogPostSummary } from "./types";
 import { prefetchedBlogPostSlugs } from "./prefetch";
 import {
   isQueryFresh,
@@ -15,15 +14,7 @@ import {
 const ALL_CATEGORIES_LABEL = "Tất cả";
 const POSTS_PER_PAGE = 6;
 
-const fallbackCategories = [
-  "Phương pháp học",
-  "Hướng nghiệp",
-  "Công nghệ giáo dục",
-  "Kỹ năng mềm",
-  "Tin tức",
-];
-
-export function useBlogCatalog(initialPosts: BlogPostSummary[] = []) {
+export function useBlogCatalog() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
@@ -46,7 +37,7 @@ export function useBlogCatalog(initialPosts: BlogPostSummary[] = []) {
       {
         page: currentPage,
         search: searchQuery,
-        category: selectedCategoryParam,
+        categorySlug: selectedCategoryParam,
       },
     ],
     queryFn: () =>
@@ -54,7 +45,7 @@ export function useBlogCatalog(initialPosts: BlogPostSummary[] = []) {
         page: currentPage,
         limit: POSTS_PER_PAGE,
         search: searchQuery.trim() || undefined,
-        category: selectedCategoryParam,
+        categorySlug: selectedCategoryParam,
       }),
     placeholderData: (previousData) => previousData,
   });
@@ -66,58 +57,21 @@ export function useBlogCatalog(initialPosts: BlogPostSummary[] = []) {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: ["blog-post-categories", 5],
-    queryFn: () => getBlogCategories(5),
+    queryKey: ["blog-post-categories", 10],
+    queryFn: () => getBlogCategories(10),
     staleTime: 10 * 60 * 1000,
   });
 
   const categoriesList = useMemo(() => {
     return [
-      ALL_CATEGORIES_LABEL,
-      ...((categoriesQuery.data?.items?.length
-        ? categoriesQuery.data.items.map(
-            (category: { name: string }) => category.name
-          )
-        : null) ?? fallbackCategories),
+      { name: ALL_CATEGORIES_LABEL, slug: ALL_CATEGORIES_LABEL },
+      ...(categoriesQuery.data?.items ?? []),
     ];
   }, [categoriesQuery.data]);
 
-  const filteredMockPosts = useMemo(() => {
-    return initialPosts.filter((post) => {
-      const matchesCategory =
-        selectedCategory === ALL_CATEGORIES_LABEL ||
-        post.category === selectedCategory;
-      const normalizedSearch = searchQuery.toLowerCase();
-      const matchesSearch =
-        !searchQuery.trim() ||
-        post.title.toLowerCase().includes(normalizedSearch) ||
-        post.excerpt.toLowerCase().includes(normalizedSearch) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(normalizedSearch));
-
-      return matchesCategory && matchesSearch;
-    });
-  }, [initialPosts, searchQuery, selectedCategory]);
-
-  const posts = useMemo(() => {
-    return postsQuery.data?.items?.length
-      ? postsQuery.data.items
-      : filteredMockPosts.slice(
-          (currentPage - 1) * POSTS_PER_PAGE,
-          currentPage * POSTS_PER_PAGE
-        );
-  }, [postsQuery.data, filteredMockPosts, currentPage]);
-
-  const totalPages = useMemo(() => {
-    return postsQuery.data?.items?.length
-      ? (postsQuery.data?.pagination.totalPages ?? 1)
-      : Math.ceil(filteredMockPosts.length / POSTS_PER_PAGE) || 1;
-  }, [postsQuery.data, filteredMockPosts]);
-
-  const featuredPosts = useMemo(() => {
-    return featuredQuery.data?.items?.length
-      ? featuredQuery.data.items
-      : initialPosts.slice(0, 3);
-  }, [featuredQuery.data, initialPosts]);
+  const posts = postsQuery.data?.items ?? [];
+  const totalPages = postsQuery.data?.pagination.totalPages ?? 1;
+  const featuredPosts = useMemo(() => featuredQuery.data?.items ?? [], [featuredQuery.data]);
 
   const featuredLarge = useMemo(() => featuredPosts[0], [featuredPosts]);
   const featuredSides = useMemo(() => featuredPosts.slice(1, 3), [featuredPosts]);

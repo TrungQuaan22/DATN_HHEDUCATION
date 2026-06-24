@@ -1,17 +1,12 @@
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { ensureMediaExists } from '~/common/ensures/media.ensure'
+import { validateImageMedia } from '~/common/policies/media.policy'
 import { mapUserProfileToResponse } from '../mappers'
 
-import type {
-  GetMeResponse,
-  UpdateMeDto,
-  UpdateMeResponse
-} from '../dto'
-import { userRepository } from '../repository'
+import type { GetMeResponse, UpdateMeDto, UpdateMeResponse } from '../dto'
 import type { UserRepositoryPort } from '../ports/user-repository.port'
-import { mediaRepository } from '~/modules/media/repository'
 import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 export class UserService {
@@ -41,21 +36,18 @@ export class UserService {
       ? await this.mediaRepository.findMediaById(input.avatarMediaId)
       : null
 
-    const avatarMedia = input.avatarMediaId
-      ? ensureActorCanUseImageMedia({
-          actor: { id: input.userId, role: user.role },
-          media,
-          label: 'Avatar media'
-        })
-      : null
+    const avatarMedia = input.avatarMediaId ? ensureMediaExists(media) : null
+
+    if (avatarMedia) {
+      validateImageMedia({ id: input.userId, role: user.role }, avatarMedia, 'Avatar media')
+    }
 
     const updatedUser = await this.repository.updateUserProfile({
       ...input,
-      avatarObjectKey: input.avatarMediaId === undefined ? undefined : avatarMedia?.objectKey ?? null
+      avatarObjectKey:
+        input.avatarMediaId === undefined ? undefined : (avatarMedia?.objectKey ?? null)
     })
 
     return mapUserProfileToResponse(updatedUser)
   }
 }
-
-export const userService = new UserService(userRepository, mediaRepository)

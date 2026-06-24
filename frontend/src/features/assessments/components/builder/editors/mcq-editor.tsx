@@ -15,7 +15,7 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2 mb-1">
-          <label className="text-[10px] font-bold text-admin-muted">Lựa chọn chế độ:</label>
+          <label className="text-xs font-bold text-admin-muted">Lựa chọn chế độ:</label>
           <select
             value={item.mode || "single"}
             onChange={(e) =>
@@ -23,7 +23,7 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
                 mode: e.target.value as McqMode,
               })
             }
-            className="bg-admin-bg border border-admin-border text-[11px] text-admin-cream rounded px-1.5 py-0.5 font-bold cursor-pointer"
+            className="bg-admin-bg border border-admin-border text-xs text-admin-cream rounded px-1.5 py-0.5 font-bold cursor-pointer"
           >
             <option value="single">Chọn một đáp án đúng</option>
             <option value="multiple">Chọn nhiều đáp án đúng</option>
@@ -59,9 +59,9 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
                   : "border-admin-muted"
               }`}
             >
-              {opt.isCorrect && <span className="text-[9px] font-black">✓</span>}
+              {opt.isCorrect && <span className="text-xs font-black">✓</span>}
             </button>
-            <span className="w-5 text-[11px] font-black text-admin-muted">
+            <span className="w-5 text-xs font-black text-admin-muted">
               {String.fromCharCode(65 + oIdx)}
             </span>
             <input
@@ -92,7 +92,7 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
       <div className="space-y-3 rounded-lg border border-admin-border/70 bg-admin-bg p-3">
         <div className="grid grid-cols-[1fr_90px] gap-3">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-admin-muted">Số lựa chọn</label>
+            <label className="text-xs font-bold uppercase text-admin-muted">Số lựa chọn</label>
             <input
               type="number"
               min={2}
@@ -114,7 +114,7 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-admin-muted">Đáp án</label>
+            <label className="text-xs font-bold uppercase text-admin-muted">Đáp án</label>
             <div className="rounded border border-admin-border bg-admin-deep px-2 py-1.5 text-xs font-black text-admin-cream">
               {correctOptions.join(", ") || "-"}
             </div>
@@ -151,7 +151,7 @@ export function McqEditor({ item, assessmentType, onUpdateItem }: McqEditorProps
             );
           })}
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-admin-muted">
+        <div className="flex items-center gap-2 text-xs text-admin-muted">
           <span>Chế độ:</span>
           <select
             value={item.mode || "single"}

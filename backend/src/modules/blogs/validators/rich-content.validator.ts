@@ -1,11 +1,34 @@
 import z from 'zod'
 
+const allowedMarks = new Set(['bold', 'italic', 'underline', 'strike', 'code', 'link'])
+const allowedNodes = new Set([
+  'paragraph',
+  'text',
+  'heading',
+  'bulletList',
+  'orderedList',
+  'listItem',
+  'blockquote',
+  'codeBlock',
+  'hardBreak',
+  'horizontalRule',
+  'image'
+])
+
 const markSchema = z
   .object({
     type: z.string().trim().min(1).max(50),
     attrs: z.record(z.unknown()).optional()
   })
   .passthrough()
+  .superRefine((mark, ctx) => {
+    if (!allowedMarks.has(mark.type)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Unsupported mark: ${mark.type}` })
+    }
+    if (mark.type === 'link' && typeof mark.attrs?.href !== 'string') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Link mark must include attrs.href' })
+    }
+  })
 
 type RichNode = {
   type: string
@@ -30,6 +53,9 @@ export const richNodeSchema: z.ZodType<RichNode> = z.lazy(() =>
       content: z.array(richNodeSchema).max(1000).optional()
     })
     .superRefine((node, ctx) => {
+      if (!allowedNodes.has(node.type)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Unsupported node: ${node.type}` })
+      }
       if (node.type === 'text' && typeof node.text !== 'string') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -39,33 +65,26 @@ export const richNodeSchema: z.ZodType<RichNode> = z.lazy(() =>
 
       if (node.type === 'heading') {
         const level = node.attrs?.level
-        if (level !== 1 && level !== 2 && level !== 3) {
+        if (level !== 2 && level !== 3) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: 'Heading level must be 1, 2, or 3'
+            message: 'Heading level must be 2 or 3'
           })
+        }
+        if (node.attrs?.id !== undefined && (typeof node.attrs.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(node.attrs.id))) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Heading must include a URL-safe attrs.id' })
         }
       }
 
-      if ((node.type === 'mathInline' || node.type === 'mathBlock') && typeof node.attrs?.latex !== 'string') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Math node must include attrs.latex'
-        })
-      }
 
-      if (node.type === 'youtube' && typeof node.attrs?.url !== 'string') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'YouTube node must include attrs.url'
-        })
-      }
 
-      if (node.type === 'image' && node.attrs?.src && !node.attrs.mediaId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Image node should reference mediaId instead of permanent src'
-        })
+      if (node.type === 'image') {
+        if (typeof node.attrs?.mediaId !== 'string' || !z.string().uuid().safeParse(node.attrs.mediaId).success) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Image must include a valid attrs.mediaId' })
+        }
+        if (typeof node.attrs?.src !== 'string' || !z.string().url().safeParse(node.attrs.src).success) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Image must include a valid attrs.src' })
+        }
       }
     })
 )

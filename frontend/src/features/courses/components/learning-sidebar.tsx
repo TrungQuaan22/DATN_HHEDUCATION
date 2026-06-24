@@ -50,10 +50,10 @@ export function LearningSidebar({
             className="w-full text-left px-4 py-2 bg-surface-input/50 hover:bg-surface-input/80 border-y border-border-dark/40 flex items-center justify-between transition-all cursor-pointer group"
           >
             <div className="flex flex-col min-w-0 pr-2">
-              <span className="text-[10px] font-extrabold text-brand-pink uppercase tracking-widest">
+              <span className="text-xs font-extrabold text-brand-pink uppercase tracking-widest">
                 Chương {chapter.orderIndex}
               </span>
-              <h4 className="text-[13px] font-bold text-cream mt-0.5 leading-snug truncate">
+              <h4 className="text-sm font-bold text-cream mt-0.5 leading-snug truncate">
                 {chapter.title}
               </h4>
             </div>
@@ -102,7 +102,7 @@ export function LearningSidebar({
                   )}
                   <div className="flex-grow min-w-0">
                     <p
-                      className={`text-[13px] font-bold truncate leading-tight ${
+                      className={`text-sm font-bold truncate leading-tight ${
                         isSelected ? "text-brand-pink" : "text-cream"
                       }`}
                     >
@@ -110,7 +110,7 @@ export function LearningSidebar({
                         ? `Chương ${chapter.orderIndex} - Bài ${lesson.orderIndex}: ${lesson.title}`
                         : `Bài ${lesson.orderIndex}: ${lesson.title}`}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-text">
+                    <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-text">
                       {lesson.type === "video" ? (
                         <Play size={11} className="text-brand-pink" />
                       ) : (
@@ -162,7 +162,7 @@ export function LearningSidebar({
         }`}
       >
         <div className="p-4 border-b border-border-dark bg-off-black flex justify-between items-center shrink-0">
-          <h3 className="text-[13px] font-extrabold text-cream uppercase tracking-wider">
+          <h3 className="text-sm font-extrabold text-cream uppercase tracking-wider">
             Nội dung khóa học
           </h3>
         </div>

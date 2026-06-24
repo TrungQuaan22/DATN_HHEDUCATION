@@ -79,7 +79,7 @@ export default function CoursesTable({
         >
           <table className="w-full border-collapse text-left min-w-[1300px]">
             <thead className="bg-admin-surface-low/50 border-b border-admin-border/30">
-              <tr className="text-admin-muted text-[12px] font-bold uppercase tracking-wider">
+              <tr className="text-admin-muted text-xs font-bold uppercase tracking-wider">
                 <th className="pl-6 py-4 w-[320px] min-w-[280px]">Khóa học</th>
                 <th className="py-4 w-[180px] min-w-[140px]">Giảng viên</th>
                 <th className="py-4 w-[110px] min-w-[90px]">Môn học</th>
@@ -113,7 +113,7 @@ export default function CoursesTable({
                 Array.from({ length: emptyRowsCount }).map((_, idx) => (
                   <tr
                     key={`empty-${idx}`}
-                    className="border-b border-transparent text-[14px]"
+                    className="border-b border-transparent text-sm"
                   >
                     <td className="pl-6 py-4">
                       <div className="h-12" />
@@ -161,7 +161,7 @@ export default function CoursesTable({
               <button
                 key={i}
                 onClick={() => onPageChange(i + 1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[12px] transition-all cursor-pointer ${
+                className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-xs transition-all cursor-pointer ${
                   currentPage === i + 1
                     ? "bg-admin-pink text-white shadow-sm"
                     : "border border-admin-border/30 text-admin-muted hover:bg-admin-surface-low hover:text-admin-cream"

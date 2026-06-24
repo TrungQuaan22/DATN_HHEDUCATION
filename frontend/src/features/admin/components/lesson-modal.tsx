@@ -245,7 +245,7 @@ export default function LessonModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nhập tiêu đề bài học..."
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
             />
           </div>
 
@@ -309,7 +309,7 @@ export default function LessonModal({
                   ? 'Nhập nội dung hoặc mô tả hướng dẫn chi tiết tài liệu học tập...'
                   : 'Nhập tóm tắt mô tả ngắn gọn về bài học này...'
               }
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] resize-none"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base resize-none"
             />
           </div>
 
@@ -327,7 +327,7 @@ export default function LessonModal({
                     id="video-source-select"
                     value={videoType}
                     onChange={(e) => setVideoType(e.target.value as 'system' | 'youtube')}
-                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                       backgroundRepeat: 'no-repeat',
@@ -352,7 +352,7 @@ export default function LessonModal({
                         min="0"
                         value={durationMin}
                         onChange={(e) => setDurationMin(Number(e.target.value))}
-                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl pl-4 pr-12 py-3 text-admin-cream font-medium text-[14px]"
+                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl pl-4 pr-12 py-3 text-admin-cream font-medium text-base"
                       />
                       <span className="absolute right-4 text-xs text-admin-muted font-bold pointer-events-none">phút</span>
                     </div>
@@ -363,7 +363,7 @@ export default function LessonModal({
                         max="59"
                         value={durationSec}
                         onChange={(e) => setDurationSec(Number(e.target.value))}
-                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl pl-4 pr-12 py-3 text-admin-cream font-medium text-[14px]"
+                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl pl-4 pr-12 py-3 text-admin-cream font-medium text-sm"
                       />
                       <span className="absolute right-4 text-xs text-admin-muted font-bold pointer-events-none">giây</span>
                     </div>
@@ -418,7 +418,7 @@ export default function LessonModal({
                       />
                       <CloudUpload size={28} className="text-admin-muted group-hover:text-admin-pink transition-colors mb-2" />
                       <p className="text-xs font-bold text-admin-cream">Kéo thả file video vào đây hoặc <span className="text-admin-pink">chọn từ máy tính</span></p>
-                      <p className="text-[10px] text-admin-muted mt-1">Hỗ trợ các định dạng video MP4, WebM (Tối đa 100MB)</p>
+                      <p className="text-xs text-admin-muted mt-1">Hỗ trợ các định dạng video MP4, WebM (Tối đa 100MB)</p>
                     </div>
                   )}
                 </div>
@@ -434,7 +434,7 @@ export default function LessonModal({
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                     placeholder="https://www.youtube.com/watch?v=..."
-                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
                   />
                 </div>
               )}
@@ -450,7 +450,7 @@ export default function LessonModal({
                 id="assessment-select"
                 value={assessmentId}
                 onChange={(e) => setAssessmentId(e.target.value)}
-                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',

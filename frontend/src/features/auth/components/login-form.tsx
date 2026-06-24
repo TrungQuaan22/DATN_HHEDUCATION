@@ -51,12 +51,12 @@ export function LoginForm() {
     <div className="w-full bg-deep-black rounded p-8 md:p-10 border border-border-dark shadow-l4 transition-all duration-300 hover:border-brand-pink/20">
       {/* Auth Tabs */}
       <div className="flex mb-8 bg-brand-dark/50 rounded-lg p-1 border border-border-dark">
-        <button className="flex-grow py-2 text-center text-[14px] font-bold rounded-md bg-brand-pink text-brand-dark transition-all">
+        <button className="flex-grow py-2 text-center text-sm font-bold rounded-md bg-brand-pink text-brand-dark transition-all">
           Đăng nhập
         </button>
         <Link
           href={registerHref}
-          className="flex-grow py-2 text-center text-[14px] font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
+          className="flex-grow py-2 text-center text-sm font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
         >
           Đăng ký
         </Link>
@@ -66,12 +66,12 @@ export function LoginForm() {
       {(isRegistered || errorMessage) && (
         <div className="mb-6">
           {isRegistered && !errorMessage && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-[13px] leading-relaxed">
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm leading-relaxed">
               Đăng ký tài khoản thành công! Vui lòng đăng nhập để tiếp tục.
             </div>
           )}
           {errorMessage && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-[13px] leading-relaxed">
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm leading-relaxed">
               {errorMessage}
             </div>
           )}
@@ -83,7 +83,7 @@ export function LoginForm() {
         {/* Email Field */}
         <div>
           <label
-            className="block text-[14px] font-bold text-cream mb-2"
+            className="block text-sm font-bold text-cream mb-2"
             htmlFor="email"
           >
             Email
@@ -116,12 +116,12 @@ export function LoginForm() {
         <div>
           <div className="flex justify-between items-center mb-2">
             <label
-              className="block text-[14px] font-bold text-cream"
+              className="block text-sm font-bold text-cream"
               htmlFor="password"
             >
               Mật khẩu
             </label>
-            <a href="#" className="text-[12px] text-brand-pink hover:underline">
+            <a href="#" className="text-xs text-brand-pink hover:underline">
               Quên mật khẩu?
             </a>
           </div>
@@ -166,7 +166,7 @@ export function LoginForm() {
             {...register("remember")}
           />
           <label
-            className="ml-2.5 text-[12px] text-muted-text select-none cursor-pointer"
+            className="ml-2.5 text-xs text-muted-text select-none cursor-pointer"
             htmlFor="remember"
           >
             Ghi nhớ đăng nhập
@@ -191,7 +191,7 @@ export function LoginForm() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border-dark"></div>
         </div>
-        <div className="relative flex justify-center text-[12px]">
+        <div className="relative flex justify-center text-xs">
           <span className="px-4 bg-deep-black text-muted-text font-bold">
             Hoặc
           </span>
@@ -217,7 +217,7 @@ export function LoginForm() {
 
       {/* Switch Text */}
       <div className="mt-8 text-center">
-        <p className="text-[13px] text-muted-text">
+        <p className="text-sm text-muted-text">
           Chưa có tài khoản?
           <Link
             href={registerHref}

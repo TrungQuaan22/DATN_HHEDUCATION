@@ -4,15 +4,10 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 
 import { paymentConfig } from './config'
-import { idempotencyRepository } from './repositories/idempotency.repository'
 import type { IdempotencyRepositoryPort } from './ports/idempotency-repository.port'
 import type { IdempotencyPort, IdempotencyRunInput } from './ports/idempotency.port'
 
-export const buildRequestHash = (data: {
-  method: string
-  path: string
-  body: unknown
-}) => {
+export const buildRequestHash = (data: { method: string; path: string; body: unknown }) => {
   return createHash('sha256')
     .update(
       JSON.stringify({
@@ -132,5 +127,3 @@ export class IdempotencyService implements IdempotencyPort {
     return result
   }
 }
-
-export const idempotencyService = new IdempotencyService(idempotencyRepository)

@@ -1,8 +1,8 @@
+import type { PaymentTransactionMatchStatus, WebhookStatus } from '@prisma/client'
+
 import type { OrderStatus, PaymentStatus } from '~/modules/orders/ports/order-repository.port'
 
-export type WebhookStatus = 'received' | 'processing' | 'processed' | 'failed'
-export type PaymentTransactionMatchStatus = 'matched' | 'unmatched' | 'manual_review' | 'ignored'
-
+export type { PaymentTransactionMatchStatus, WebhookStatus }
 
 import type { NormalizedPaymentEvent } from '../dto'
 
@@ -22,45 +22,52 @@ export type PaymentWebhookOrderRecord = {
   }>
 }
 
+export type CreateWebhookEventData = {
+  provider: string
+  eventId: string
+  payload: unknown
+}
+
+export type UpdateWebhookEventStatusData = {
+  provider: string
+  eventId: string
+  status: WebhookStatus
+  errorMessage?: string | null
+  processedAt?: Date
+}
+
+export type UpdatePaymentTransactionData = {
+  id: string
+  orderId?: string
+  paymentId?: string
+  matchStatus: PaymentTransactionMatchStatus
+  metadata?: unknown
+}
+
+export type CreateManualReviewPaymentData = {
+  event: NormalizedPaymentEvent
+  reason: string
+  orderId: string
+  expectedAmount?: number
+  orderStatus?: OrderStatus
+  expiredAt?: Date
+}
+
+export type UpdatePendingPaymentData = {
+  status: PaymentStatus
+  amount?: number
+  transactionRef?: string | null
+  paidAt?: Date | null
+  metadata?: unknown
+}
+
 export interface PaymentWebhookTransactionPort {
-  createWebhookEvent(data: {
-    provider: string
-    eventId: string
-    payload: unknown
-  }): Promise<unknown>
-  updateWebhookEventStatus(data: {
-    provider: string
-    eventId: string
-    status: WebhookStatus
-    errorMessage?: string | null
-    processedAt?: Date
-  }): Promise<unknown>
+  createWebhookEvent(data: CreateWebhookEventData): Promise<unknown>
+  updateWebhookEventStatus(data: UpdateWebhookEventStatusData): Promise<unknown>
   createPaymentTransaction(event: NormalizedPaymentEvent): Promise<{ id: string }>
-  updatePaymentTransaction(data: {
-    id: string
-    orderId?: string
-    paymentId?: string
-    matchStatus: PaymentTransactionMatchStatus
-    metadata?: unknown
-  }): Promise<unknown>
-  createManualReviewPayment(data: {
-    event: NormalizedPaymentEvent
-    reason: string
-    orderId: string
-    expectedAmount?: number
-    orderStatus?: OrderStatus
-    expiredAt?: Date
-  }): Promise<{ id: string }>
-  updatePayment(
-    paymentId: string,
-    data: {
-      status: PaymentStatus
-      amount?: number
-      transactionRef?: string | null
-      paidAt?: Date | null
-      metadata?: unknown
-    }
-  ): Promise<unknown>
+  updatePaymentTransaction(data: UpdatePaymentTransactionData): Promise<unknown>
+  createManualReviewPayment(data: CreateManualReviewPaymentData): Promise<{ id: string }>
+  updatePayment(paymentId: string, data: UpdatePendingPaymentData): Promise<boolean>
   findOrderForWebhook(
     orderInvoiceNumber: string,
     provider: string
@@ -73,10 +80,9 @@ export interface PaymentWebhookTransactionPort {
 }
 
 export interface PaymentWebhookRepositoryPort {
-  withTransaction<T>(handler: (transaction: PaymentWebhookTransactionPort) => Promise<T>): Promise<T>
-  findWebhookEvent(
-    provider: string,
-    eventId: string
-  ): Promise<{ status: WebhookStatus } | null>
+  withTransaction<T>(
+    handler: (transaction: PaymentWebhookTransactionPort) => Promise<T>
+  ): Promise<T>
+  findWebhookEvent(provider: string, eventId: string): Promise<{ status: WebhookStatus } | null>
   isUniqueConstraintError(error: unknown): boolean
 }

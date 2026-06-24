@@ -4,7 +4,8 @@ import z from 'zod'
 import { sendSuccess } from '~/common/http/response'
 
 import type { ListPublicBlogPostsDto } from '../dto'
-import { PublicBlogService, publicBlogService } from '../services/public.service'
+import type { PublicBlogService } from '../services/public.service'
+import { publicBlogService } from '../wiring'
 import {
   getPublicBlogPostSchema,
   listPublicBlogCategoriesSchema,

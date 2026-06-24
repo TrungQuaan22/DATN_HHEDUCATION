@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "next/navigation";
@@ -24,7 +24,8 @@ import {
 import LessonYoutubeField from "./lesson-youtube-field";
 import LessonSystemVideoField from "./lesson-system-video-field";
 import LessonQuizField from "./lesson-quiz-field";
-import { listAdminAssessments } from "@/features/assessments/api";
+import { useAdminAssessmentsQuery } from "@/features/assessments/hooks";
+import LessonMaterialsTab from "./lesson-materials-tab";
 
 type LessonModalProps = {
   isOpen: boolean;
@@ -44,22 +45,18 @@ export default function LessonModal({
 
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const [assessmentsList, setAssessmentsList] = useState<{ id: string; title: string }[]>([]);
+  const [activeModalTab, setActiveModalTab] = useState<"general" | "materials">("general");
+  const { data: assessmentsData, refetch: refetchAssessments } = useAdminAssessmentsQuery(
+    { page: 1, limit: 100 },
+    { enabled: isOpen }
+  );
 
-  const loadAssessments = async () => {
-    try {
-      const res = await listAdminAssessments({ page: 1, limit: 100 });
-      setAssessmentsList(res.items.map((item) => ({ id: item.id, title: item.title })));
-    } catch (error) {
-      console.error("Lỗi tải danh sách đề thi:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      loadAssessments();
-    }
-  }, [isOpen]);
+  const assessmentsList = useMemo(() => {
+    return (assessmentsData?.items || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+    }));
+  }, [assessmentsData]);
 
   const {
     register,
@@ -91,6 +88,7 @@ export default function LessonModal({
   useEffect(() => {
     if (isOpen) {
       setGeneralError(null);
+      setActiveModalTab("general");
 
       if (initialData) {
         const totalSec = initialData.durationSec || 0;
@@ -191,10 +189,39 @@ export default function LessonModal({
           </h2>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onFormSubmit)}
-          className="flex-grow overflow-y-auto p-6 space-y-5 custom-scrollbar"
-        >
+        {initialData && initialData.id && (
+          <div className="flex border-b border-admin-border/10 bg-admin-surface-low/10 px-6 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveModalTab("general")}
+              className={`px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer uppercase tracking-wider ${
+                activeModalTab === "general"
+                  ? "text-admin-pink border-admin-pink bg-admin-surface-low/5"
+                  : "text-admin-muted hover:text-admin-cream border-transparent"
+              }`}
+            >
+              Chi tiết bài học
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveModalTab("materials")}
+              className={`px-4 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer uppercase tracking-wider ${
+                activeModalTab === "materials"
+                  ? "text-admin-pink border-admin-pink bg-admin-surface-low/5"
+                  : "text-admin-muted hover:text-admin-cream border-transparent"
+              }`}
+            >
+              Tài liệu học tập
+            </button>
+          </div>
+        )}
+
+        {(!initialData || !initialData.id || activeModalTab === "general") ? (
+          <>
+            <form
+              onSubmit={handleSubmit(onFormSubmit)}
+              className="flex-grow overflow-y-auto p-6 space-y-5 custom-scrollbar"
+            >
           {generalError && (
             <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-xs">
               <AlertCircle size={16} className="flex-shrink-0" />
@@ -215,7 +242,7 @@ export default function LessonModal({
               disabled={isSubmitting}
               {...register("title")}
               placeholder="Nhập tiêu đề bài học..."
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
             />
             {errors.title && (
               <p className="text-red-400 text-xs mt-1">
@@ -293,7 +320,7 @@ export default function LessonModal({
                   ? "Nhập nội dung hoặc mô tả hướng dẫn chi tiết tài liệu học tập..."
                   : "Nhập tóm tắt mô tả ngắn gọn về bài học này..."
               }
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] resize-none"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base resize-none"
             />
             {errors.description && (
               <p className="text-red-400 text-xs mt-1">
@@ -315,7 +342,7 @@ export default function LessonModal({
                   <select
                     id="video-source-select"
                     {...register("videoType")}
-                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+                    className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                       backgroundRepeat: "no-repeat",
@@ -348,7 +375,7 @@ export default function LessonModal({
                         type="number"
                         min="0"
                         {...register("durationMin")}
-                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded pl-4 pr-12 py-3 text-admin-cream font-medium text-[14px]"
+                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded pl-4 pr-12 py-3 text-admin-cream font-medium text-base"
                       />
                       <span className="absolute right-4 text-xs text-admin-muted font-bold pointer-events-none">
                         phút
@@ -360,7 +387,7 @@ export default function LessonModal({
                         min="0"
                         max="59"
                         {...register("durationSec")}
-                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded pl-4 pr-12 py-3 text-admin-cream font-medium text-[14px]"
+                        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded pl-4 pr-12 py-3 text-admin-cream font-medium text-base"
                       />
                       <span className="absolute right-4 text-xs text-admin-muted font-bold pointer-events-none">
                         giây
@@ -392,7 +419,7 @@ export default function LessonModal({
               assessments={assessmentsList}
               courseId={courseId}
               lessonId={initialData?.id}
-              onRefresh={loadAssessments}
+              onRefresh={() => refetchAssessments()}
             />
           )}
 
@@ -441,6 +468,12 @@ export default function LessonModal({
             Lưu bài học
           </button>
         </div>
+      </>
+    ) : (
+      <div className="flex-grow overflow-y-auto p-6 custom-scrollbar text-admin-cream">
+        <LessonMaterialsTab lessonId={initialData.id} />
+      </div>
+    )}
       </div>
     </div>
   );

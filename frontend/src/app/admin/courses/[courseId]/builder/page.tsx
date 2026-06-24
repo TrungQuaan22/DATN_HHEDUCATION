@@ -54,7 +54,7 @@ export default function AdminCurriculumBuilderPage() {
       <div className="bg-admin-surface-low/50 text-admin-cream p-4 rounded flex items-start gap-3 border border-admin-border/20">
         <Info className="text-admin-pink w-5 h-5 mt-0.5 flex-shrink-0" />
         <div>
-          <p className="text-[13px] font-semibold">
+          <p className="text-sm font-semibold">
             {courseInfo?.status === "draft"
               ? "Khóa học đang ở chế độ Nháp (Draft). Bạn có thể kéo thả để thay đổi vị trí các chương, bài học để cấu trúc chương trình học."
               : "Khóa học đang được hiển thị cho học sinh. Các thay đổi về cấu trúc bài học sẽ cập nhật trực tiếp vào chương trình học tập của học viên."}

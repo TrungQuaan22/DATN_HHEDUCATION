@@ -68,7 +68,21 @@ const buildFinalLessonOrderUpdates = (lessonIds: string[]) => {
   })
 }
 
-function mapToLessonRecord(lesson: any): AdminLessonRecord {
+const ADMIN_LESSON_INCLUDE = {
+  videoMedia: {
+    select: lessonVideoMediaSelect
+  },
+  assessmentPlacements: {
+    where: { type: 'lesson' },
+    select: { assessmentId: true }
+  }
+} satisfies Prisma.LessonInclude
+
+type PrismaAdminLesson = Prisma.LessonGetPayload<{
+  include: typeof ADMIN_LESSON_INCLUDE
+}>
+
+function mapToLessonRecord(lesson: PrismaAdminLesson): AdminLessonRecord {
   return {
     id: lesson.id,
     chapterId: lesson.chapterId,
@@ -109,8 +123,12 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
             course: {
               select: {
                 id: true,
+                title: true,
+                slug: true,
                 teacherId: true,
                 status: true,
+                price: true,
+                salePrice: true,
                 deletedAt: true
               }
             }
@@ -139,8 +157,15 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
         updatedAt: lesson.chapter.updatedAt,
         course: {
           id: lesson.chapter.course.id,
+          title: lesson.chapter.course.title,
+          slug: lesson.chapter.course.slug,
           teacherId: lesson.chapter.course.teacherId,
           status: lesson.chapter.course.status,
+          price: Number(lesson.chapter.course.price),
+          salePrice:
+            lesson.chapter.course.salePrice === null
+              ? null
+              : Number(lesson.chapter.course.salePrice),
           deletedAt: lesson.chapter.course.deletedAt
         }
       }
@@ -220,15 +245,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
               }
             : undefined
         },
-        include: {
-          videoMedia: {
-            select: lessonVideoMediaSelect
-          },
-          assessmentPlacements: {
-            where: { type: 'lesson' },
-            select: { assessmentId: true }
-          }
-        }
+        include: ADMIN_LESSON_INCLUDE
       })
 
       await tx.course.update({
@@ -337,15 +354,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
           youtubeUrl: finalYoutubeUrl,
           durationSec: finalDurationSec
         },
-        include: {
-          videoMedia: {
-            select: lessonVideoMediaSelect
-          },
-          assessmentPlacements: {
-            where: { type: 'lesson' },
-            select: { assessmentId: true }
-          }
-        }
+        include: ADMIN_LESSON_INCLUDE
       })
 
       return mapToLessonRecord(lesson)
@@ -373,15 +382,7 @@ export class PrismaAdminLessonRepository implements AdminLessonRepositoryPort {
           deletedAt: new Date(),
           orderIndex: deletedOrderIndex
         },
-        include: {
-          videoMedia: {
-            select: lessonVideoMediaSelect
-          },
-          assessmentPlacements: {
-            where: { type: 'lesson' },
-            select: { assessmentId: true }
-          }
-        }
+        include: ADMIN_LESSON_INCLUDE
       })
 
       await tx.course.update({

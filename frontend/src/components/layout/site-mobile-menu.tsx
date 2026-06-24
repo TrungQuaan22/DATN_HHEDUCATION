@@ -85,7 +85,7 @@ export default function SiteMobileMenu({
                 <p className="text-sm font-bold text-cream truncate">
                   {user?.fullName || "Học sinh HH"}
                 </p>
-                <p className="text-[11px] text-muted-text truncate">
+                <p className="text-xs text-muted-text truncate">
                   {user?.email || "hocsinh@hheducation.com"}
                 </p>
               </div>

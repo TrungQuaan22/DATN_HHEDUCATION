@@ -23,14 +23,14 @@ export type ListUsersInput = {
   role?: UserRole
   status?: UserStatus
   search?: string
-  skip: number
-  take: number
+  page: number
+  limit: number
 }
 
 export type ListTeacherOptionsInput = {
   search?: string
-  skip: number
-  take: number
+  page: number
+  limit: number
 }
 
 export type UpdateUserProfileInput = {

@@ -38,7 +38,7 @@ export function AnswerKeyTable({
           <col className="w-[44px]" />
         </colgroup>
         <thead>
-          <tr className="border-b border-admin-border/60 text-admin-muted font-bold text-[10px] uppercase tracking-wider sticky top-0 bg-admin-surface-low z-10">
+          <tr className="border-b border-admin-border/60 text-admin-muted font-bold text-xs uppercase tracking-wider sticky top-0 bg-admin-surface-low z-10">
             <th className="px-2 pb-2 text-center">Câu</th>
             <th className="px-3 pb-2">Đáp án</th>
             <th className="px-2 pb-2">Chuyên đề</th>
@@ -129,7 +129,7 @@ export function AnswerKeyTable({
                           }`
                         );
                       }}
-                      className={`ml-1 text-[8px] font-black uppercase px-1 py-0.5 rounded border border-admin-border cursor-pointer ${
+                      className={`ml-1 text-xs font-black uppercase px-1 py-0.5 rounded border border-admin-border cursor-pointer ${
                         item.mode === "multiple"
                           ? "text-admin-pink bg-admin-pink/10 border-admin-pink/30"
                           : "text-admin-muted hover:text-admin-cream bg-admin-deep"
@@ -153,10 +153,10 @@ export function AnswerKeyTable({
                         key={sIdx}
                         className="flex h-8 items-center justify-between gap-2 rounded border border-admin-border/50 bg-admin-bg/85 px-2"
                       >
-                        <span className="w-10 shrink-0 text-[10px] font-bold text-admin-muted">
+                        <span className="w-10 shrink-0 text-xs font-bold text-admin-muted">
                           MĐ{sIdx + 1}:
                         </span>
-                        <div className="flex overflow-hidden rounded border border-admin-border text-[10px] font-bold">
+                        <div className="flex overflow-hidden rounded border border-admin-border text-xs font-bold">
                           <button
                             type="button"
                             onClick={() => {
@@ -214,7 +214,7 @@ export function AnswerKeyTable({
                           statements: nextStmts,
                         });
                       }}
-                      className="flex h-7 items-center justify-center rounded border border-dashed border-admin-border/60 px-2 text-[10px] font-bold text-admin-pink transition-all hover:border-admin-pink hover:bg-admin-pink/[0.02] cursor-pointer"
+                      className="flex h-7 items-center justify-center rounded border border-dashed border-admin-border/60 px-2 text-xs font-bold text-admin-pink transition-all hover:border-admin-pink hover:bg-admin-pink/[0.02] cursor-pointer"
                     >
                       + Thêm MĐ
                     </button>

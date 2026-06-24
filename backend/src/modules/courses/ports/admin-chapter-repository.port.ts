@@ -12,8 +12,12 @@ export type AdminChapterRecord = {
 export type AdminChapterWithCourseRecord = AdminChapterRecord & {
   course: {
     id: string
+    title: string
+    slug: string
     teacherId: string
     status: CourseStatus
+    price: number
+    salePrice: number | null
     deletedAt: Date | null
   }
 }

@@ -3,14 +3,9 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import {
-  type AdminOrderService,
-  adminOrderService
-} from '../services/admin-order.service'
-import {
-  getAdminOrderSchema,
-  listAdminOrdersSchema
-} from '../validators/admin-order.validator'
+import type { AdminOrderService } from '../services/admin-order.service'
+import { getAdminOrderSchema, listAdminOrdersSchema } from '../validators/admin-order.validator'
+import { adminOrderService } from '../wiring'
 
 type ListAdminOrdersValidated = z.infer<typeof listAdminOrdersSchema>
 type GetAdminOrderValidated = z.infer<typeof getAdminOrderSchema>

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 
 import { getPaymentProvider } from '../providers/provider.factory'
-import { webhookService } from '../services/webhook.service'
+import { webhookService } from '../wiring'
 
 export const paymentWebhookController = async (req: Request, res: Response) => {
   const provider = getPaymentProvider(req.params.provider as string)

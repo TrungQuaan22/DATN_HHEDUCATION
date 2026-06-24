@@ -80,7 +80,8 @@ export const mapAdminCourseDetailResponse = (
               durationSec: lesson.videoMedia.durationSec
             }
           : null,
-        assessmentId: lesson.assessmentId
+        assessmentId: lesson.assessmentId,
+        hasRagError: lesson.hasRagError
       }))
     }))
   }

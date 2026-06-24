@@ -72,17 +72,17 @@ export default function CurriculumBuilderHeader({
               {courseStatus && (
                 <>
                   {courseStatus === "draft" && (
-                    <span className="px-2 py-0.5 rounded bg-admin-pink/10 text-admin-pink text-[10px] font-bold uppercase tracking-wider border border-admin-pink/20">
+                    <span className="px-2 py-0.5 rounded bg-admin-pink/10 text-admin-pink text-xs font-bold uppercase tracking-wider border border-admin-pink/20">
                       DRAFT
                     </span>
                   )}
                   {courseStatus === "published" && (
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-500/20">
                       PUBLISHED
                     </span>
                   )}
                   {courseStatus === "archived" && (
-                    <span className="px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 text-[10px] font-bold uppercase tracking-wider border border-zinc-500/20">
+                    <span className="px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 text-xs font-bold uppercase tracking-wider border border-zinc-500/20">
                       ARCHIVED
                     </span>
                   )}
@@ -101,7 +101,7 @@ export default function CurriculumBuilderHeader({
             <button
               onClick={onPublish}
               disabled={isPublishPending}
-              className="bg-admin-pink text-white px-5 py-2 text-[13px] font-bold rounded flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="bg-admin-pink text-white px-5 py-2 text-sm font-bold rounded flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <CheckCircle size={15} />
               Xuất bản khóa học
@@ -110,7 +110,7 @@ export default function CurriculumBuilderHeader({
             <button
               onClick={onArchive}
               disabled={isArchivePending}
-              className="border border-amber-500/30 bg-amber-500/10 text-amber-400 px-5 py-2 text-[13px] font-bold rounded flex items-center gap-1.5 hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="border border-amber-500/30 bg-amber-500/10 text-amber-400 px-5 py-2 text-sm font-bold rounded flex items-center gap-1.5 hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <Archive size={15} />
               Lưu trữ khóa học
@@ -119,7 +119,7 @@ export default function CurriculumBuilderHeader({
             <button
               onClick={onPublish}
               disabled={isPublishPending}
-              className="bg-admin-pink text-white px-5 py-2 text-[13px] font-bold rounded flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="bg-admin-pink text-white px-5 py-2 text-sm font-bold rounded flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <RefreshCw size={15} />
               Mở lại bản nháp

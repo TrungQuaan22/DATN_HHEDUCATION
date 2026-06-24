@@ -11,7 +11,7 @@ interface EssayEditorProps {
 export function EssayEditor({ item, onUpdateItem }: EssayEditorProps) {
   return (
     <div className="space-y-1.5 bg-admin-deep p-4 rounded-lg border border-admin-border/60">
-      <label className="text-[10px] font-bold text-admin-muted uppercase block">
+      <label className="text-xs font-bold text-admin-muted uppercase block">
         Rubric hướng dẫn chấm bài
       </label>
       <textarea

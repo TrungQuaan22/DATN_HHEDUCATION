@@ -185,7 +185,7 @@ export default function CourseCreateEditModal({
         </button>
 
         <div className="px-8 pt-8 pb-6 text-center border-b border-admin-border/20 bg-admin-surface-low/30">
-          <h3 className="text-2xl font-bold font-serif text-admin-cream flex items-center justify-center gap-2">
+          <h3 className="text-lg font-bold text-admin-cream flex items-center justify-center gap-2">
             {initialData ? "Chỉnh sửa Khóa học" : "Tạo Khóa Học Mới"}
           </h3>
           <p className="text-sm text-admin-muted mt-2 max-w-md mx-auto">
@@ -207,14 +207,14 @@ export default function CourseCreateEditModal({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Tên khóa học <span className="text-admin-pink">*</span>
             </label>
             <input
               type="text"
               {...register("title")}
               placeholder="Ví dụ: Toán giải tích 12 nâng cao"
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                 errors.title
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -229,12 +229,12 @@ export default function CourseCreateEditModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Môn học
               </label>
               <select
                 {...register("subject")}
-                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none ${
+                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-sm appearance-none ${
                   errors.subject
                     ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -264,12 +264,12 @@ export default function CourseCreateEditModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Khối lớp
               </label>
               <select
                 {...register("grade")}
-                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none ${
+                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-sm appearance-none ${
                   errors.grade
                     ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -300,7 +300,7 @@ export default function CourseCreateEditModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Giảng viên phụ trách
             </label>
             <SearchableTeacherSelect
@@ -323,14 +323,14 @@ export default function CourseCreateEditModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Giá gốc (VND) <span className="text-admin-pink">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 {...register("price")}
-                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                   errors.price
                     ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -344,7 +344,7 @@ export default function CourseCreateEditModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Giá khuyến mãi (VND)
               </label>
               <input
@@ -354,7 +354,7 @@ export default function CourseCreateEditModal({
                   setValueAs: (v) => (v === "" ? null : Number(v)),
                 })}
                 placeholder="Để trống nếu không giảm giá"
-                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+                className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                   errors.salePrice
                     ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                     : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -369,14 +369,14 @@ export default function CourseCreateEditModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Mô tả ngắn
             </label>
             <textarea
               {...register("description")}
               placeholder="Nhập tóm tắt nội dung chính của khóa học..."
               rows={3}
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] resize-none ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm resize-none ${
                 errors.description
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -390,7 +390,7 @@ export default function CourseCreateEditModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Ảnh bìa khóa học
             </label>
             <ImageUploadField

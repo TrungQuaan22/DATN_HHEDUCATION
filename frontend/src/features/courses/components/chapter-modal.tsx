@@ -97,7 +97,7 @@ export default function ChapterModal({
               disabled={isSubmitting}
               {...register("title")}
               placeholder="Ví dụ: Chương 1: Khảo sát Hàm số"
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm"
             />
             {errors.title && (
               <p className="text-red-400 text-xs mt-1">

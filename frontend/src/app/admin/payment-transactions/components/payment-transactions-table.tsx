@@ -22,15 +22,15 @@ type PaymentTransactionsTableProps = {
 const getMatchStatusBadge = (status: string) => {
   switch (status) {
     case "matched":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">Đã khớp</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">Đã khớp</span>;
     case "unmatched":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-wider">Chưa khớp</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-wider">Chưa khớp</span>;
     case "manual_review":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase tracking-wider">Cần đối soát</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase tracking-wider">Cần đối soát</span>;
     case "ignored":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">Bỏ qua</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">Bỏ qua</span>;
     default:
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">{status}</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">{status}</span>;
   }
 };
 
@@ -117,12 +117,12 @@ function TransactionExpandedRow({ transactionId, colSpan }: { transactionId: str
                   navigator.clipboard.writeText(JSON.stringify(detail.rawPayload, null, 2));
                   alert("Đã sao chép JSON Payload!");
                 }}
-                className="text-[10px] text-admin-muted hover:text-admin-cream bg-admin-bg px-2 py-0.5 rounded border border-admin-border/20 cursor-pointer"
+                className="text-xs text-admin-muted hover:text-admin-cream bg-admin-bg px-2 py-0.5 rounded border border-admin-border/20 cursor-pointer"
               >
                 Copy JSON
               </button>
             </div>
-            <pre className="bg-admin-bg p-4 rounded border border-admin-border/30 overflow-x-auto text-[11px] text-admin-pink font-mono max-h-[300px] custom-scrollbar">
+            <pre className="bg-admin-bg p-4 rounded border border-admin-border/30 overflow-x-auto text-xs text-admin-pink font-mono max-h-[300px] custom-scrollbar">
               {JSON.stringify(detail.rawPayload, null, 2)}
             </pre>
           </div>
@@ -140,12 +140,12 @@ function TransactionExpandedRow({ transactionId, colSpan }: { transactionId: str
                 </div>
                 <div className="flex justify-between">
                   <span className="text-admin-muted">ID Giao dịch hệ thống:</span>
-                  <span className="font-mono text-[11px]">{detail.id}</span>
+                  <span className="font-mono text-xs">{detail.id}</span>
                 </div>
                 {detail.providerEventId && (
                   <div className="flex justify-between">
                     <span className="text-admin-muted">ID Sự kiện cổng:</span>
-                    <span className="font-mono text-[11px]">{detail.providerEventId}</span>
+                    <span className="font-mono text-xs">{detail.providerEventId}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -259,7 +259,7 @@ export default function PaymentTransactionsTable({
         <div className={`overflow-x-auto custom-scrollbar transition-opacity duration-200 ${isFetching ? "opacity-60" : "opacity-100"}`}>
           <table className="w-full border-collapse text-left min-w-[1000px]">
             <thead className="bg-admin-surface-low/50 border-b border-admin-border/30">
-              <tr className="text-admin-muted text-[12px] font-bold uppercase tracking-wider">
+              <tr className="text-admin-muted text-xs font-bold uppercase tracking-wider">
                 <th className="pl-6 py-4 w-[40px]"></th>
                 <th className="py-4 w-[120px]">Nhà cung cấp</th>
                 <th className="py-4 w-[180px]">Mã GD ngân hàng</th>
@@ -278,7 +278,7 @@ export default function PaymentTransactionsTable({
                   <React.Fragment key={tx.id}>
                     <tr 
                       onClick={() => toggleExpandTx(tx.id)}
-                      className={`hover:bg-admin-surface-low/30 transition-colors cursor-pointer text-[14px] ${isExpanded ? "bg-admin-surface-low/20" : ""}`}
+                      className={`hover:bg-admin-surface-low/30 transition-colors cursor-pointer text-sm ${isExpanded ? "bg-admin-surface-low/20" : ""}`}
                     >
                       <td className="pl-6 py-4 text-center">
                         {isExpanded ? (
@@ -293,12 +293,12 @@ export default function PaymentTransactionsTable({
                       <td className="py-4 font-semibold text-admin-cream break-all pr-2">
                         {tx.transactionRef || "N/A"}
                       </td>
-                      <td className="py-4 pr-2 font-mono text-[13px] text-zinc-300">
+                      <td className="py-4 pr-2 font-mono text-sm text-zinc-300">
                         {tx.orderInvoiceNumber || (
-                          <span className="text-admin-muted italic text-[11px]">Chưa khớp</span>
+                          <span className="text-admin-muted italic text-xs">Chưa khớp</span>
                         )}
                       </td>
-                      <td className="py-4 font-bold text-admin-cream text-[13px]">
+                      <td className="py-4 font-bold text-admin-cream text-sm">
                         {formatPrice(tx.amount)}
                       </td>
                       <td className="py-4">
@@ -329,7 +329,7 @@ export default function PaymentTransactionsTable({
               })}
               {emptyRowsCount > 0 &&
                 Array.from({ length: emptyRowsCount }).map((_, idx) => (
-                  <tr key={`empty-${idx}`} className="border-b border-transparent text-[14px]">
+                  <tr key={`empty-${idx}`} className="border-b border-transparent text-sm">
                     <td colSpan={colSpan} className="py-4">&nbsp;</td>
                   </tr>
                 ))}
@@ -382,7 +382,7 @@ export default function PaymentTransactionsTable({
                 <button
                   key={i}
                   onClick={() => onPageChange(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[12px] transition-all cursor-pointer ${
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-xs transition-all cursor-pointer ${
                     currentPage === i + 1
                       ? "bg-admin-pink text-white shadow-sm"
                       : "border border-admin-border/30 text-admin-muted hover:bg-admin-surface-low hover:text-admin-cream"

@@ -2,8 +2,6 @@ import type { CourseStatus, LessonType, Subject } from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 
-// Shared response fields for course APIs.
-// These are building blocks for endpoint DTOs, not endpoint DTOs by themselves.
 export type CourseTeacherPublic = {
   id: string
   fullName: string

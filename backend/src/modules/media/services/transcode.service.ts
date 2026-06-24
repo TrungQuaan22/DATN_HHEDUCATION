@@ -6,12 +6,9 @@ import { pipeline } from 'stream/promises'
 
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg'
 import ffprobeInstaller from '@ffprobe-installer/ffprobe'
-import { MediaStatus, MediaType } from '@prisma/client'
-
-import { mediaStorage } from '../adapters/r2-media-storage.adapter'
-import { mediaRepository } from '../repository'
 import type { MediaRepositoryPort } from '../ports/media-repository.port'
 import type { MediaStoragePort } from '../ports/media-storage.port'
+import type { MediaTranscoderPort } from '../ports/media-transcoder.port'
 
 const ffmpegPath = ffmpegInstaller.path
 const ffprobePath = ffprobeInstaller.path
@@ -149,7 +146,7 @@ const uploadHlsFiles = async (
   }
 }
 
-export class TranscodeService {
+export class TranscodeService implements MediaTranscoderPort {
   constructor(
     private readonly repository: MediaRepositoryPort,
     private readonly storage: MediaStoragePort
@@ -158,7 +155,7 @@ export class TranscodeService {
   async startHlsTranscoding(mediaId: string): Promise<void> {
     const media = await this.repository.findMediaById(mediaId)
 
-    if (!media || media.type !== MediaType.video || media.status === MediaStatus.deleted) {
+    if (!media || media.type !== 'video' || media.status === 'deleted') {
       return
     }
 
@@ -167,7 +164,10 @@ export class TranscodeService {
       return
     }
 
-    const { jobDir, hlsDir, tempInputFile } = await prepareTranscodeWorkspace(mediaId, media.objectKey)
+    const { jobDir, hlsDir, tempInputFile } = await prepareTranscodeWorkspace(
+      mediaId,
+      media.objectKey
+    )
 
     try {
       await downloadSourceVideo(this.storage, media.objectKey, tempInputFile)
@@ -195,5 +195,3 @@ export class TranscodeService {
     }
   }
 }
-
-export const transcodeService = new TranscodeService(mediaRepository, mediaStorage)

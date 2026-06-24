@@ -17,6 +17,8 @@ import {
   LearningCourseOverview,
   LearningLessonDetail,
   UpdateProgressResponse,
+  AdminLessonMaterial,
+  AdminLessonMaterialRequest,
 } from "./types";
 
 type ApiEnvelope<T> = {
@@ -221,6 +223,56 @@ export const updateLessonProgress = async (
   const response = await api.post<ApiEnvelope<UpdateProgressResponse>>(
     `/learning/lessons/${lessonId}/progress`,
     data,
+  );
+  return response.data.data;
+};
+
+// Admin Lesson Materials API
+export const getAdminLessonMaterials = async (
+  lessonId: string
+): Promise<AdminLessonMaterial[]> => {
+  const response = await api.get<ApiEnvelope<AdminLessonMaterial[]>>(
+    `/admin/lessons/${lessonId}/materials`
+  );
+  return response.data.data;
+};
+
+export const createAdminLessonMaterial = async (
+  lessonId: string,
+  data: AdminLessonMaterialRequest
+): Promise<AdminLessonMaterial> => {
+  const response = await api.post<ApiEnvelope<AdminLessonMaterial>>(
+    `/admin/lessons/${lessonId}/materials`,
+    data
+  );
+  return response.data.data;
+};
+
+export const updateAdminLessonMaterial = async (
+  materialId: string,
+  data: Partial<AdminLessonMaterialRequest>
+): Promise<AdminLessonMaterial> => {
+  const response = await api.patch<ApiEnvelope<AdminLessonMaterial>>(
+    `/admin/lesson-materials/${materialId}`,
+    data
+  );
+  return response.data.data;
+};
+
+export const deleteAdminLessonMaterial = async (
+  materialId: string
+): Promise<{ id: string; deleted: boolean }> => {
+  const response = await api.delete<ApiEnvelope<{ id: string; deleted: boolean }>>(
+    `/admin/lesson-materials/${materialId}`
+  );
+  return response.data.data;
+};
+
+export const ingestAdminLessonMaterial = async (
+  materialId: string
+): Promise<{ id: string; processingStatus: string; triggered: boolean }> => {
+  const response = await api.post<ApiEnvelope<{ id: string; processingStatus: string; triggered: boolean }>>(
+    `/admin/lesson-materials/${materialId}/ingest`
   );
   return response.data.data;
 };

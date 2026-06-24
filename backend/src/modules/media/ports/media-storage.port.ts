@@ -13,6 +13,10 @@ export interface MediaStoragePort {
     objectKey: string
     contentType: string
   }): Promise<string>
+  createPresignedGetUrl(data: {
+    objectKey: string
+    expiresInSeconds?: number
+  }): Promise<string>
   headObject(objectKey: string): Promise<StoredObjectMetadata | null>
   deleteObject(objectKey: string): Promise<void>
   getObject(objectKey: string): Promise<StoredObject | null>

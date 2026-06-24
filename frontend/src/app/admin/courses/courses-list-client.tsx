@@ -44,7 +44,7 @@ export default function CoursesListClient() {
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold font-serif text-admin-cream">
+          <h2 className="text-2xl font-bold text-admin-cream">
             Quản Lý Khóa Học
           </h2>
           <p className="text-sm text-admin-muted mt-1">
@@ -53,7 +53,7 @@ export default function CoursesListClient() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-admin-pink text-white px-6 py-2.5 rounded font-bold text-[14px] flex items-center gap-2 hover:shadow-lg hover:shadow-admin-pink/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          className="bg-admin-pink text-white px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:shadow-lg hover:shadow-admin-pink/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           type="button"
         >
           <Plus size={16} />

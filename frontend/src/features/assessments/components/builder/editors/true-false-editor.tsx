@@ -43,7 +43,7 @@ export function TrueFalseEditor({ item, assessmentType, onUpdateItem }: TrueFals
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
         <div className="font-bold text-amber-300">Quy tắc chấm đúng/sai</div>
         <div className="mt-0.5 text-amber-100/90">
           Mặc định 4 mệnh đề: đúng 4 được 100%, đúng 3 được 50%, đúng 2 được 25%, đúng 1 được 10%.
@@ -65,7 +65,7 @@ export function TrueFalseEditor({ item, assessmentType, onUpdateItem }: TrueFals
           ) : (
             <div className="text-xs font-bold text-admin-cream">Mệnh đề {sIdx + 1}</div>
           )}
-          <div className="flex rounded border border-admin-border overflow-hidden text-[10px] font-bold">
+          <div className="flex rounded border border-admin-border overflow-hidden text-xs font-bold">
             <button
               type="button"
               onClick={() => handleUpdateStatementValue(sIdx, true)}
@@ -97,7 +97,7 @@ export function TrueFalseEditor({ item, assessmentType, onUpdateItem }: TrueFals
         </div>
       ))}
       <div className="flex items-center justify-between gap-3">
-        <div className="text-[11px] text-admin-muted">Hiện có {statements.length} mệnh đề.</div>
+        <div className="text-xs text-admin-muted">Hiện có {statements.length} mệnh đề.</div>
         <button
           type="button"
           onClick={handleAddStatement}

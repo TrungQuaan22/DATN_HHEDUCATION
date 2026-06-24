@@ -30,8 +30,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   useEffect(() => {
-    if (mounted && hasHydrated && (!isAuthenticated || (role !== 'admin' && role !== 'teacher'))) {
-      router.push('/login');
+    if (mounted && hasHydrated) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (role !== 'admin' && role !== 'teacher') {
+        router.push(role === 'student' ? '/student' : '/');
+      }
     }
   }, [mounted, hasHydrated, isAuthenticated, role, router]);
 
@@ -40,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated || (role !== 'admin' && role !== 'teacher')) {
     return (
       <div className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-cream font-sans">
-        <p className="animate-pulse">Đang kiểm tra quyền truy cập...</p>
+        <p className="animate-pulse">Đang chuyển hướng...</p>
       </div>
     );
   }

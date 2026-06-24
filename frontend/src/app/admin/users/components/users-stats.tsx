@@ -50,7 +50,7 @@ export default function UsersStats({ stats }: UsersStatsProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-bold text-admin-muted uppercase tracking-wider">
+                <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
                   {item.label}
                 </p>
                 <p className="text-3xl font-bold text-admin-cream mt-2">

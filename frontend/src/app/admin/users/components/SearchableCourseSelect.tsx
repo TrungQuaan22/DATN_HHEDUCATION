@@ -77,7 +77,7 @@ export function SearchableCourseSelect({
         type="button"
         disabled={disabled}
         onClick={handleToggle}
-        className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-[14px] text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+        className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-3 text-admin-cream transition-all font-medium text-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
           error
             ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
             : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -105,7 +105,7 @@ export function SearchableCourseSelect({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm theo tên khóa học, lớp, môn..."
-              className="w-full bg-transparent border-none focus:outline-none text-[13px] text-admin-cream placeholder:text-admin-muted/40 py-1"
+              className="w-full bg-transparent border-none focus:outline-none text-sm text-admin-cream placeholder:text-admin-muted/40 py-1"
               autoFocus
             />
             {isLoading && (
@@ -137,7 +137,7 @@ export function SearchableCourseSelect({
                     <div className="min-w-0 pr-4">
                       <p className="font-bold truncate">{c.title}</p>
                       <p
-                        className={`text-[10px] font-medium mt-0.5 ${
+                        className={`text-xs font-medium mt-0.5 ${
                           isSelected ? "text-white/80" : "text-admin-muted"
                         }`}
                       >

@@ -56,20 +56,20 @@ export function PracticeQuiz({
         <button
           type="button"
           onClick={handleQuitConfirm}
-          className="flex items-center gap-1 text-[12px] font-bold text-muted-text hover:text-brand-pink transition-colors cursor-pointer"
+          className="flex items-center gap-1 text-xs font-bold text-muted-text hover:text-brand-pink transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} />
           Thoát luyện tập
         </button>
 
         <div className="flex items-center gap-4">
-          <span className="text-[12px] font-bold text-cream">
+          <span className="text-xs font-bold text-cream">
             Môn:{" "}
             <span className="text-brand-pink">
               {SUBJECT_LABELS[selectedSubject]}
             </span>
           </span>
-          <div className="flex items-center gap-1.5 text-[12px] font-bold text-cream bg-brand-dark px-3 py-1.5 rounded-lg border border-border-dark">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-cream bg-brand-dark px-3 py-1.5 rounded-lg border border-border-dark">
             <Clock size={14} className="text-brand-pink" />
             <span className="font-mono text-brand-pink">
               {formatTimer(timeLeft)}
@@ -108,7 +108,7 @@ export function PracticeQuiz({
           <span>
             CÂU HỎI {currentQuestionIndex + 1} / {quizQuestions.length}
           </span>
-          <span className="text-brand-pink uppercase tracking-widest text-[9px] bg-brand-pink/5 border border-brand-pink/10 px-2 py-0.5 rounded">
+          <span className="text-brand-pink uppercase tracking-widest text-xs bg-brand-pink/5 border border-brand-pink/10 px-2 py-0.5 rounded">
             {difficulty === "easy"
               ? "Cơ bản"
               : difficulty === "medium"
@@ -117,7 +117,7 @@ export function PracticeQuiz({
           </span>
         </div>
 
-        <p className="text-[16px] font-bold text-cream leading-relaxed">
+        <p className="text-base font-bold text-cream leading-relaxed">
           {activeQuestion.content}
         </p>
 
@@ -130,14 +130,14 @@ export function PracticeQuiz({
                 key={opt.key}
                 type="button"
                 onClick={() => selectAnswer(activeQuestion.id, opt.key)}
-                className={`p-4 rounded text-left border text-[13px] font-bold flex items-center gap-3.5 transition-all cursor-pointer ${
+                className={`p-4 rounded text-left border text-sm font-bold flex items-center gap-3.5 transition-all cursor-pointer ${
                   isSelected
                     ? "bg-brand-pink/10 border-brand-pink text-brand-pink shadow-[0_0_12px_rgba(255,105,180,0.08)]"
                     : "bg-brand-dark border-border-dark text-cream hover:border-[#303038] hover:bg-off-black"
                 }`}
               >
                 <span
-                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ${
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black shrink-0 ${
                     isSelected
                       ? "bg-brand-pink text-brand-dark"
                       : "bg-off-black text-muted-text border border-border-dark/60"
@@ -158,7 +158,7 @@ export function PracticeQuiz({
           type="button"
           onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
           disabled={currentQuestionIndex === 0}
-          className={`px-5 py-2.5 rounded border border-border-dark bg-deep-black text-[12px] font-bold text-cream hover:text-brand-pink transition-colors cursor-pointer flex items-center gap-1 ${
+          className={`px-5 py-2.5 rounded border border-border-dark bg-deep-black text-xs font-bold text-cream hover:text-brand-pink transition-colors cursor-pointer flex items-center gap-1 ${
             currentQuestionIndex === 0
               ? "opacity-50 cursor-not-allowed"
               : ""
@@ -172,7 +172,7 @@ export function PracticeQuiz({
           <button
             type="button"
             onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-            className="px-5 py-2.5 rounded bg-brand-pink text-brand-dark hover:scale-105 active:scale-95 font-bold text-[12px] transition-all cursor-pointer flex items-center gap-1"
+            className="px-5 py-2.5 rounded bg-brand-pink text-brand-dark hover:scale-105 active:scale-95 font-bold text-xs transition-all cursor-pointer flex items-center gap-1"
           >
             Câu tiếp theo
             <ArrowRight size={13} />
@@ -181,7 +181,7 @@ export function PracticeQuiz({
           <button
             type="button"
             onClick={handleQuizSubmit}
-            className="px-6 py-2.5 rounded bg-emerald-500 text-brand-dark hover:scale-105 active:scale-95 font-extrabold text-[12px] transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+            className="px-6 py-2.5 rounded bg-emerald-500 text-brand-dark hover:scale-105 active:scale-95 font-extrabold text-xs transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)]"
           >
             Nộp bài tự luyện
           </button>

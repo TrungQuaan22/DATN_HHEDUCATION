@@ -5,9 +5,10 @@ import { sepayConfig } from '~/modules/payments/config'
 
 import type {
   CreateOrderRecord,
+  CreatePaymentRecord,
+  OrderActionRecord,
   OrderRecord,
-  OrderRepositoryPort,
-  PaymentAttemptOrderRecord
+  OrderRepositoryPort
 } from '../ports/order-repository.port'
 
 const ORDER_SELECT = {
@@ -57,6 +58,28 @@ type PrismaOrderRecord = Prisma.OrderGetPayload<{
   select: typeof ORDER_SELECT
 }>
 
+const ORDER_ACTION_SELECT = {
+  id: true,
+  orderInvoiceNumber: true,
+  totalAmount: true,
+  status: true,
+  expiresAt: true,
+  payments: {
+    orderBy: {
+      createdAt: 'desc'
+    },
+    select: {
+      id: true,
+      provider: true,
+      status: true
+    }
+  }
+} satisfies Prisma.OrderSelect
+
+type PrismaOrderActionRecord = Prisma.OrderGetPayload<{
+  select: typeof ORDER_ACTION_SELECT
+}>
+
 const buildInvoiceNumber = () => {
   const suffixLength = Math.max(1, sepayConfig.paymentCodeSuffixLength)
   const firstDigit = String(randomInt(1, 10))
@@ -103,8 +126,31 @@ const mapPrismaOrderToRecord = (order: PrismaOrderRecord): OrderRecord => {
   }
 }
 
+const mapPrismaOrderToActionRecord = (order: PrismaOrderActionRecord): OrderActionRecord => {
+  return {
+    id: order.id,
+    orderInvoiceNumber: order.orderInvoiceNumber,
+    totalAmount: Number(order.totalAmount),
+    status: order.status,
+    expiresAt: order.expiresAt,
+    payments: order.payments
+  }
+}
+
 export class PrismaOrderRepository implements OrderRepositoryPort {
   constructor(private readonly transactionClient: Prisma.TransactionClient) {}
+
+  async lockOrderForUser(data: { userId: string; orderId: string }): Promise<void> {
+    await this.transactionClient.$queryRaw(
+      Prisma.sql`
+        SELECT id
+        FROM orders
+        WHERE id = ${data.orderId}::uuid
+          AND user_id = ${data.userId}::uuid
+        FOR UPDATE
+      `
+    )
+  }
 
   async expireStalePendingOrders(data: {
     now: Date
@@ -277,43 +323,20 @@ export class PrismaOrderRepository implements OrderRepositoryPort {
   async findOrderForPaymentAttempt(data: {
     userId: string
     orderId: string
-  }): Promise<PaymentAttemptOrderRecord | null> {
+  }): Promise<OrderActionRecord | null> {
     const order = await this.transactionClient.order.findFirst({
       where: {
         id: data.orderId,
         userId: data.userId
       },
-      select: {
-        id: true,
-        orderInvoiceNumber: true,
-        totalAmount: true,
-        status: true,
-        expiresAt: true,
-        payments: {
-          orderBy: {
-            createdAt: 'desc'
-          },
-          select: {
-            id: true,
-            provider: true,
-            status: true
-          }
-        }
-      }
+      select: ORDER_ACTION_SELECT
     })
 
     if (!order) {
       return null
     }
 
-    return {
-      id: order.id,
-      orderInvoiceNumber: order.orderInvoiceNumber,
-      totalAmount: Number(order.totalAmount),
-      status: order.status,
-      expiresAt: order.expiresAt,
-      payments: order.payments
-    }
+    return mapPrismaOrderToActionRecord(order)
   }
 
   async cancelPendingPayments(orderId: string): Promise<void> {
@@ -328,9 +351,7 @@ export class PrismaOrderRepository implements OrderRepositoryPort {
     })
   }
 
-  async createPaymentForOrder(
-    data: Parameters<OrderRepositoryPort['createPaymentForOrder']>[0]
-  ): Promise<void> {
+  async createPaymentForOrder(data: CreatePaymentRecord): Promise<void> {
     await this.transactionClient.payment.create({
       data: {
         orderId: data.orderId,
@@ -346,17 +367,19 @@ export class PrismaOrderRepository implements OrderRepositoryPort {
     })
   }
 
-  findOrderForCancel(data: { userId: string; orderId: string }) {
-    return this.transactionClient.order.findFirst({
+  async findOrderForCancel(data: {
+    userId: string
+    orderId: string
+  }): Promise<OrderActionRecord | null> {
+    const order = await this.transactionClient.order.findFirst({
       where: {
         id: data.orderId,
         userId: data.userId
       },
-      select: {
-        id: true,
-        status: true
-      }
+      select: ORDER_ACTION_SELECT
     })
+
+    return order ? mapPrismaOrderToActionRecord(order) : null
   }
 
   async cancelOrderAndPendingPayments(orderId: string): Promise<void> {

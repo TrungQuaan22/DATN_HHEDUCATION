@@ -11,8 +11,8 @@ export const SUBJECT_VALUES = [
   'geography'
 ] as const satisfies readonly Subject[]
 
-export const GRADE_VALUES = [
-  12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-] as const
+export type SubjectValue = (typeof SUBJECT_VALUES)[number]
+
+export const GRADE_VALUES = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as const
 
 export type GradeValue = number

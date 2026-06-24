@@ -14,6 +14,7 @@ interface ImageUploadFieldProps {
   onChange: (value: string | null) => void;
   initialUrl?: string | null;
   error?: string;
+  aspectRatio?: "video" | "square";
 }
 
 export default function ImageUploadField({
@@ -21,6 +22,7 @@ export default function ImageUploadField({
   onChange,
   initialUrl,
   error,
+  aspectRatio = "video",
 }: ImageUploadFieldProps) {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(
@@ -87,14 +89,14 @@ export default function ImageUploadField({
       setUploadedUrl(completeData.publicUrl);
       onChange(presignData.mediaId);
       setUploadProgress(null);
-      toast.success("Tải lên ảnh bìa thành công!");
+      toast.success("Tải lên hình ảnh thành công!");
     } catch (err: unknown) {
       console.error("Image upload failed:", err);
-      setUploadError("Tải lên ảnh bìa thất bại. Vui lòng thử lại.");
+      setUploadError("Tải lên hình ảnh thất bại. Vui lòng thử lại.");
       setUploadProgress(null);
       setUploadedUrl(null);
       onChange(null);
-      toast.error("Tải lên ảnh bìa thất bại!");
+      toast.error("Tải lên hình ảnh thất bại!");
     }
   };
 
@@ -105,6 +107,8 @@ export default function ImageUploadField({
     onChange(null);
   };
 
+  const isSquare = aspectRatio === "square";
+
   return (
     <div className="space-y-2">
       {uploadError && (
@@ -114,7 +118,11 @@ export default function ImageUploadField({
       )}
 
       {uploadedUrl ? (
-        <div className="relative border border-admin-border/30 rounded overflow-hidden aspect-video bg-admin-surface-low flex items-center justify-center group">
+        <div
+          className={`relative border border-admin-border/30 overflow-hidden bg-admin-surface-low flex items-center justify-center group ${
+            isSquare ? "w-28 h-28 rounded-full mx-auto" : "rounded aspect-video"
+          }`}
+        >
           <img
             src={uploadedUrl}
             alt="Preview"
@@ -123,15 +131,19 @@ export default function ImageUploadField({
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-lg transition-colors cursor-pointer z-10"
+            className={`absolute bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-lg transition-colors cursor-pointer z-10 ${
+              isSquare ? "top-1 right-1" : "top-3 right-3"
+            }`}
             title="Xóa ảnh"
           >
-            <X size={14} />
+            <X size={isSquare ? 12 : 14} />
           </button>
         </div>
       ) : (
         <div
-          className={`relative border-2 border-dashed rounded p-8 flex flex-col items-center justify-center bg-admin-surface-low/30 hover:bg-admin-surface-low/50 transition-all cursor-pointer group ${
+          className={`relative border-2 border-dashed flex flex-col items-center justify-center bg-admin-surface-low/30 hover:bg-admin-surface-low/50 transition-all cursor-pointer group ${
+            isSquare ? "w-28 h-28 rounded-full mx-auto p-2" : "rounded p-8"
+          } ${
             error
               ? "border-red-500/50 hover:border-red-500/50"
               : "border-admin-border/30 hover:border-admin-pink/50"
@@ -146,14 +158,21 @@ export default function ImageUploadField({
           />
 
           {uploadProgress !== null ? (
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center justify-center">
               <Loader2
-                size={24}
-                className="animate-spin text-admin-pink mb-3"
+                size={isSquare ? 18 : 24}
+                className="animate-spin text-admin-pink mb-1"
               />
-              <p className="text-sm font-semibold text-admin-cream">
-                Đang tải lên... {uploadProgress}%
+              <p className={`font-semibold text-admin-cream ${isSquare ? "text-xs" : "text-sm mt-2"}`}>
+                {isSquare ? `${uploadProgress}%` : `Đang tải lên... ${uploadProgress}%`}
               </p>
+            </div>
+          ) : isSquare ? (
+            <div className="flex flex-col items-center justify-center text-center">
+              <CloudUpload size={18} className="text-admin-muted group-hover:text-admin-pink mb-1 transition-colors" />
+              <span className="text-xs font-bold text-admin-muted group-hover:text-admin-cream transition-colors leading-none">
+                Tải ảnh
+              </span>
             </div>
           ) : (
             <>
@@ -170,8 +189,14 @@ export default function ImageUploadField({
           )}
         </div>
       )}
-      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+
+      {isSquare && !uploadedUrl && uploadProgress === null && (
+        <p className="text-center text-xs text-admin-muted mt-1">
+          Hỗ trợ JPG, PNG, WEBP (Tối đa 5MB, Tỷ lệ 1:1)
+        </p>
+      )}
+
+      {error && <p className="text-red-400 text-xs mt-1 text-center">{error}</p>}
     </div>
   );
 }
-

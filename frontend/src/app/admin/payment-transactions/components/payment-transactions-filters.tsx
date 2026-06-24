@@ -147,7 +147,7 @@ export default function PaymentTransactionsFilters({
         {/* Date Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-admin-muted">Từ:</span>
+            <span className="text-xs text-admin-muted">Từ:</span>
             <input
               type="date"
               value={createdFrom}
@@ -156,7 +156,7 @@ export default function PaymentTransactionsFilters({
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-admin-muted">Đến:</span>
+            <span className="text-xs text-admin-muted">Đến:</span>
             <input
               type="date"
               value={createdTo}

@@ -24,10 +24,10 @@ export function PracticeConfig({
   return (
     <>
       <div>
-        <h2 className="text-[22px] font-extrabold text-cream">
+        <h2 className="text-2xl font-extrabold text-cream">
           Phòng luyện tập tự do
         </h2>
-        <p className="text-[13px] text-muted-text mt-1">
+        <p className="text-sm text-muted-text mt-1">
           Nâng cao kỹ năng tự học với hệ thống câu hỏi thông minh AI
         </p>
       </div>
@@ -42,7 +42,7 @@ export function PracticeConfig({
                 size={22}
                 className="drop-shadow-[0_0_8px_rgba(255,105,180,0.4)]"
               />
-              <h3 className="text-[16px] font-extrabold">
+              <h3 className="text-base font-extrabold">
                 Luyện tập chủ động cùng AI
               </h3>
             </div>
@@ -55,7 +55,7 @@ export function PracticeConfig({
 
           {/* Form Config AI */}
           <div className="bg-deep-black border border-border-dark rounded p-6 space-y-6">
-            <h4 className="text-[14px] font-bold text-cream flex items-center gap-2">
+            <h4 className="text-sm font-bold text-cream flex items-center gap-2">
               <Sparkles size={16} className="text-brand-pink" />
               Cấu hình đề tự luyện AI
             </h4>
@@ -63,7 +63,7 @@ export function PracticeConfig({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Select Subject */}
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-muted-text uppercase tracking-wider">
+                <label className="text-xs font-bold text-muted-text uppercase tracking-wider">
                   Chọn môn học
                 </label>
                 <select
@@ -71,7 +71,7 @@ export function PracticeConfig({
                   onChange={(e) =>
                     setSelectedSubject(e.target.value as any)
                   }
-                  className="w-full bg-brand-dark text-cream border border-border-dark rounded px-4 py-3 text-[13px] font-bold outline-none cursor-pointer hover:border-brand-pink/50 transition-colors"
+                  className="w-full bg-brand-dark text-cream border border-border-dark rounded px-4 py-3 text-sm font-bold outline-none cursor-pointer hover:border-brand-pink/50 transition-colors"
                 >
                   <option value="literature">Ngữ Văn (3 câu)</option>
                   <option value="math">Toán Học (3 câu)</option>
@@ -81,7 +81,7 @@ export function PracticeConfig({
 
               {/* Select Difficulty */}
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-muted-text uppercase tracking-wider">
+                <label className="text-xs font-bold text-muted-text uppercase tracking-wider">
                   Chọn độ khó
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -90,7 +90,7 @@ export function PracticeConfig({
                       key={level}
                       type="button"
                       onClick={() => setDifficulty(level)}
-                      className={`py-3 rounded text-[12px] font-bold border transition-all cursor-pointer ${
+                      className={`py-3 rounded text-xs font-bold border transition-all cursor-pointer ${
                         difficulty === level
                           ? "bg-brand-pink border-brand-pink text-brand-dark shadow-sm"
                           : "bg-brand-dark border-border-dark text-cream hover:border-brand-pink/30 hover:text-brand-pink"
@@ -106,14 +106,14 @@ export function PracticeConfig({
             </div>
 
             <div className="border-t border-border-dark/40 pt-5 flex items-center justify-between">
-              <div className="text-[11px] text-muted-text flex items-center gap-1.5">
+              <div className="text-xs text-muted-text flex items-center gap-1.5">
                 <AlertCircle size={14} className="text-brand-pink" />
                 <span>Thời gian làm bài mặc định: 5 phút</span>
               </div>
               <button
                 type="button"
                 onClick={() => handleStartPractice()}
-                className="bg-brand-pink text-brand-dark font-extrabold text-[12px] px-6 py-3 rounded hover:scale-105 transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                className="bg-brand-pink text-brand-dark font-extrabold text-xs px-6 py-3 rounded hover:scale-105 transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
               >
                 <Brain size={14} />
                 Tạo đề & Làm bài ngay
@@ -123,7 +123,7 @@ export function PracticeConfig({
 
           {/* Recommendation lists */}
           <div className="space-y-4">
-            <h3 className="text-[14px] font-bold text-cream">
+            <h3 className="text-sm font-bold text-cream">
               Gợi ý ôn luyện hôm nay
             </h3>
 
@@ -131,13 +131,13 @@ export function PracticeConfig({
               {/* Topic card 1 */}
               <div className="bg-deep-black p-5 rounded border border-border-dark space-y-4 flex flex-col justify-between hover:border-brand-pink/20 transition-all group">
                 <div className="space-y-1.5">
-                  <span className="text-[9px] font-extrabold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded border border-brand-pink/20 uppercase tracking-wider w-fit block">
+                  <span className="text-xs font-extrabold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded border border-brand-pink/20 uppercase tracking-wider w-fit block">
                     Đọc hiểu Văn học
                   </span>
-                  <h4 className="text-[14px] font-bold text-cream group-hover:text-brand-pink transition-colors leading-snug">
+                  <h4 className="text-sm font-bold text-cream group-hover:text-brand-pink transition-colors leading-snug">
                     Luyện tập kiến thức từ Hán Việt & Văn học
                   </h4>
-                  <p className="text-[11px] text-muted-text leading-relaxed">
+                  <p className="text-xs text-muted-text leading-relaxed">
                     Củng cố từ vựng, ngữ nghĩa Hán Việt và các điển tích
                     điển cố trong văn học hiện đại.
                   </p>
@@ -145,7 +145,7 @@ export function PracticeConfig({
                 <button
                   type="button"
                   onClick={() => handleStartPractice("literature")}
-                  className="w-full text-center bg-brand-dark border border-border-dark text-[11px] font-bold py-2.5 rounded hover:border-brand-pink hover:text-brand-pink transition-all cursor-pointer"
+                  className="w-full text-center bg-brand-dark border border-border-dark text-xs font-bold py-2.5 rounded hover:border-brand-pink hover:text-brand-pink transition-all cursor-pointer"
                 >
                   Bắt đầu ôn Ngữ Văn
                 </button>
@@ -154,13 +154,13 @@ export function PracticeConfig({
               {/* Topic card 2 */}
               <div className="bg-deep-black p-5 rounded border border-border-dark space-y-4 flex flex-col justify-between hover:border-brand-pink/20 transition-all group">
                 <div className="space-y-1.5">
-                  <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider w-fit block">
+                  <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider w-fit block">
                     Giải tích nâng cao
                   </span>
-                  <h4 className="text-[14px] font-bold text-cream group-hover:text-emerald-400 transition-colors leading-snug">
+                  <h4 className="text-sm font-bold text-cream group-hover:text-emerald-400 transition-colors leading-snug">
                     Luyện tập Hàm số & Khối đa diện
                   </h4>
-                  <p className="text-[11px] text-muted-text leading-relaxed">
+                  <p className="text-xs text-muted-text leading-relaxed">
                     Cực trị hàm số, các dạng bài về thể tích hình chóp, khối
                     lăng trụ tròn.
                   </p>
@@ -168,7 +168,7 @@ export function PracticeConfig({
                 <button
                   type="button"
                   onClick={() => handleStartPractice("math")}
-                  className="w-full text-center bg-brand-dark border border-border-dark text-[11px] font-bold py-2.5 rounded hover:border-emerald-500 hover:text-emerald-400 transition-all cursor-pointer"
+                  className="w-full text-center bg-brand-dark border border-border-dark text-xs font-bold py-2.5 rounded hover:border-emerald-500 hover:text-emerald-400 transition-all cursor-pointer"
                 >
                   Bắt đầu ôn Toán học
                 </button>
@@ -180,7 +180,7 @@ export function PracticeConfig({
         {/* Right panel: History */}
         <div className="lg:col-span-4">
           <div className="bg-deep-black rounded p-5 border border-border-dark space-y-5 sticky top-[88px]">
-            <h3 className="text-[14px] font-bold text-cream flex items-center gap-2 border-b border-border-dark/40 pb-3">
+            <h3 className="text-sm font-bold text-cream flex items-center gap-2 border-b border-border-dark/40 pb-3">
               <History size={16} className="text-brand-pink" />
               Lịch sử luyện tập
             </h3>
@@ -195,10 +195,10 @@ export function PracticeConfig({
                     <Brain size={18} />
                   </div>
                   <div className="flex-grow min-w-0">
-                    <div className="text-[13px] font-bold text-cream truncate">
+                    <div className="text-sm font-bold text-cream truncate">
                       {item.title}
                     </div>
-                    <div className="text-[10px] text-muted-text mt-0.5">
+                    <div className="text-xs text-muted-text mt-0.5">
                       {item.score} / {item.totalScore} •{" "}
                       {item.questionCount} câu • {item.date}
                     </div>
@@ -210,7 +210,7 @@ export function PracticeConfig({
             <div className="border-t border-border-dark/40 pt-4 text-center">
               <button
                 type="button"
-                className="text-[11px] font-bold text-brand-pink hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                className="text-xs font-bold text-brand-pink hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
               >
                 Xem tất cả lịch sử
                 <ArrowRight size={12} />

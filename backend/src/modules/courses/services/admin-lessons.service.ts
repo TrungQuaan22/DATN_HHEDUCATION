@@ -1,8 +1,7 @@
-import { LessonType, VideoType } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
-import { ensureActorCanUseVideoMedia } from '~/common/ensures/media.ensure'
+import { ensureMediaExists } from '~/common/ensures/media.ensure'
+import { validateVideoMedia } from '~/common/policies/media.policy'
 import { AppError } from '~/common/error/app-error'
 
 import type {
@@ -15,12 +14,13 @@ import type {
 } from '../dto/admin-lessons.dto'
 import {
   type CourseActor,
-  ensureCanManageCourse,
-  ensureCourseCanBeEdited,
-  ensureCourseCanBeReordered,
-  ensureCreateLessonPayloadIsValid,
-  ensureExactReorderIds
-} from '../ensures/courses.ensure'
+  validateCourseCanBeEdited,
+  validateCourseCanManage,
+  validateCourseCanBeReordered,
+  validateReorderIds
+} from '../policies/course.policy'
+import { validateLessonPayload } from '../policies/lesson.policy'
+import type { LessonType, VideoType } from '@prisma/client'
 import { mapAdminLessonResponse } from '../mappers'
 import type {
   AdminChapterRepositoryPort,
@@ -41,7 +41,9 @@ export class AdminLessonService {
     private readonly mediaRepository: MediaRepositoryPort
   ) {}
 
-  private ensureChapterExists(chapter: AdminChapterWithCourseRecord | null): AdminChapterWithCourseRecord {
+  private ensureChapterExists(
+    chapter: AdminChapterWithCourseRecord | null
+  ): AdminChapterWithCourseRecord {
     if (!chapter) {
       throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
     }
@@ -49,7 +51,9 @@ export class AdminLessonService {
     return chapter
   }
 
-  private ensureLessonExists(lesson: AdminLessonWithChapterRecord | null): AdminLessonWithChapterRecord {
+  private ensureLessonExists(
+    lesson: AdminLessonWithChapterRecord | null
+  ): AdminLessonWithChapterRecord {
     if (!lesson) {
       throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
     }
@@ -72,32 +76,26 @@ export class AdminLessonService {
     youtubeUrl?: string | null
     description?: string | null
   }): Promise<void> {
-    ensureCreateLessonPayloadIsValid(data)
+    validateLessonPayload(data)
 
-    if (data.type === LessonType.quiz && data.assessmentId) {
+    if (data.type === 'quiz' && data.assessmentId) {
       const assessment = await this.lessonRepository.findAssessmentById(data.assessmentId)
       this.ensureAssessmentExists(assessment)
     }
 
-    if (
-      data.type === LessonType.video &&
-      data.videoType === VideoType.system &&
-      data.videoMediaId
-    ) {
+    if (data.type === 'video' && data.videoType === 'system' && data.videoMediaId) {
       const media = await this.mediaRepository.findMediaById(data.videoMediaId)
-      ensureActorCanUseVideoMedia({
-        actor: data.actor,
-        media,
-        label: 'Video media'
-      })
+      const videoMedia = ensureMediaExists(media)
+      validateVideoMedia(data.actor, videoMedia, 'Video media')
     }
   }
 
   async createLesson(actor: CourseActor, input: CreateLessonDto): Promise<AdminLessonResponse> {
     const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
     const chapter = this.ensureChapterExists(chapterRecord)
-    ensureCanManageCourse({ actor, course: chapter.course })
-    ensureCourseCanBeEdited(chapter.course.status)
+
+    validateCourseCanManage(chapter.course, actor)
+    validateCourseCanBeEdited(chapter.course)
 
     await this.validateRelatedLessonData({ actor, ...input })
 
@@ -107,18 +105,13 @@ export class AdminLessonService {
       title: input.title,
       type: input.type,
       description: input.description ?? null,
-      videoType: input.type === LessonType.video ? input.videoType : null,
+      videoType: input.type === 'video' ? input.videoType : null,
       videoMediaId:
-        input.type === LessonType.video && input.videoType === VideoType.system
-          ? input.videoMediaId
-          : null,
-      youtubeUrl:
-        input.type === LessonType.video && input.videoType === VideoType.youtube
-          ? input.youtubeUrl
-          : null,
-      durationSec: input.type === LessonType.video ? (input.durationSec ?? null) : null,
+        input.type === 'video' && input.videoType === 'system' ? input.videoMediaId : null,
+      youtubeUrl: input.type === 'video' && input.videoType === 'youtube' ? input.youtubeUrl : null,
+      durationSec: input.type === 'video' ? (input.durationSec ?? null) : null,
       allowPreview: input.allowPreview ?? false,
-      assessmentId: input.type === LessonType.quiz ? input.assessmentId : null
+      assessmentId: input.type === 'quiz' ? input.assessmentId : null
     })
 
     return mapAdminLessonResponse(lesson)
@@ -127,16 +120,16 @@ export class AdminLessonService {
   async updateLesson(actor: CourseActor, input: UpdateLessonDto): Promise<AdminLessonResponse> {
     const lessonRecord = await this.lessonRepository.findLessonById(input.lessonId)
     const lesson = this.ensureLessonExists(lessonRecord)
-    ensureCanManageCourse({ actor, course: lesson.chapter.course })
-    ensureCourseCanBeEdited(lesson.chapter.course.status)
+
+    validateCourseCanManage(lesson.chapter.course, actor)
+    validateCourseCanBeEdited(lesson.chapter.course)
 
     // Merge and validate related lesson data
     const type = input.type ?? lesson.type
     const videoType = input.videoType !== undefined ? input.videoType : lesson.videoType
     const videoMediaId = input.videoMediaId !== undefined ? input.videoMediaId : lesson.videoMediaId
     const youtubeUrl = input.youtubeUrl !== undefined ? input.youtubeUrl : lesson.youtubeUrl
-    const assessmentId =
-      input.assessmentId !== undefined ? input.assessmentId : lesson.assessmentId
+    const assessmentId = input.assessmentId !== undefined ? input.assessmentId : lesson.assessmentId
 
     await this.validateRelatedLessonData({
       actor,
@@ -169,8 +162,9 @@ export class AdminLessonService {
   ): Promise<{ id: string; deleted: true }> {
     const lessonRecord = await this.lessonRepository.findLessonById(input.lessonId)
     const lesson = this.ensureLessonExists(lessonRecord)
-    ensureCanManageCourse({ actor, course: lesson.chapter.course })
-    ensureCourseCanBeEdited(lesson.chapter.course.status)
+
+    validateCourseCanManage(lesson.chapter.course, actor)
+    validateCourseCanBeEdited(lesson.chapter.course)
 
     await this.lessonRepository.softDeleteLesson({
       lessonId: input.lessonId,
@@ -189,11 +183,12 @@ export class AdminLessonService {
   ): Promise<ReorderLessonsResponse> {
     const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
     const chapter = this.ensureChapterExists(chapterRecord)
-    ensureCanManageCourse({ actor, course: chapter.course })
-    ensureCourseCanBeReordered(chapter.course.status)
+
+    validateCourseCanManage(chapter.course, actor)
+    validateCourseCanBeReordered(chapter.course)
 
     const currentLessons = await this.lessonRepository.listChapterLessonIds(input.chapterId)
-    ensureExactReorderIds(
+    validateReorderIds(
       currentLessons.map((lesson) => lesson.id),
       input.lessonIds
     )

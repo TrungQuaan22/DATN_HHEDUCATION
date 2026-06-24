@@ -34,7 +34,7 @@ export default function OrdersListClient() {
     <div className="space-y-6">
       {/* Header section */}
       <div>
-        <h2 className="text-3xl font-bold font-serif text-admin-cream">
+        <h2 className="text-2xl font-bold text-admin-cream">
           Quản Lý Đơn Hàng
         </h2>
         <p className="text-sm text-admin-muted mt-1">

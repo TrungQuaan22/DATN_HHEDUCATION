@@ -10,10 +10,7 @@ import {
   getAdminOrderController,
   listAdminOrdersController
 } from '../controllers/admin-order.controller'
-import {
-  getAdminOrderSchema,
-  listAdminOrdersSchema
-} from '../validators/admin-order.validator'
+import { getAdminOrderSchema, listAdminOrdersSchema } from '../validators/admin-order.validator'
 
 export const adminOrderRoutes = Router()
 

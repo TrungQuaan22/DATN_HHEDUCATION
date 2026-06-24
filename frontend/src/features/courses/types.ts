@@ -112,6 +112,7 @@ export type AdminCourseLesson = CourseLessonPublic & {
   videoType: "system" | "youtube" | null;
   videoMediaId: string | null;
   assessmentId: string | null;
+  hasRagError?: boolean;
   videoMedia: {
     id: string;
     url: string | null;
@@ -196,11 +197,56 @@ export type LearningCourseOverviewMedia = {
   status: MediaStatus;
 };
 
+export type AdminLessonMaterialType = "text" | "markdown" | "pdf" | "docx" | "pptx";
+
+export type AdminLessonMaterialProcessingStatus = "pending" | "processing" | "ready" | "failed";
+
+export type LessonMaterialMedia = {
+  id: string;
+  url: string | null;
+  originalName: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  status: MediaStatus;
+};
+
+export type AdminLessonMaterial = {
+  id: string;
+  courseId: string;
+  lessonId: string;
+  mediaId: string | null;
+  title: string;
+  type: AdminLessonMaterialType;
+  contentText: string | null;
+  extractedText: string | null;
+  processingStatus: AdminLessonMaterialProcessingStatus;
+  processingError: string | null;
+  isPublic: boolean;
+  media: LessonMaterialMedia | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminLessonMaterialRequest = {
+  title: string;
+  type: AdminLessonMaterialType;
+  isPublic?: boolean;
+  mediaId?: string;
+  contentText?: string;
+};
+
 export type LearningCourseMaterial = {
   id: string;
   title: string;
-  fileUrl: string;
-  fileSize: number;
+  type: AdminLessonMaterialType;
+  downloadUrl?: string | null;
+  contentText?: string | null;
+  media?: {
+    id: string;
+    originalName: string | null;
+    sizeBytes: number;
+    status: MediaStatus;
+  } | null;
 };
 
 export type LearningAssessmentPlacement = {

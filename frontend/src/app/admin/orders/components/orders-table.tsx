@@ -22,15 +22,15 @@ type OrdersTableProps = {
 const getOrderStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">Chờ TT</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">Chờ TT</span>;
     case "completed":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">Hoàn thành</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">Hoàn thành</span>;
     case "cancelled":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-wider">Đã hủy</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-wider">Đã hủy</span>;
     case "expired":
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">Hết hạn</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">Hết hạn</span>;
     default:
-      return <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">{status}</span>;
+      return <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20 uppercase tracking-wider">{status}</span>;
   }
 };
 
@@ -38,19 +38,19 @@ const getOrderStatusBadge = (status: string) => {
 const getPaymentStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">Chờ TT</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">Chờ TT</span>;
     case "success":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Thành công</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Thành công</span>;
     case "failed":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">Thất bại</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">Thất bại</span>;
     case "cancelled":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">Đã hủy</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">Đã hủy</span>;
     case "late_success":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/10 text-purple-500 border border-purple-500/20">TT Muộn</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-500 border border-purple-500/20">TT Muộn</span>;
     case "manual_review":
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Đối soát thủ công</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Đối soát thủ công</span>;
     default:
-      return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">{status}</span>;
+      return <span className="px-2 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">{status}</span>;
   }
 };
 
@@ -135,10 +135,10 @@ function OrderExpandedRow({ orderId, colSpan }: { orderId: string; colSpan: numb
               {detail.items.map((item) => (
                 <div key={item.id} className="py-2.5 first:pt-0 last:pb-0 flex justify-between items-start gap-4">
                   <div>
-                    <p className="font-semibold text-admin-cream text-[13px]">{item.course.title}</p>
-                    <p className="text-[11px] text-admin-muted">Slug: {item.course.slug}</p>
+                    <p className="font-semibold text-admin-cream text-sm">{item.course.title}</p>
+                    <p className="text-xs text-admin-muted">Slug: {item.course.slug}</p>
                   </div>
-                  <span className="font-bold text-admin-cream text-[13px] flex-shrink-0">
+                  <span className="font-bold text-admin-cream text-sm flex-shrink-0">
                     {formatPrice(item.priceAtPurchase)}
                   </span>
                 </div>
@@ -162,10 +162,10 @@ function OrderExpandedRow({ orderId, colSpan }: { orderId: string; colSpan: numb
                 {detail.payments.map((p, idx) => (
                   <div key={p.id} className="pt-3 first:pt-0 space-y-1 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-[13px] text-admin-cream">Lần {detail.payments.length - idx}: {p.provider}</span>
+                      <span className="font-bold text-sm text-admin-cream">Lần {detail.payments.length - idx}: {p.provider}</span>
                       {getPaymentStatusBadge(p.status)}
                     </div>
-                    <div className="grid grid-cols-2 gap-1 text-[11px] text-admin-muted">
+                    <div className="grid grid-cols-2 gap-1 text-xs text-admin-muted">
                       <div>Số tiền: <span className="text-admin-cream font-medium">{formatPrice(p.amount)}</span></div>
                       <div>Mã tham chiếu: <span className="text-admin-cream font-medium break-all">{p.transactionRef || "N/A"}</span></div>
                       <div>Tạo lúc: <span>{formatDate(p.createdAt)}</span></div>
@@ -193,7 +193,7 @@ function OrderExpandedRow({ orderId, colSpan }: { orderId: string; colSpan: numb
                       <span className="text-admin-muted">{formatDate(e.enrolledAt)}</span>
                     </div>
                     {e.manualReason && (
-                      <p className="text-[11px] text-amber-500 italic bg-amber-500/5 px-2 py-1 rounded border border-amber-500/10">
+                      <p className="text-xs text-amber-500 italic bg-amber-500/5 px-2 py-1 rounded border border-amber-500/10">
                         Lý do thủ công: {e.manualReason}
                       </p>
                     )}
@@ -207,16 +207,16 @@ function OrderExpandedRow({ orderId, colSpan }: { orderId: string; colSpan: numb
                 Giao dịch ngân hàng khớp ({detail.paymentTransactions.length})
               </h4>
               {detail.paymentTransactions.length === 0 ? (
-                <p className="text-[11px] text-admin-muted">Không tìm thấy giao dịch ngân hàng khớp.</p>
+                <p className="text-xs text-admin-muted">Không tìm thấy giao dịch ngân hàng khớp.</p>
               ) : (
                 <div className="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar">
                   {detail.paymentTransactions.map((tx) => (
-                    <div key={tx.id} className="bg-admin-deep p-2 rounded border border-admin-border/10 text-[11px] space-y-1">
+                    <div key={tx.id} className="bg-admin-deep p-2 rounded border border-admin-border/10 text-xs space-y-1">
                       <div className="flex justify-between">
                         <span className="font-semibold text-admin-cream break-all">{tx.transactionRef || "N/A"}</span>
                         <span className="text-emerald-500 font-bold">+{formatPrice(tx.amount)}</span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-admin-muted">
+                      <div className="flex justify-between text-xs text-admin-muted">
                         <span>Cổng: {tx.provider}</span>
                         <span>{tx.transactionDate ? formatDate(tx.transactionDate) : ""}</span>
                       </div>
@@ -272,7 +272,7 @@ export default function OrdersTable({
         <div className={`overflow-x-auto custom-scrollbar transition-opacity duration-200 ${isFetching ? "opacity-60" : "opacity-100"}`}>
           <table className="w-full border-collapse text-left min-w-[900px]">
             <thead className="bg-admin-surface-low/50 border-b border-admin-border/30">
-              <tr className="text-admin-muted text-[12px] font-bold uppercase tracking-wider">
+              <tr className="text-admin-muted text-xs font-bold uppercase tracking-wider">
                 <th className="pl-6 py-4 w-[40px]"></th>
                 <th className="py-4 w-[160px]">Mã hóa đơn</th>
                 <th className="py-4 w-[220px]">Học viên</th>
@@ -304,7 +304,7 @@ export default function OrdersTable({
                   <React.Fragment key={order.id}>
                     <tr 
                       onClick={() => toggleExpandOrder(order.id)}
-                      className={`hover:bg-admin-surface-low/30 transition-colors cursor-pointer text-[14px] ${isExpanded ? "bg-admin-surface-low/20" : ""}`}
+                      className={`hover:bg-admin-surface-low/30 transition-colors cursor-pointer text-sm ${isExpanded ? "bg-admin-surface-low/20" : ""}`}
                     >
                       <td className="pl-6 py-4 text-center">
                         {isExpanded ? (
@@ -317,13 +317,13 @@ export default function OrdersTable({
                         {order.orderInvoiceNumber}
                       </td>
                       <td className="py-4 pr-2">
-                        <p className="font-semibold text-admin-cream text-[13px]">{order.user.fullName}</p>
-                        <p className="text-[11px] text-admin-muted">{order.user.email}</p>
+                        <p className="font-semibold text-admin-cream text-sm">{order.user.fullName}</p>
+                        <p className="text-xs text-admin-muted">{order.user.email}</p>
                       </td>
-                      <td className="py-4 text-admin-cream text-[13px] pr-2 max-w-[200px] truncate" title={order.items.map(i => i.course.title).join(", ")}>
+                      <td className="py-4 text-admin-cream text-sm pr-2 max-w-[200px] truncate" title={order.items.map(i => i.course.title).join(", ")}>
                         {coursesText}
                       </td>
-                      <td className="py-4 font-bold text-admin-pink text-[13px]">
+                      <td className="py-4 font-bold text-admin-pink text-sm">
                         {formatPrice(order.totalAmount)}
                       </td>
                       <td className="py-4">
@@ -333,9 +333,9 @@ export default function OrdersTable({
                           {order.payments && order.payments.length > 0 ? (
                             getPaymentStatusBadge(order.payments[0].status)
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">Chưa TT</span>
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">Chưa TT</span>
                           )}
-                          <span className="text-[10px] text-admin-muted">({latestPaymentProvider})</span>
+                          <span className="text-xs text-admin-muted">({latestPaymentProvider})</span>
                         </div>
                       </td>
                       <td className="pr-6 py-4 text-right text-xs text-admin-muted">
@@ -350,7 +350,7 @@ export default function OrdersTable({
               })}
               {emptyRowsCount > 0 &&
                 Array.from({ length: emptyRowsCount }).map((_, idx) => (
-                  <tr key={`empty-${idx}`} className="border-b border-transparent text-[14px]">
+                  <tr key={`empty-${idx}`} className="border-b border-transparent text-sm">
                     <td colSpan={colSpan} className="py-4">&nbsp;</td>
                   </tr>
                 ))}
@@ -403,7 +403,7 @@ export default function OrdersTable({
                 <button
                   key={i}
                   onClick={() => onPageChange(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-[12px] transition-all cursor-pointer ${
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-xs transition-all cursor-pointer ${
                     currentPage === i + 1
                       ? "bg-admin-pink text-white shadow-sm"
                       : "border border-admin-border/30 text-admin-muted hover:bg-admin-surface-low hover:text-admin-cream"

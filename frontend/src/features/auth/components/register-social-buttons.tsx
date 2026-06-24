@@ -11,7 +11,7 @@ export default function RegisterSocialButtons() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border-dark"></div>
         </div>
-        <div className="relative flex justify-center text-[12px]">
+        <div className="relative flex justify-center text-xs">
           <span className="px-4 bg-deep-black text-muted-text font-bold">
             Hoặc đăng ký bằng
           </span>

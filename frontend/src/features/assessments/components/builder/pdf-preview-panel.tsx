@@ -27,11 +27,11 @@ export function PdfPreviewPanel({
           </div>
           <div className="space-y-1">
             <h4 className="text-xs font-bold text-admin-cream">Tải đề PDF lên tại đây</h4>
-            <p className="text-[10px] text-admin-muted max-w-[200px] mx-auto leading-relaxed">
+            <p className="text-xs text-admin-muted max-w-[200px] mx-auto leading-relaxed">
               Chọn tệp đề thi dạng PDF để học sinh vừa xem đề vừa điền đáp án trực tiếp.
             </p>
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded bg-admin-pink px-4 py-1.5 text-[11px] font-bold text-admin-bg hover:brightness-110 transition active:scale-95">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded bg-admin-pink px-4 py-1.5 text-xs font-bold text-admin-bg hover:brightness-110 transition active:scale-95">
             <Upload size={12} />
             {uploadProgress !== null ? `Đang tải: ${uploadProgress}%` : "Chọn tệp PDF"}
             <input

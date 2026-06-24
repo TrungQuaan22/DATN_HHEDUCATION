@@ -32,11 +32,11 @@ export function EmptyState({
       className={`flex flex-col items-center justify-center p-6 text-center rounded-lg border border-border-dark bg-deep-black/30 max-w-md mx-auto w-full ${className}`}
     >
       {renderIcon()}
-      <h3 className="text-[16px] font-bold text-cream leading-tight">
+      <h3 className="text-base font-bold text-cream leading-tight">
         {title}
       </h3>
       {description && (
-        <p className="text-[12px] text-muted-text mt-2 max-w-xs leading-relaxed">
+        <p className="text-xs text-muted-text mt-2 max-w-xs leading-relaxed">
           {description}
         </p>
       )}

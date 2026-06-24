@@ -1,11 +1,16 @@
+import type {
+  PaymentTransactionDirection,
+  PaymentTransactionMatchStatus,
+  Prisma
+} from '@prisma/client'
+
 import type { OrderStatus, PaymentStatus } from '~/modules/orders/ports/order-repository.port'
 
-export type PaymentTransactionDirection = 'in' | 'out'
-
+export type { PaymentTransactionDirection, PaymentTransactionMatchStatus }
 
 export type ListAdminPaymentTransactionsFilters = {
   provider?: string
-  matchStatus?: string
+  matchStatus?: PaymentTransactionMatchStatus
   direction?: PaymentTransactionDirection
   orderId?: string
   paymentId?: string
@@ -27,7 +32,7 @@ export type AdminPaymentTransactionListItemRecord = {
   direction: PaymentTransactionDirection
   transactionDate: Date | null
   matchStatus: string
-  metadata: any
+  metadata: Prisma.JsonValue
   createdAt: Date
   orderId: string | null
   paymentId: string | null
@@ -53,14 +58,14 @@ export type AdminPaymentTransactionListItemRecord = {
 }
 
 export type AdminPaymentTransactionDetailRecord = AdminPaymentTransactionListItemRecord & {
-  rawPayload: any
+  rawPayload: Prisma.JsonValue
 }
 
 export interface AdminPaymentTransactionRepositoryPort {
   listTransactions(data: {
     filters: ListAdminPaymentTransactionsFilters
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[AdminPaymentTransactionListItemRecord[], number]>
   getTransactionById(transactionId: string): Promise<AdminPaymentTransactionDetailRecord | null>
 }

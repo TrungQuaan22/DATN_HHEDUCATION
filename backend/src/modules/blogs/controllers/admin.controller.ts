@@ -8,13 +8,16 @@ import { sendSuccess } from '~/common/http/response'
 
 import type {
   BlogPostIdDto,
+  CreateBlogCategoryDto,
   CreateBlogPostDto,
   ListAdminBlogPostsDto,
   UpdateBlogPostDto
 } from '../dto'
-import { AdminBlogService, adminBlogService } from '../services/admin.service'
+import type { AdminBlogService } from '../services/admin.service'
+import { adminBlogService } from '../wiring'
 import {
   changeBlogPostStatusSchema,
+  createBlogCategorySchema,
   createBlogPostSchema,
   deleteBlogPostSchema,
   getAdminBlogPostSchema,
@@ -25,6 +28,7 @@ import {
 } from '../validators/admin.validator'
 
 type CreateBlogPostValidated = z.infer<typeof createBlogPostSchema>
+type CreateBlogCategoryValidated = z.infer<typeof createBlogCategorySchema>
 type ListAdminBlogPostsValidated = z.infer<typeof listAdminBlogPostsSchema>
 type ListAdminBlogTagsValidated = z.infer<typeof listAdminBlogTagsSchema>
 type ListAdminBlogCategoriesValidated = z.infer<typeof listAdminBlogCategoriesSchema>
@@ -53,6 +57,14 @@ export class AdminBlogController {
       actorRole: actor.role
     }
     const data = await this.service.createPost(dto)
+
+    sendSuccess({ res, data, status: 201 })
+  }
+
+  createCategory = async (req: Request, res: Response) => {
+    const validated = req.validated as CreateBlogCategoryValidated
+    const dto: CreateBlogCategoryDto = validated.body
+    const data = await this.service.createCategory(dto)
 
     sendSuccess({ res, data, status: 201 })
   }
@@ -161,6 +173,7 @@ export class AdminBlogController {
 export const adminBlogController = new AdminBlogController(adminBlogService)
 
 export const createBlogPostController = adminBlogController.createPost
+export const createBlogCategoryController = adminBlogController.createCategory
 export const listAdminBlogPostsController = adminBlogController.listPosts
 export const listAdminBlogTagsController = adminBlogController.listTags
 export const listAdminBlogCategoriesController = adminBlogController.listCategories

@@ -15,6 +15,7 @@ import {
   ListChecks,
   ChevronRight,
   ChevronLeft,
+  X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -67,6 +68,45 @@ import { AiAssistant } from "@/features/assessments/components/builder/ai-assist
 import { QuestionEditor } from "@/features/assessments/components/builder/editors";
 import { AnswerKeyTable } from "@/features/assessments/components/builder/answer-key-table";
 
+const formatToLocalDatetime = (dateInput: string | Date | null | undefined) => {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  const localTime = new Date(date.getTime() - tzOffset);
+  return localTime.toISOString().slice(0, 16);
+};
+
+const toastApiError = (err: any, defaultMsg: string = "Thao tác thất bại.") => {
+  console.error("API Error details:", err);
+  if (err && typeof err === "object") {
+    if (Array.isArray(err.details) && err.details.length > 0) {
+      const detailsText = err.details
+        .map((d: any) => `${d.field ? `Trường ${d.field}: ` : ""}${d.message}`)
+        .join(", ");
+      toast.error(`${err.message || defaultMsg} (${detailsText})`);
+      return;
+    }
+    const nestedError = err.response?.data?.error;
+    if (nestedError) {
+      if (Array.isArray(nestedError.details) && nestedError.details.length > 0) {
+        const detailsText = nestedError.details
+          .map((d: any) => `${d.field ? `Trường ${d.field}: ` : ""}${d.message}`)
+          .join(", ");
+        toast.error(`${nestedError.message || defaultMsg} (${detailsText})`);
+        return;
+      }
+      toast.error(nestedError.message || defaultMsg);
+      return;
+    }
+    if (err.message) {
+      toast.error(err.message);
+      return;
+    }
+  }
+  toast.error(defaultMsg);
+};
+
 function BuilderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,6 +133,26 @@ function BuilderContent() {
     "draft" | "published" | "hidden"
   >("draft");
   const [assessmentType, setAssessmentType] = useState<AssessmentType>("quiz");
+
+  // Settings Modal States
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTitle, setSettingsTitle] = useState("");
+  const [settingsSubject, setSettingsSubject] = useState<Subject>("math");
+  const [settingsGrade, setSettingsGrade] = useState(12);
+  const [settingsTimeLimit, setSettingsTimeLimit] = useState(90);
+  const [settingsGradingType, setSettingsGradingType] = useState<"auto" | "manual" | "mixed">("auto");
+  const [settingsMediaId, setSettingsMediaId] = useState<string | null>(null);
+  const [settingsPdfFileName, setSettingsPdfFileName] = useState<string | null>(null);
+  const [settingsPdfUrl, setSettingsPdfUrl] = useState<string | null>(null);
+  const [settingsUploadProgress, setSettingsUploadProgress] = useState<number | null>(null);
+
+  // Redirect if assessmentId is missing
+  useEffect(() => {
+    if (!assessmentId) {
+      toast.error("Không tìm thấy ID bài kiểm tra. Vui lòng tạo đề thi trước.");
+      router.push("/admin/assessments");
+    }
+  }, [assessmentId, router]);
 
   const defaultSectionId = "section_default";
   const [sections, setSections] = useState<BuilderSection[]>([
@@ -234,14 +294,10 @@ function BuilderContent() {
       if (mainPlacement.lessonId) setSelectedLessonId(mainPlacement.lessonId);
       if (mainPlacement.maxAttempts) setMaxAttempts(mainPlacement.maxAttempts);
       if (mainPlacement.openTime) {
-        setOpenTime(
-          new Date(mainPlacement.openTime).toISOString().slice(0, 16),
-        );
+        setOpenTime(formatToLocalDatetime(mainPlacement.openTime));
       }
       if (mainPlacement.closeTime) {
-        setOpenCloseTime(
-          new Date(mainPlacement.closeTime).toISOString().slice(0, 16),
-        );
+        setOpenCloseTime(formatToLocalDatetime(mainPlacement.closeTime));
       }
     } else {
       setPlacementType("unplaced");
@@ -258,6 +314,15 @@ function BuilderContent() {
           ? `https://pub-77edff2c782245799db963fbbfae0e94.r2.dev/${assessmentDetail.sourceMedia.objectKey}`
           : null);
       setPdfUrl(url);
+
+      // Sync settings media state too
+      setSettingsMediaId(assessmentDetail.sourceMediaId);
+      setSettingsPdfFileName(assessmentDetail.sourceMedia?.originalName || "Tài liệu đính kèm");
+      setSettingsPdfUrl(url);
+    } else {
+      setSettingsMediaId(null);
+      setSettingsPdfFileName(null);
+      setSettingsPdfUrl(null);
     }
 
     // Map items
@@ -271,7 +336,13 @@ function BuilderContent() {
           orderIndex: section.orderIndex,
         })),
       );
-      setSelectedSectionId(assessmentDetail.sections[0].id);
+      setSelectedSectionId((currentId) => {
+        const stillExists = assessmentDetail.sections.some((sec) => sec.id === currentId);
+        if (currentId && stillExists) {
+          return currentId;
+        }
+        return assessmentDetail.sections[0].id;
+      });
     }
 
     const detailItems = assessmentDetail.sections?.flatMap((section) =>
@@ -363,7 +434,13 @@ function BuilderContent() {
 
     if (mapped.length > 0) {
       setItems(mapped);
-      setSelectedItemId(mapped[0].id);
+      setSelectedItemId((currentId) => {
+        const stillExists = mapped.some((item) => item.id === currentId);
+        if (currentId && stillExists) {
+          return currentId;
+        }
+        return mapped[0].id;
+      });
     }
   }, [assessmentDetail]);
 
@@ -438,6 +515,92 @@ function BuilderContent() {
       toast.error("Không thể tải tài liệu đính kèm.");
     } finally {
       setUploadProgress(null);
+    }
+  };
+
+  // Handle PDF Upload in Settings Modal
+  const handleSettingsPdfUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      toast.error("Vui lòng tải tệp tin dạng PDF.");
+      return;
+    }
+
+    setSettingsPdfFileName(file.name);
+    setSettingsUploadProgress(0);
+
+    try {
+      const presign = await createPresignedUpload({
+        resourceType: "document",
+        fileName: file.name,
+        contentType: file.type || "application/pdf",
+        fileSize: file.size,
+      });
+
+      await uploadFileDirectly(presign.uploadUrl, file, setSettingsUploadProgress);
+      const completeRes = await completeUpload({ mediaId: presign.mediaId });
+
+      setSettingsMediaId(presign.mediaId);
+      setSettingsPdfUrl(completeRes.publicUrl);
+      toast.success("Tải tài liệu đính kèm thành công.");
+    } catch (err) {
+      toast.error("Không thể tải tài liệu đính kèm.");
+      setSettingsPdfFileName(null);
+    } finally {
+      setSettingsUploadProgress(null);
+    }
+  };
+
+  // Save Settings from Settings Modal
+  const handleSaveSettings = async () => {
+    if (!settingsTitle.trim()) {
+      toast.error("Vui lòng nhập tiêu đề bài kiểm tra.");
+      return;
+    }
+
+    if (assessmentType === "exam" && !settingsMediaId) {
+      toast.error("Đề thi dạng Exam PDF yêu cầu phải tải lên tệp tin PDF.");
+      return;
+    }
+
+    if (!assessmentId) return;
+
+    setIsSaving(true);
+    try {
+      await updateAssessmentMutation.mutateAsync({
+        assessmentId,
+        payload: {
+          title: settingsTitle.trim(),
+          subject: settingsSubject,
+          grade: settingsGrade,
+          gradingType: settingsGradingType,
+          timeLimitMinutes: settingsTimeLimit,
+          sourceMediaId: assessmentType === "exam" ? settingsMediaId : null,
+        },
+      });
+
+      setTitle(settingsTitle.trim());
+      setSubject(settingsSubject);
+      setGrade(settingsGrade);
+      setTimeLimit(settingsTimeLimit);
+      setMediaId(settingsMediaId);
+      setPdfFileName(settingsPdfFileName);
+      setPdfUrl(settingsPdfUrl);
+
+      toast.success("Cập nhật cài đặt đề thi thành công!");
+      setIsSettingsOpen(false);
+      await refetchAssessmentDetail();
+    } catch (err) {
+      toastApiError(err, "Cập nhật cài đặt thất bại.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -782,8 +945,14 @@ function BuilderContent() {
 
   useEffect(() => {
     if (!selectedSection) return;
-    const firstItem = items.find((item) => item.sectionId === selectedSection.id);
-    if (firstItem) setSelectedItemId(firstItem.id);
+    setSelectedItemId((currentId) => {
+      const currentItem = items.find((item) => item.id === currentId);
+      if (currentItem && currentItem.sectionId === selectedSection.id) {
+        return currentId;
+      }
+      const firstItem = items.find((item) => item.sectionId === selectedSection.id);
+      return firstItem ? firstItem.id : currentId;
+    });
     setBulkItemType(selectedSection.itemType);
     setBulkMaxScore(defaultMaxScoreByItemType[selectedSection.itemType]);
   }, [items, selectedSection, selectedSectionId]);
@@ -1079,9 +1248,7 @@ function BuilderContent() {
       toast.success("Lưu nội dung bài kiểm tra thành công!");
       setStep(2); // Auto proceed to step 2
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Lưu bài kiểm tra thất bại.";
-      toast.error(msg);
+      toastApiError(err, "Lưu bài kiểm tra thất bại.");
     } finally {
       setIsSaving(false);
     }
@@ -1111,6 +1278,7 @@ function BuilderContent() {
       if (placementType === "unplaced") {
         await deletePlacementMutation.mutateAsync(assessmentId);
       } else {
+        const isPublicPractice = placementType === "public_practice";
         await upsertPlacementMutation.mutateAsync({
           assessmentId,
           payload: {
@@ -1119,13 +1287,9 @@ function BuilderContent() {
               placementType === "course" ? selectedCourseId || null : null,
             lessonId:
               placementType === "lesson" ? selectedLessonId || null : null,
-            openTime: openTime || null,
-            closeTime: closeTime || null,
+            openTime: isPublicPractice ? null : (openTime ? new Date(openTime).toISOString() : null),
+            closeTime: isPublicPractice ? null : (closeTime ? new Date(closeTime).toISOString() : null),
             maxAttempts: maxAttempts,
-            slug:
-              placementType === "public_practice"
-                ? `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString().slice(-4)}`
-                : null,
             isFeatured: placementType === "public_practice",
           },
         });
@@ -1133,11 +1297,7 @@ function BuilderContent() {
       toast.success("Đã lưu cài đặt phân phối đề thi!");
       setStep(3); // Proceed to step 3
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Cài đặt phân phối đề thi thất bại.";
-      toast.error(msg);
+      toastApiError(err, "Cài đặt phân phối đề thi thất bại.");
     } finally {
       setIsSaving(false);
     }
@@ -1168,11 +1328,7 @@ function BuilderContent() {
       );
       router.push("/admin/assessments");
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Cập nhật trạng thái xuất bản thất bại.";
-      toast.error(msg);
+      toastApiError(err, "Cập nhật trạng thái xuất bản thất bại.");
     } finally {
       setIsSaving(false);
     }
@@ -1253,16 +1409,32 @@ function BuilderContent() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <div className="text-[11px] font-bold text-admin-pink uppercase tracking-wider flex items-center gap-1.5">
+            <div className="text-xs font-bold text-admin-pink uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles size={11} /> Workspace thiết kế đề thi
             </div>
-            <input
-              value={title}
-              disabled={step !== 1}
-              onChange={(e) => setTitle(e.target.value)}
-              className="bg-transparent text-xl font-bold text-admin-cream outline-none border-b border-admin-border/40 hover:border-admin-pink/40 focus:border-admin-pink/60 pb-0.5 max-w-xl transition-all disabled:opacity-75"
-              placeholder="Nhập tiêu đề bài thi ..."
-            />
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-xl font-bold text-admin-cream tracking-tight max-w-md truncate">
+                {title}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsTitle(title);
+                  setSettingsSubject(subject);
+                  setSettingsGrade(grade);
+                  setSettingsTimeLimit(timeLimit);
+                  setSettingsGradingType(settingsGradingType || "auto");
+                  setSettingsMediaId(mediaId);
+                  setSettingsPdfFileName(pdfFileName);
+                  setSettingsPdfUrl(pdfUrl);
+                  setIsSettingsOpen(true);
+                }}
+                className="p-1.5 rounded-lg border border-admin-border bg-admin-surface-low text-admin-cream hover:border-admin-pink/60 transition cursor-pointer flex items-center justify-center hover:text-admin-pink"
+                title="Cài đặt thông tin đề thi"
+              >
+                <Settings size={15} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1337,7 +1509,7 @@ function BuilderContent() {
                 : "border-transparent text-admin-muted hover:text-admin-cream"
             }`}
           >
-            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-[10px]">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-xs">
               1
             </span>
             Nội dung bài thi
@@ -1354,7 +1526,7 @@ function BuilderContent() {
                 : "border-transparent text-admin-muted hover:text-admin-cream"
             }`}
           >
-            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-[10px]">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-xs">
               2
             </span>
             Cấu hình phân phối
@@ -1371,7 +1543,7 @@ function BuilderContent() {
                 : "border-transparent text-admin-muted hover:text-admin-cream"
             }`}
           >
-            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-[10px]">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full border border-current text-xs">
               3
             </span>
             Kiểm tra & Xuất bản
@@ -1441,7 +1613,7 @@ function BuilderContent() {
                     type="button"
                     disabled={isContentLocked}
                     onClick={() => handleAddSection(type)}
-                    className="rounded border border-admin-border bg-admin-deep px-2 py-1 text-[10px] font-bold text-admin-cream hover:border-admin-pink disabled:opacity-50"
+                    className="rounded border border-admin-border bg-admin-deep px-2 py-1 text-xs font-bold text-admin-cream hover:border-admin-pink disabled:opacity-50"
                   >
                     + {itemTypeLabels[type]}
                   </button>
@@ -1492,7 +1664,7 @@ function BuilderContent() {
                 <span className="text-admin-cream">{timeLimit} phút</span>
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px]">
+            <div className="flex items-center gap-1 text-xs">
               <Clock size={12} className="text-admin-pink" />
               <span>
                 Loại:{" "}
@@ -1562,12 +1734,12 @@ function BuilderContent() {
                 </div>
 
                 <div className="bg-admin-bg border border-admin-border/60 rounded-lg p-3 space-y-2 mb-4 shrink-0">
-                  <div className="text-[10px] font-bold uppercase text-admin-pink flex items-center gap-1">
+                  <div className="text-xs font-bold uppercase text-admin-pink flex items-center gap-1">
                     <Plus size={11} /> Thêm nhanh nhiều câu hỏi
                   </div>
                   <div className="flex flex-wrap items-end gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-admin-muted block">
+                      <label className="text-xs font-bold uppercase text-admin-muted block">
                         Dạng
                       </label>
                       <select
@@ -1588,7 +1760,7 @@ function BuilderContent() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-admin-muted block">
+                      <label className="text-xs font-bold uppercase text-admin-muted block">
                         Số câu
                       </label>
                       <input
@@ -1602,7 +1774,7 @@ function BuilderContent() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-admin-muted block">
+                      <label className="text-xs font-bold uppercase text-admin-muted block">
                         Điểm/Câu
                       </label>
                       <input
@@ -1618,7 +1790,7 @@ function BuilderContent() {
                     </div>
 
                     <div className="space-y-1 w-48">
-                      <label className="text-[9px] font-bold uppercase text-admin-muted block">
+                      <label className="text-xs font-bold uppercase text-admin-muted block">
                         Chuyên đề (Optional)
                       </label>
                       <input
@@ -1663,25 +1835,12 @@ function BuilderContent() {
           </h3>
 
           <div className="space-y-4 py-2">
-            {/* Title field copy */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-admin-muted block">
-                Tiêu đề bài kiểm tra
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold"
-              />
-            </div>
-
             {/* Scope / Placement type tabs */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-admin-muted block">
+              <label className="text-xs font-bold uppercase text-admin-muted block">
                 Phạm vi phân phối
               </label>
-              <div className="grid grid-cols-4 rounded-lg bg-admin-bg p-1 border border-admin-border/80 text-[11px] font-bold">
+              <div className="grid grid-cols-4 rounded-lg bg-admin-bg p-1 border border-admin-border/80 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setPlacementType("unplaced")}
@@ -1732,7 +1891,7 @@ function BuilderContent() {
             {/* Course placement details */}
             {placementType === "course" && (
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted block">
+                <label className="text-xs font-bold text-admin-muted block">
                   Khóa học áp dụng
                 </label>
                 <select
@@ -1755,7 +1914,7 @@ function BuilderContent() {
             {placementType === "lesson" && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-admin-muted block">
+                  <label className="text-xs font-bold text-admin-muted block">
                     Khóa học
                   </label>
                   <select
@@ -1773,7 +1932,7 @@ function BuilderContent() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-admin-muted block">
+                  <label className="text-xs font-bold text-admin-muted block">
                     Bài học (Dạng Quiz)
                   </label>
                   {quizLessons.length === 0 ? (
@@ -1798,92 +1957,47 @@ function BuilderContent() {
               </div>
             )}
 
-            {/* Subject & Grade selection */}
-            <div className="grid grid-cols-2 gap-3 border-t border-admin-border/40 pt-3">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Môn học
-                </label>
-                <select
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value as Subject)}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink cursor-pointer"
-                >
-                  {Object.entries(SUBJECT_LABELS).map(([val, label]) => (
-                    <option key={val} value={val}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Khối lớp
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={grade}
-                  onChange={(e) => setGrade(Number(e.target.value))}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink"
-                />
-              </div>
-            </div>
-
-            {/* Time limit & Attempts */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Thời gian làm bài (phút)
-                </label>
-                <input
-                  type="number"
-                  min={5}
-                  value={timeLimit}
-                  onChange={(e) => setTimeLimit(Number(e.target.value))}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Số lượt làm bài tối đa
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={maxAttempts}
-                  onChange={(e) => setMaxAttempts(Number(e.target.value))}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink"
-                />
-              </div>
+            {/* Attempts limit */}
+            <div className="space-y-1 border-t border-admin-border/40 pt-3">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
+                Số lượt làm bài tối đa
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={maxAttempts}
+                onChange={(e) => setMaxAttempts(Number(e.target.value))}
+                className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold"
+              />
             </div>
 
             {/* Open & Close times */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Thời gian mở đề
-                </label>
-                <input
-                  type="datetime-local"
-                  value={openTime}
-                  onChange={(e) => setOpenTime(e.target.value)}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink cursor-pointer"
-                />
+            {placementType !== "unplaced" && placementType !== "public_practice" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-admin-muted uppercase block">
+                    Thời gian mở đề
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink cursor-pointer"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-admin-muted uppercase block">
+                    Thời gian đóng đề
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={closeTime}
+                    onChange={(e) => setOpenCloseTime(e.target.value)}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink cursor-pointer"
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted uppercase block">
-                  Thời gian đóng đề
-                </label>
-                <input
-                  type="datetime-local"
-                  value={closeTime}
-                  onChange={(e) => setOpenCloseTime(e.target.value)}
-                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-2.5 py-1.5 text-xs text-admin-cream outline-none focus:border-admin-pink cursor-pointer"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="flex justify-between gap-3 pt-3 border-t border-admin-border/60">
@@ -2054,6 +2168,175 @@ function BuilderContent() {
                 className="rounded-lg bg-admin-pink px-4 py-2 text-xs font-bold text-admin-bg hover:brightness-110 disabled:opacity-50"
               >
                 Xac nhan publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-xl border border-admin-border bg-admin-surface-low p-6 shadow-2xl relative space-y-4 animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-lg border border-admin-border bg-admin-bg text-admin-cream hover:border-admin-pink/60 flex items-center justify-center transition cursor-pointer"
+            >
+              <X size={14} className="text-admin-cream hover:text-admin-pink" />
+            </button>
+
+            <h3 className="text-base font-bold uppercase tracking-wider text-admin-pink flex items-center gap-1.5 border-b border-admin-border/60 pb-3">
+              <Settings size={18} /> Cài đặt thông tin đề thi (Metadata)
+            </h3>
+
+            <div className="space-y-4 py-2">
+              {/* Title */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase text-admin-muted block">
+                  Tiêu đề đề thi
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={settingsTitle}
+                  onChange={(e) => setSettingsTitle(e.target.value)}
+                  placeholder="Nhập tiêu đề đề thi"
+                  className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Subject */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase text-admin-muted block">
+                    Môn học
+                  </label>
+                  <select
+                    value={settingsSubject}
+                    onChange={(e) => setSettingsSubject(e.target.value as Subject)}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold cursor-pointer"
+                  >
+                    {Object.entries(SUBJECT_LABELS).map(([value, label]) => (
+                      <option key={value} value={value} className="bg-admin-surface-low">
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Grade */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase text-admin-muted block">
+                    Khối lớp
+                  </label>
+                  <select
+                    value={settingsGrade}
+                    onChange={(e) => setSettingsGrade(Number(e.target.value))}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold cursor-pointer"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
+                      <option key={g} value={g} className="bg-admin-surface-low">
+                        Lớp {g}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Time Limit */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase text-admin-muted block">
+                    Thời gian (phút)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={settingsTimeLimit}
+                    onChange={(e) => setSettingsTimeLimit(Number(e.target.value))}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold"
+                  />
+                </div>
+
+                {/* Grading Type */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase text-admin-muted block">
+                    Hình thức chấm
+                  </label>
+                  <select
+                    value={settingsGradingType}
+                    onChange={(e) => setSettingsGradingType(e.target.value as any)}
+                    className="w-full rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs text-admin-cream outline-none focus:border-admin-pink font-bold cursor-pointer"
+                  >
+                    <option value="auto" className="bg-admin-surface-low">Tự động chấm</option>
+                    <option value="manual" className="bg-admin-surface-low">Tự luận chấm tay</option>
+                    <option value="mixed" className="bg-admin-surface-low">Hỗn hợp</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Exam PDF Uploader */}
+              {assessmentType === "exam" && (
+                <div className="space-y-2 border border-admin-border/40 rounded-xl bg-admin-deep/40 p-4">
+                  <label className="text-xs font-bold uppercase text-admin-muted block">
+                    Đính kèm đề thi PDF gốc
+                  </label>
+                  {settingsPdfFileName ? (
+                    <div className="flex items-center justify-between rounded-lg border border-admin-border bg-admin-deep px-3 py-2 text-xs font-bold text-admin-cream">
+                      <span className="truncate max-w-[200px]">{settingsPdfFileName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsMediaId(null);
+                          setSettingsPdfFileName(null);
+                          setSettingsPdfUrl(null);
+                        }}
+                        className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-admin-border hover:border-admin-pink/60 rounded-lg p-5 cursor-pointer transition text-admin-muted hover:text-admin-cream">
+                      <Upload size={20} className="mb-2" />
+                      <span className="text-xs font-bold">Tải lên tệp PDF</span>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="hidden"
+                        onChange={handleSettingsPdfUpload}
+                        disabled={settingsUploadProgress !== null}
+                      />
+                    </label>
+                  )}
+                  {settingsUploadProgress !== null && (
+                    <div className="w-full bg-admin-border rounded-full h-1.5 overflow-hidden mt-2">
+                      <div
+                        className="bg-admin-pink h-full transition-all duration-300"
+                        style={{ width: `${settingsUploadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-admin-border/40">
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-4 py-2 rounded border border-admin-border text-xs font-bold text-admin-cream hover:bg-admin-deep transition cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={isSaving || (assessmentType === "exam" && !settingsMediaId)}
+                onClick={handleSaveSettings}
+                className="px-4 py-2 rounded bg-admin-pink text-xs font-bold text-admin-bg hover:brightness-110 active:scale-95 disabled:opacity-40 transition cursor-pointer"
+              >
+                {isSaving ? "Đang lưu..." : "Lưu cài đặt"}
               </button>
             </div>
           </div>

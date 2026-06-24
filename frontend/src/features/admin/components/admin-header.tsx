@@ -9,6 +9,11 @@ export default function AdminHeader() {
   const { user, clearSession } = useAuthStore();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.avatarUrl]);
 
   useEffect(() => {
     const isLight = document.documentElement.classList.contains('light');
@@ -47,7 +52,7 @@ export default function AdminHeader() {
           <input
             type="text"
             placeholder="Tìm kiếm hệ thống..."
-            className="w-full bg-admin-surface-low border border-admin-border/30 rounded-xl pl-10 pr-4 py-2 text-[14px] text-admin-cream placeholder:text-admin-muted/50 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink transition-all"
+            className="w-full bg-admin-surface-low border border-admin-border/30 rounded-xl pl-10 pr-4 py-2 text-sm text-admin-cream placeholder:text-admin-muted/50 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink transition-all"
           />
         </div>
       </div>
@@ -80,10 +85,10 @@ export default function AdminHeader() {
         {/* Profile info & Dropdown */}
         <div className="flex items-center gap-3 relative admin-profile-dropdown-container">
           <div className="text-right hidden sm:block">
-            <p className="text-[13px] font-bold text-admin-cream leading-tight">
+            <p className="text-sm font-bold text-admin-cream leading-tight">
               {user?.fullName || 'Quản trị viên HH'}
             </p>
-            <p className="text-[10px] text-admin-pink uppercase font-semibold tracking-wider">
+            <p className="text-xs text-admin-pink uppercase font-semibold tracking-wider">
               {user?.role === 'admin' ? 'Super Administrator' : 'Instructor'}
             </p>
           </div>
@@ -91,17 +96,18 @@ export default function AdminHeader() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="w-10 h-10 rounded-full border-2 border-admin-pink overflow-hidden hover:opacity-85 transition-all cursor-pointer bg-admin-surface-low flex items-center justify-center"
           >
-            <img
-              alt="Profile"
-              className="w-full h-full object-cover"
-              src={
-                user?.avatarUrl ||
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuAGuA46dM9ofJOmtVCw4AMz8_whqj-2oCYdfE_v3mqHdlFmalFobUoD7sVror_gmNvr7HU2ruEqEghBfMiyTX9nRBNpBqhJX_GEx6KVLiEqu88W8TVbu1T2F03bshwyMWzPgOHMt9sh-5uOHlO_t2xK92c8WJHzkt_c0wwco1GuSUaWysUMin6PwpnDkru6nZT880_hkN7dKnKyA2IA0CgvZIepP9zEL6vFSovA_FwlsSqTJzFuhyBw2RHdY5ao61-Tgemu4OUWzY0'
-              }
-              onError={(e) => {
-                e.currentTarget.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAGuA46dM9ofJOmtVCw4AMz8_whqj-2oCYdfE_v3mqHdlFmalFobUoD7sVror_gmNvr7HU2ruEqEghBfMiyTX9nRBNpBqhJX_GEx6KVLiEqu88W8TVbu1T2F03bshwyMWzPgOHMt9sh-5uOHlO_t2xK92c8WJHzkt_c0wwco1GuSUaWysUMin6PwpnDkru6nZT880_hkN7dKnKyA2IA0CgvZIepP9zEL6vFSovA_FwlsSqTJzFuhyBw2RHdY5ao61-Tgemu4OUWzY0';
-              }}
-            />
+            {!user?.avatarUrl || imageError ? (
+              <div className="w-full h-full flex items-center justify-center bg-admin-pink/15 text-admin-pink">
+                <User size={18} />
+              </div>
+            ) : (
+              <img
+                alt="Profile"
+                className="w-full h-full object-cover"
+                src={user.avatarUrl}
+                onError={() => setImageError(true)}
+              />
+            )}
           </button>
 
           {isDropdownOpen && (
@@ -118,7 +124,7 @@ export default function AdminHeader() {
                 <Link
                   href="/admin/settings"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-admin-surface-low hover:text-admin-pink transition-colors cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-admin-surface-low hover:text-admin-pink transition-colors cursor-pointer"
                 >
                   <User size={15} />
                   Thông tin cá nhân
@@ -129,7 +135,7 @@ export default function AdminHeader() {
                     clearSession();
                     window.location.href = '/login';
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
                 >
                   <LogOut size={15} />
                   Đăng xuất

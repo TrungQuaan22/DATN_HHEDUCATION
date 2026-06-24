@@ -71,7 +71,7 @@ export default function TimelineMilestone({
         }`}
       >
         <span
-          className={`text-[12px] font-bold uppercase tracking-wider transition-all duration-300 ${
+          className={`text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
             isActive ? item.stageColorClass : "text-muted-taupe/50"
           }`}
         >
@@ -80,7 +80,7 @@ export default function TimelineMilestone({
         <h4 className="text-xl font-bold text-cream mt-2 transition-colors duration-300">
           {item.title}
         </h4>
-        <p className="text-[15px] text-muted-taupe mt-3 leading-relaxed transition-colors duration-300">
+        <p className="text-base text-muted-taupe mt-3 leading-relaxed transition-colors duration-300">
           {item.desc}
         </p>
       </div>

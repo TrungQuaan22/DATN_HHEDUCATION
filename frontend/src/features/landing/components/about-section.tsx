@@ -55,13 +55,13 @@ export default function AboutSection() {
     >
       <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
         <div className="space-y-6">
-          <div className="inline-block px-3 py-1 bg-brand-pink/10 text-brand-pink rounded-sm text-[11px] font-semibold uppercase tracking-wider">
+          <div className="inline-block px-3 py-1 bg-brand-pink/10 text-brand-pink rounded-sm text-xs font-semibold uppercase tracking-wider">
             Chúng tôi là ai
           </div>
-          <h2 className="text-[36px] font-[700] text-cream leading-tight">
+          <h2 className="text-4xl font-[700] text-cream leading-tight">
             Đồng hành cùng khát vọng vươn xa của thế hệ trẻ
           </h2>
-          <p className="text-[16px] text-muted-taupe leading-relaxed">
+          <p className="text-base text-muted-taupe leading-relaxed">
             HH Education mang đến môi trường học tập kỷ luật và nhân văn. Chúng
             tôi tin rằng mỗi học sinh đều có tiềm năng vô hạn nếu được dẫn dắt
             bởi một lộ trình học tập được thiết kế tỉ mỉ.
@@ -74,7 +74,7 @@ export default function AboutSection() {
                   size={18}
                   className="text-accent-orange shrink-0"
                 />
-                <span className="text-[14px] text-cream">{item}</span>
+                <span className="text-sm text-cream">{item}</span>
               </div>
             ))}
           </div>
@@ -86,10 +86,10 @@ export default function AboutSection() {
             <div className="w-20 h-20 bg-brand-dark border border-border-dark rounded-lg flex items-center justify-center shadow-l1 transform group-hover:rotate-6 transition-transform duration-300">
               <School size={36} className="text-brand-pink" />
             </div>
-            <h3 className="text-[20px] font-bold text-cream">
+            <h3 className="text-xl font-bold text-cream">
               Học thuật vững chắc
             </h3>
-            <p className="text-[14px] text-muted-taupe leading-relaxed">
+            <p className="text-sm text-muted-taupe leading-relaxed">
               Xây dựng nền tảng tư duy logic và sự say mê học tập bền vững cho
               tương lai.
             </p>
@@ -99,10 +99,10 @@ export default function AboutSection() {
 
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-[36px] font-[700] text-cream mb-4">
+          <h2 className="text-4xl font-[700] text-cream mb-4">
             Chúng tôi cung cấp gì
           </h2>
-          <p className="text-[16px] text-muted-taupe max-w-2xl mx-auto">
+          <p className="text-base text-muted-taupe max-w-2xl mx-auto">
             Giải pháp học tập toàn diện tích hợp công nghệ giúp tối ưu hóa thời
             gian.
           </p>
@@ -119,10 +119,10 @@ export default function AboutSection() {
               >
                 {serv.icon}
               </div>
-              <h3 className="text-[18px] font-bold text-cream mb-3">
+              <h3 className="text-lg font-bold text-cream mb-3">
                 {serv.title}
               </h3>
-              <p className="text-[14px] text-muted-taupe leading-relaxed">
+              <p className="text-sm text-muted-taupe leading-relaxed">
                 {serv.desc}
               </p>
             </div>

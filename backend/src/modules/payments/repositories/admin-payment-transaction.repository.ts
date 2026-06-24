@@ -54,12 +54,16 @@ const detailSelect = {
   rawPayload: true
 } satisfies Prisma.PaymentTransactionSelect
 
+type PrismaPaymentTransactionListItem = Prisma.PaymentTransactionGetPayload<{
+  select: typeof listSelect
+}>
+
 function buildPaymentTransactionWhere(
   filters: ListAdminPaymentTransactionsFilters
 ): Prisma.PaymentTransactionWhereInput {
   const where: Prisma.PaymentTransactionWhereInput = {
     provider: filters.provider,
-    matchStatus: filters.matchStatus as any,
+    matchStatus: filters.matchStatus,
     direction: filters.direction,
     orderId: filters.orderId,
     paymentId: filters.paymentId,
@@ -120,7 +124,9 @@ function buildPaymentTransactionWhere(
   return where
 }
 
-function mapPrismaToListItemRecord(tx: any): AdminPaymentTransactionListItemRecord {
+function mapPrismaToListItemRecord(
+  tx: PrismaPaymentTransactionListItem
+): AdminPaymentTransactionListItemRecord {
   return {
     id: tx.id,
     provider: tx.provider,
@@ -158,13 +164,11 @@ function mapPrismaToListItemRecord(tx: any): AdminPaymentTransactionListItemReco
   }
 }
 
-export class PrismaAdminPaymentTransactionRepository
-  implements AdminPaymentTransactionRepositoryPort
-{
+export class PrismaAdminPaymentTransactionRepository implements AdminPaymentTransactionRepositoryPort {
   async listTransactions(data: {
     filters: ListAdminPaymentTransactionsFilters
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[AdminPaymentTransactionListItemRecord[], number]> {
     const where = buildPaymentTransactionWhere(data.filters)
     const [txs, total] = await prisma.$transaction([
@@ -174,8 +178,8 @@ export class PrismaAdminPaymentTransactionRepository
         orderBy: {
           createdAt: 'desc'
         },
-        skip: data.skip,
-        take: data.take
+        skip: (data.page - 1) * data.limit,
+        take: data.limit
       }),
       prisma.paymentTransaction.count({
         where
@@ -186,7 +190,9 @@ export class PrismaAdminPaymentTransactionRepository
     return [records, total]
   }
 
-  async getTransactionById(transactionId: string): Promise<AdminPaymentTransactionDetailRecord | null> {
+  async getTransactionById(
+    transactionId: string
+  ): Promise<AdminPaymentTransactionDetailRecord | null> {
     const tx = await prisma.paymentTransaction.findUnique({
       where: {
         id: transactionId

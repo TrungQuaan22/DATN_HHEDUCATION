@@ -14,7 +14,7 @@ export default function SiteNavLinks({
   isActive,
   onLinkClick,
   className = "flex items-center justify-center gap-10",
-  itemClassName = "text-[14px] font-medium pb-1 transition-colors",
+  itemClassName = "text-sm font-medium pb-1 transition-colors",
 }: SiteNavLinksProps) {
   return (
     <div className={className}>

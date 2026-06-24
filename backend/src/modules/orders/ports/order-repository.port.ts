@@ -1,13 +1,28 @@
-export type OrderStatus = 'pending' | 'completed' | 'cancelled' | 'expired'
+import type { OrderStatus, PaymentStatus } from '@prisma/client'
 
-export type PaymentStatus =
-  | 'pending'
-  | 'success'
-  | 'failed'
-  | 'cancelled'
-  | 'late_success'
-  | 'manual_review'
+export type { OrderStatus, PaymentStatus }
 
+export type OrderItemRecord = {
+  id: string
+  courseId: string
+  priceAtPurchase: number
+  course: {
+    title: string
+    slug: string
+  }
+}
+
+export type OrderPaymentRecord = {
+  id: string
+  provider: string
+  amount: number
+  currency: string
+  status: PaymentStatus
+  qrCodeUrl: string | null
+  checkoutUrl: string | null
+  expiresAt: Date | null
+  paidAt: Date | null
+}
 
 export type OrderRecord = {
   id: string
@@ -17,26 +32,8 @@ export type OrderRecord = {
   status: OrderStatus
   expiresAt: Date
   createdAt: Date
-  items: Array<{
-    id: string
-    courseId: string
-    priceAtPurchase: number
-    course: {
-      title: string
-      slug: string
-    }
-  }>
-  payments: Array<{
-    id: string
-    provider: string
-    amount: number
-    currency: string
-    status: PaymentStatus
-    qrCodeUrl: string | null
-    checkoutUrl: string | null
-    expiresAt: Date | null
-    paidAt: Date | null
-  }>
+  items: OrderItemRecord[]
+  payments: OrderPaymentRecord[]
 }
 
 export type PurchasableCourseRecord = {
@@ -55,7 +52,7 @@ export type PaymentAttemptRecord = {
   status: PaymentStatus
 }
 
-export type PaymentAttemptOrderRecord = {
+export type OrderActionRecord = {
   id: string
   orderInvoiceNumber: string
   totalAmount: number
@@ -74,7 +71,19 @@ export type CreateOrderRecord = {
   courses: PurchasableCourseRecord[]
 }
 
+export type CreatePaymentRecord = {
+  orderId: string
+  provider: string
+  providerPaymentId: string
+  amount: number
+  qrCodeUrl: string | null
+  checkoutUrl: string | null
+  expiresAt: Date
+}
+
 export interface OrderRepositoryPort {
+  lockOrderForUser(data: { userId: string; orderId: string }): Promise<void>
+
   expireStalePendingOrders(data: { now: Date; userId?: string; orderId?: string }): Promise<void>
 
   findActivePendingOrder(userId: string, now: Date): Promise<OrderRecord | null>
@@ -99,24 +108,13 @@ export interface OrderRepositoryPort {
   findOrderForPaymentAttempt(data: {
     userId: string
     orderId: string
-  }): Promise<PaymentAttemptOrderRecord | null>
+  }): Promise<OrderActionRecord | null>
 
   cancelPendingPayments(orderId: string): Promise<void>
 
-  createPaymentForOrder(data: {
-    orderId: string
-    provider: string
-    providerPaymentId: string
-    amount: number
-    qrCodeUrl: string | null
-    checkoutUrl: string | null
-    expiresAt: Date
-  }): Promise<void>
+  createPaymentForOrder(data: CreatePaymentRecord): Promise<void>
 
-  findOrderForCancel(data: {
-    userId: string
-    orderId: string
-  }): Promise<{ id: string; status: OrderStatus } | null>
+  findOrderForCancel(data: { userId: string; orderId: string }): Promise<OrderActionRecord | null>
 
   cancelOrderAndPendingPayments(orderId: string): Promise<void>
 }

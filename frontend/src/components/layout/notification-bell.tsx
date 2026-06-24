@@ -76,8 +76,8 @@ export function NotificationBell({
         } ${dropdownClassName || ""}`}
       >
         <div className="px-4 py-1.5 border-b border-border-dark/40 flex justify-between items-center">
-          <span className="text-[11px] font-bold text-cream">Thông báo mới</span>
-          <span className="text-[9px] text-brand-pink cursor-pointer font-semibold">
+          <span className="text-xs font-bold text-cream">Thông báo mới</span>
+          <span className="text-xs text-brand-pink cursor-pointer font-semibold">
             Đánh dấu tất cả đã đọc
           </span>
         </div>
@@ -91,11 +91,11 @@ export function NotificationBell({
                 {n.unread && (
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-pink shrink-0" />
                 )}
-                <p className="text-[11px] font-bold text-cream truncate">
+                <p className="text-xs font-bold text-cream truncate">
                   {n.title}
                 </p>
               </div>
-              <span className="text-[9px] text-muted-text pl-3">{n.time}</span>
+              <span className="text-xs text-muted-text pl-3">{n.time}</span>
             </div>
           ))}
         </div>

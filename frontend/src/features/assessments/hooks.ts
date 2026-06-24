@@ -242,7 +242,7 @@ export function usePublicAssessmentsQuery(filters?: {
   });
 }
 
-export function usePublicAssessmentDetailQuery(placementRef: string) {
+export function usePublicAssessmentDetailQuery(placementRef: string, options?: { enabled?: boolean }) {
   const uuidPattern =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   const isUuid = uuidPattern.test(placementRef);
@@ -253,7 +253,7 @@ export function usePublicAssessmentDetailQuery(placementRef: string) {
       isUuid
         ? getPublicAssessment(placementRef)
         : getPublicAssessmentBySlug(placementRef),
-    enabled: !!placementRef,
+    enabled: !!placementRef && (options?.enabled ?? true),
   });
 }
 

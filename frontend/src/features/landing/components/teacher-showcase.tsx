@@ -82,7 +82,7 @@ export default function TeacherStickyShowcase({
           </div>
 
           <span
-            className={`inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider mb-3 border ${teacher.badgeColorClass}`}
+            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 border ${teacher.badgeColorClass}`}
           >
             {teacher.badge}
           </span>

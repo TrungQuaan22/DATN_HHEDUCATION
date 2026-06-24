@@ -39,7 +39,6 @@ const buildReviewMetadata = (
 }
 
 export const paymentRepository = {
-
   // --- Webhook Events ---
   createWebhookEvent(
     tx: TransactionClient,
@@ -199,20 +198,32 @@ export const paymentRepository = {
     })
   },
 
-  updatePayment(
+  async updatePayment(
     tx: TransactionClient,
     paymentId: string,
     data: Prisma.PaymentUpdateInput
-  ) {
-    return tx.payment.update({
+  ): Promise<boolean> {
+    const result = await tx.payment.updateMany({
       where: {
-        id: paymentId
+        id: paymentId,
+        status: PaymentStatus.pending
       },
       data
     })
+
+    return result.count === 1
   },
 
-  findOrderForWebhook(tx: TransactionClient, orderInvoiceNumber: string, provider: string) {
+  async findOrderForWebhook(tx: TransactionClient, orderInvoiceNumber: string, provider: string) {
+    await tx.$queryRaw(
+      Prisma.sql`
+        SELECT id
+        FROM orders
+        WHERE order_invoice_number = ${orderInvoiceNumber}
+        FOR UPDATE
+      `
+    )
+
     return tx.order.findUnique({
       where: {
         orderInvoiceNumber

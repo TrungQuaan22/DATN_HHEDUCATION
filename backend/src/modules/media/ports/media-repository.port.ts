@@ -1,4 +1,15 @@
-import type { Media, MediaStatus, MediaType, Prisma } from '@prisma/client'
+import type { Media, MediaStatus, MediaType } from '@prisma/client'
+
+export type { MediaStatus, MediaType }
+
+export type MediaRecord = Media
+
+export type UpdateMediaData = {
+  status?: MediaStatus
+  mimeType?: string
+  sizeBytes?: number
+  etag?: string | null
+}
 
 export interface MediaRepositoryPort {
   createMedia(data: {
@@ -9,16 +20,16 @@ export interface MediaRepositoryPort {
     mimeType: string
     sizeBytes: number
     uploadedById: string
-  }): Promise<Media>
-  findMediaById(mediaId: string): Promise<Media | null>
-  updateMediaById(mediaId: string, data: Prisma.MediaUpdateInput): Promise<Media>
+  }): Promise<MediaRecord>
+  findMediaById(mediaId: string): Promise<MediaRecord | null>
+  updateMediaById(mediaId: string, data: UpdateMediaData): Promise<MediaRecord>
   listOrphanMediaForCleanup(data: {
     type: MediaType
     statuses: MediaStatus[]
     olderThan: Date
     limit: number
-  }): Promise<Media[]>
-  deleteMediaById(mediaId: string): Promise<Media>
+  }): Promise<MediaRecord[]>
+  deleteMediaById(mediaId: string): Promise<MediaRecord>
   lockMediaForTranscoding(mediaId: string): Promise<boolean>
   markMediaReady(data: {
     mediaId: string

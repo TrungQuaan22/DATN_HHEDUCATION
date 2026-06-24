@@ -15,6 +15,21 @@ enum VideoType {
   youtube
 }
 
+enum LessonMaterialType {
+  text
+  markdown
+  pdf
+  docx
+  pptx
+}
+
+enum LessonMaterialProcessingStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
 enum Subject {
   math
   physics
@@ -51,16 +66,19 @@ model Course {
   updatedAt          DateTime     @updatedAt @map("updated_at")
   deletedAt          DateTime?    @map("deleted_at")
 
-  teacher           User               @relation("CourseTeacher", fields: [teacherId], references: [id])
-  thumbnailMedia    Media?             @relation("CourseThumbnailMedia", fields: [thumbnailMediaId], references: [id], onDelete: SetNull)
-  chapters          Chapter[]
-  topics            Topic[]
-  courseAssessments CourseAssessment[]
+  teacher              User                  @relation("CourseTeacher", fields: [teacherId], references: [id])
+  thumbnailMedia       Media?                @relation("CourseThumbnailMedia", fields: [thumbnailMediaId], references: [id], onDelete: SetNull)
+  chapters             Chapter[]
+  topics               Topic[]
+  courseAssessments    CourseAssessment[]
   assessmentPlacements AssessmentPlacement[]
-  orderItems        OrderItem[]
-  enrollments       Enrollment[]
-  courseProgress    CourseProgress[]
-  practiceSessions  PracticeSession[]
+  orderItems           OrderItem[]
+  enrollments          Enrollment[]
+  courseProgress       CourseProgress[]
+  practiceSessions     PracticeSession[]
+  lessonMaterials      LessonMaterial[]
+  knowledgeChunks      KnowledgeChunk[]
+  tutorChatSessions    TutorChatSession[]
 
   @@index([teacherId])
   @@map("courses")
@@ -100,16 +118,53 @@ model Lesson {
   updatedAt    DateTime   @updatedAt @map("updated_at")
   deletedAt    DateTime?  @map("deleted_at")
 
-  chapter           Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  videoMedia        Media?             @relation("LessonVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  chapter              Chapter               @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  videoMedia           Media?                @relation("LessonVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
   assessmentPlacements AssessmentPlacement[]
-  progress          LessonProgress[]
+  progress             LessonProgress[]
+  materials            LessonMaterial[]
+  knowledgeChunks      KnowledgeChunk[]
+  tutorChatSessions    TutorChatSession[]
 
   @@unique([chapterId, orderIndex])
   @@index([chapterId])
   @@index([chapterId, deletedAt])
   @@index([deletedAt])
   @@map("lessons")
+}
+
+model LessonMaterial {
+  id               String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId         String                         @map("course_id") @db.Uuid
+  lessonId         String                         @map("lesson_id") @db.Uuid
+  mediaId          String?                        @map("media_id") @db.Uuid
+  createdById      String?                        @map("created_by_id") @db.Uuid
+  title            String                         @db.VarChar(255)
+  type             LessonMaterialType
+  objectKey        String?                        @map("object_key") @db.VarChar(500)
+  contentText      String?                        @map("content_text") @db.Text
+  extractedText    String?                        @map("extracted_text") @db.Text
+  processingStatus LessonMaterialProcessingStatus @default(pending) @map("processing_status")
+  processingError  String?                        @map("processing_error") @db.Text
+  contentHash      String?                        @map("content_hash") @db.VarChar(64)
+  isPublic         Boolean                        @default(true) @map("is_public")
+  createdAt        DateTime                       @default(now()) @map("created_at")
+  updatedAt        DateTime                       @updatedAt @map("updated_at")
+  deletedAt        DateTime?                      @map("deleted_at")
+
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson    Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  media     Media? @relation("LessonMaterialMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+  createdBy User?  @relation("CreatedLessonMaterials", fields: [createdById], references: [id], onDelete: SetNull)
+  knowledgeChunks KnowledgeChunk[]
+
+  @@index([courseId])
+  @@index([lessonId, isPublic, deletedAt])
+  @@index([courseId, lessonId])
+  @@index([mediaId])
+  @@index([createdById])
+  @@index([processingStatus])
+  @@map("lesson_materials")
 }
 
 model Enrollment {

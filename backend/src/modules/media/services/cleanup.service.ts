@@ -1,33 +1,21 @@
-import { MediaStatus } from '@prisma/client'
-
 import {
   ORPHAN_IMAGE_RETENTION_HOURS,
   ORPHAN_MEDIA_CLEANUP_BATCH_SIZE,
   ORPHAN_VIDEO_RETENTION_DAYS
 } from '~/common/constant/media'
 
-import { mediaRepository } from '../repository'
-import { mediaStorage } from '../adapters/r2-media-storage.adapter'
 import type { MediaRepositoryPort } from '../ports/media-repository.port'
 import type { MediaStoragePort } from '../ports/media-storage.port'
 
-const IMAGE_ORPHAN_STATUSES = [
-  MediaStatus.pending_upload,
-  MediaStatus.uploaded,
-  MediaStatus.ready,
-  MediaStatus.failed
-] as const
+const IMAGE_ORPHAN_STATUSES = ['pending_upload', 'uploaded', 'ready', 'failed'] as const
 
-const VIDEO_ORPHAN_STATUSES = [
-  MediaStatus.pending_upload,
-  MediaStatus.uploaded,
-  MediaStatus.ready,
-  MediaStatus.failed
-] as const
+const VIDEO_ORPHAN_STATUSES = ['pending_upload', 'uploaded', 'ready', 'failed'] as const
 
-const subtractHours = (date: Date, hours: number) => new Date(date.getTime() - hours * 60 * 60 * 1000)
+const subtractHours = (date: Date, hours: number) =>
+  new Date(date.getTime() - hours * 60 * 60 * 1000)
 
-const subtractDays = (date: Date, days: number) => new Date(date.getTime() - days * 24 * 60 * 60 * 1000)
+const subtractDays = (date: Date, days: number) =>
+  new Date(date.getTime() - days * 24 * 60 * 60 * 1000)
 
 export class MediaCleanupService {
   constructor(
@@ -38,7 +26,7 @@ export class MediaCleanupService {
   private async cleanupOrphanMediaByType(data: {
     type: 'image' | 'video'
     olderThan: Date
-    statuses: MediaStatus[]
+    statuses: Array<'pending_upload' | 'uploaded' | 'ready' | 'failed'>
     limit?: number
   }) {
     const items = await this.repository.listOrphanMediaForCleanup({
@@ -86,5 +74,3 @@ export class MediaCleanupService {
     }
   }
 }
-
-export const mediaCleanupService = new MediaCleanupService(mediaRepository, mediaStorage)

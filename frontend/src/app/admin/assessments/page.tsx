@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, BookOpenCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { useAuthStore } from "@/stores/auth-store";
 import { getAdminCourses } from "@/features/courses/api";
@@ -20,11 +21,42 @@ import { AssessmentListTable } from "@/features/assessments/components/assessmen
 import { AssessmentListSkeleton } from "@/features/assessments/components/assessment-list-skeleton";
 import { EssayGradingSidebar } from "@/features/assessments/components/essay-grading-sidebar";
 import { EssayGradingModal } from "@/features/assessments/components/essay-grading-modal";
+import { AssessmentCreateModal } from "@/features/assessments/components/assessment-create-modal";
 
 const GRADING_LABELS = {
   auto: "Trắc nghiệm tự động",
   manual: "Tự luận chấm tay",
   mixed: "Hỗn hợp",
+};
+
+const toastApiError = (err: any, defaultMsg: string = "Thao tác thất bại.") => {
+  console.error("API Error details:", err);
+  if (err && typeof err === "object") {
+    if (Array.isArray(err.details) && err.details.length > 0) {
+      const detailsText = err.details
+        .map((d: any) => `${d.field ? `Trường ${d.field}: ` : ""}${d.message}`)
+        .join(", ");
+      toast.error(`${err.message || defaultMsg} (${detailsText})`);
+      return;
+    }
+    const nestedError = err.response?.data?.error;
+    if (nestedError) {
+      if (Array.isArray(nestedError.details) && nestedError.details.length > 0) {
+        const detailsText = nestedError.details
+          .map((d: any) => `${d.field ? `Trường ${d.field}: ` : ""}${d.message}`)
+          .join(", ");
+        toast.error(`${nestedError.message || defaultMsg} (${detailsText})`);
+        return;
+      }
+      toast.error(nestedError.message || defaultMsg);
+      return;
+    }
+    if (err.message) {
+      toast.error(err.message);
+      return;
+    }
+  }
+  toast.error(defaultMsg);
 };
 
 export default function AdminAssessmentsPage() {
@@ -39,6 +71,9 @@ export default function AdminAssessmentsPage() {
   const [filterGradingType, setFilterGradingType] = useState("");
 
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+
+  // Setup Assessment States
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // 1. Fetch courses list using React Query
   const coursesQuery = useQuery({
@@ -131,7 +166,7 @@ export default function AdminAssessmentsPage() {
       {/* Upper header block */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-admin-border/60 pb-6">
         <div>
-          <h2 className="font-serif text-3xl font-bold text-admin-cream tracking-tight flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-admin-cream tracking-tight flex items-center gap-3">
             <BookOpenCheck className="text-admin-pink" size={32} />
             Quản lý Bài kiểm tra
           </h2>
@@ -143,8 +178,8 @@ export default function AdminAssessmentsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.push("/admin/assessments/builder")}
-            className="inline-flex items-center gap-2 rounded bg-admin-pink px-4 py-2.5 text-[13px] font-bold text-admin-bg transition hover:brightness-110 active:scale-95 cursor-pointer"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded bg-admin-pink px-4 py-2.5 text-sm font-bold text-admin-bg transition hover:brightness-110 active:scale-95 cursor-pointer"
           >
             <Plus size={15} />
             Soạn thảo đề thi mới
@@ -206,6 +241,12 @@ export default function AdminAssessmentsPage() {
           }}
         />
       )}
+
+      {/* Create Assessment Modal */}
+      <AssessmentCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

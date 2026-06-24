@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   AlertTriangle,
-  ArrowLeft,
   Clock,
   FileText,
   ListChecks,
@@ -17,6 +16,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import {
   useLearningAssessmentQuery,
   useSaveAnswersMutation,
@@ -184,13 +184,52 @@ export default function StudentAssessmentWorkspacePage() {
     return result;
   }, [workspaceData]);
 
-  const showSectionHeadings = (workspaceData?.sections?.length || 0) > 1;
+  const showSectionHeadings = (workspaceData?.sections?.length || 0) >= 1;
 
   // Answers State
   const [answers, setAnswers] = useState<AnswerState>({});
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const lastLoadedSubmissionId = useRef<string | null>(null);
+
+  // Sync answers ref to avoid stale closures in event listeners
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  // Anti-cheat violation count state and refs
+  const [violationCount, setViolationCount] = useState(0);
+  const violationCountRef = useRef(0);
+
+  // Custom confirmation modal state
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmConfig((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // Time remaining (seconds)
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -264,11 +303,11 @@ export default function StudentAssessmentWorkspacePage() {
     return () => window.clearInterval(timer);
   }, [timeLeft]);
 
-  // Auto-submit when time is up
+  // Auto-submit when time is up or on extreme anti-cheat violation
   const handleAutoSubmit = async () => {
-    toast.warning("Hết giờ làm bài! Hệ thống đang tự động nộp bài làm của bạn.");
+    toast.warning("Hệ thống đang tự động nộp bài làm của bạn.");
     try {
-      const payload = buildAnswerPayload(workspaceItems, answers);
+      const payload = buildAnswerPayload(workspaceItems, answersRef.current);
       if (payload.length > 0) {
         await saveAnswersMutation.mutateAsync({
           submissionId,
@@ -283,6 +322,125 @@ export default function StudentAssessmentWorkspacePage() {
       toast.error("Lỗi tự động nộp bài: " + (e?.message || "Vui lòng thử lại."));
     }
   };
+
+  // Helper to handle anti-cheat violations
+  const handleViolation = (reason: string) => {
+    const nextCount = violationCountRef.current + 1;
+    violationCountRef.current = nextCount;
+    setViolationCount(nextCount);
+
+    if (nextCount >= 5) {
+      toast.error(`Bạn đã vi phạm quy chế thi 5 lần (${reason}). Hệ thống tự động nộp bài!`, {
+        duration: 8000,
+        id: "violation-autosubmit"
+      });
+      handleAutoSubmit();
+    } else {
+      toast.error(`Cảnh báo vi phạm quy chế (${nextCount}/5): ${reason}. Vi phạm quá 5 lần bài thi sẽ tự động nộp!`, {
+        duration: 6000,
+        id: `violation-warning-${nextCount}`
+      });
+    }
+  };
+
+  // Fullscreen & Strict Keyboard/Focus Anti-Cheat Hook
+  useEffect(() => {
+    if (!workspaceData) return;
+
+    const requestFS = async () => {
+      if (!document.fullscreenElement) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (err) {
+          console.warn("Fullscreen request failed, awaiting user click:", err);
+        }
+      }
+    };
+
+    // Auto-enter fullscreen when page mounts
+    requestFS();
+
+    // Attach click listener to force fullscreen on any workspace interaction
+    const handleGlobalClick = () => {
+      requestFS();
+    };
+    document.addEventListener("click", handleGlobalClick);
+
+    // Block right-clicks (context menu)
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      handleViolation("Bấm chuột phải");
+    };
+    document.addEventListener("contextmenu", handleContextMenu);
+
+    // Track tab switching and focus loss
+    const handleWindowBlur = () => {
+      handleViolation("Thoát khỏi màn hình thi hoặc chuyển ứng dụng");
+    };
+    window.addEventListener("blur", handleWindowBlur);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        handleViolation("Chuyển tab hoặc ẩn cửa sổ trình duyệt");
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Strict keyboard listeners
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const allowedSpecialKeys = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Enter",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+        "Shift",
+        "CapsLock",
+      ];
+
+      // Block Ctrl / Alt / Meta combinations (Copy, Paste, Tab Switch, DevTools shortcuts)
+      const hasForbiddenModifier = e.ctrlKey || e.altKey || e.metaKey;
+
+      if (hasForbiddenModifier) {
+        e.preventDefault();
+        handleViolation(`Sử dụng phím tắt hoặc phím chức năng bị cấm (${e.key})`);
+        return;
+      }
+
+      // Block other functional keys (e.g. PageUp, F1-F12, Escape)
+      if (e.key.length > 1 && !allowedSpecialKeys.includes(e.key)) {
+        e.preventDefault();
+        handleViolation(`Nhấn phím chức năng không cho phép (${e.key})`);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Prompt user if they exit fullscreen mode
+    const handleFSChange = () => {
+      if (!document.fullscreenElement) {
+        handleViolation("Thoát khỏi chế độ toàn màn hình");
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFSChange);
+
+    return () => {
+      document.removeEventListener("click", handleGlobalClick);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("blur", handleWindowBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", handleFSChange);
+      // Auto exit fullscreen on exit
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, [workspaceData]);
 
   // Save draft answers
   const handleSave = async (isSilent = false) => {
@@ -305,7 +463,7 @@ export default function StudentAssessmentWorkspacePage() {
   };
 
   // Submit assessment manually
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // Validation: check count of unanswered questions
     const totalCount = workspaceItems.length;
     const answeredCount = workspaceItems.filter((item) => isAnswered(item, answers)).length;
@@ -315,41 +473,34 @@ export default function StudentAssessmentWorkspacePage() {
       ? `Bạn còn ${unansweredCount} câu hỏi chưa hoàn thành. Bạn có chắc chắn muốn nộp bài làm?`
       : "Bạn có chắc chắn muốn nộp bài thi? Sau khi nộp, bạn sẽ không thể chỉnh sửa đáp án.";
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+    showConfirm(
+      "Xác nhận nộp bài",
+      confirmMessage,
+      async () => {
+        try {
+          // Save answers one last time
+          const payload = buildAnswerPayload(workspaceItems, answers);
+          if (payload.length > 0) {
+            await saveAnswersMutation.mutateAsync({
+              submissionId,
+              answers: payload,
+            });
+          }
 
-    try {
-      // Save answers one last time
-      const payload = buildAnswerPayload(workspaceItems, answers);
-      if (payload.length > 0) {
-        await saveAnswersMutation.mutateAsync({
-          submissionId,
-          answers: payload,
-        });
+          // Submit attempt
+          await submitAttemptMutation.mutateAsync(submissionId);
+          setIsDirty(false);
+          router.push(`/student/assessments/${placementId}`);
+
+          toast.success("Nộp bài thi thành công!");
+        } catch (e: any) {
+          toast.error("Nộp bài thất bại: " + (e?.message || "Vui lòng thử lại."));
+        }
       }
-
-      // Submit attempt
-      const result = await submitAttemptMutation.mutateAsync(submissionId);
-      setIsDirty(false);
-      router.push(`/student/assessments/${placementId}`);
-
-      toast.success("Nộp bài thi thành công!");
-    } catch (e: any) {
-      toast.error("Nộp bài thất bại: " + (e?.message || "Vui lòng thử lại."));
-    }
+    );
   };
 
-  // Navigate back to overview with dirty check
-  const handleLeaveTakingWorkspace = () => {
-    if (isDirty) {
-      if (!window.confirm("Bạn đang có bài làm chưa lưu. Nhấn OK để rời đi và mất các chỉnh sửa chưa lưu.")) {
-        return;
-      }
-    }
-    setIsDirty(false);
-    router.push(`/student/assessments/${placementId}`);
-  };
+
 
   const assessmentType = workspaceData?.assessment?.type ?? assessment?.assessment?.type;
   const isExam = assessmentType === "exam";
@@ -406,19 +557,11 @@ export default function StudentAssessmentWorkspacePage() {
       {/* Workspace Top Bar */}
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-surface-container py-2.5 px-4 rounded-xl border border-outline-variant/30 shrink-0 mb-2 shadow-xl">
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleLeaveTakingWorkspace}
-            className="py-1 px-2.5 hover:bg-surface-container-high rounded-lg text-cream hover:text-primary transition-all active:scale-95 flex items-center gap-1 text-xs font-bold cursor-pointer"
-          >
-            <ArrowLeft size={14} />
-            Thoát phòng
-          </button>
-          <div className="h-6 w-[1px] bg-outline-variant" />
           <div>
             <h2 className="font-semibold text-sm text-cream leading-none truncate max-w-[150px] sm:max-w-xs md:max-w-md">
               {workspaceData?.assessment?.title || assessment?.assessment?.title}
             </h2>
-            <span className="text-[9px] text-muted-text font-bold uppercase tracking-wider mt-0.5 block">
+            <span className="text-xs text-muted-text font-bold uppercase tracking-wider mt-0.5 block">
               {isExam ? "Phòng thi trực tuyến (PDF)" : `Phòng thi Quiz • Trang ${currentPage + 1}/${quizPagesCount}`}
             </span>
           </div>
@@ -452,7 +595,7 @@ export default function StudentAssessmentWorkspacePage() {
 
       {/* Question Navigation Panel (Horizontal Row) */}
       <nav className="bg-deep-black/30 border border-outline-variant/20 rounded-xl py-1.5 px-3 mb-2 flex flex-col gap-1 shrink-0">
-        <div className="flex justify-between items-center text-[10px]">
+        <div className="flex justify-between items-center text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-muted-text uppercase tracking-widest font-semibold">Tiến độ làm bài</span>
             <span className="text-muted-text/30">•</span>
@@ -464,47 +607,70 @@ export default function StudentAssessmentWorkspacePage() {
               )}
             </span>
           </div>
-          <span className="text-primary font-bold">{answeredCount}/{totalQuestions} Hoàn thành</span>
+          <div className="flex items-center gap-3">
+            {violationCount > 0 && (
+              <span className="text-error font-extrabold animate-pulse uppercase tracking-wider text-xs">
+                Vi phạm: {violationCount}/5
+              </span>
+            )}
+            <span className="text-primary font-bold">{answeredCount}/{totalQuestions} Hoàn thành</span>
+          </div>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {workspaceItems.map((item, index) => {
-            const isCurrentPage = Math.floor(index / questionsPerPage) === currentPage;
-            const active = isExam ? index === activeQuestionIndex : isCurrentPage;
-            const answered = isAnswered(item, answers);
+        <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar items-center mt-1.5">
+          {(workspaceData?.sections || []).map((section, sIdx) => {
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  if (isExam) {
-                    setActiveQuestionIndex(index);
-                    // Scroll the active answer input into view on the right sheet
-                    setTimeout(() => {
-                      const element = document.getElementById(`ans-q-${item.id}`);
-                      element?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 100);
-                  } else {
-                    setCurrentPage(Math.floor(index / questionsPerPage));
-                    setTimeout(() => {
-                      const element = document.getElementById(`q-${item.id}`);
-                      element?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 100);
-                  }
-                }}
-                className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all border ${
-                  active && !isExam
-                    ? answered
-                      ? "bg-primary border-primary text-deep-black font-bold ring-2 ring-primary ring-offset-2 ring-offset-brand-dark shadow-[0_0_6px_rgba(52,211,153,0.5)]"
-                      : "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
-                    : active && isExam
-                    ? "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
-                    : answered
-                    ? "bg-primary text-deep-black font-bold border-transparent"
-                    : "bg-surface-container-high border-outline-variant/30 text-muted-text hover:border-primary/50"
-                }`}
-              >
-                {item.questionNumber}
-              </button>
+              <React.Fragment key={section.id}>
+                {sIdx > 0 && (
+                  <span className="text-muted-text/30 px-1 font-bold shrink-0">|</span>
+                )}
+                {showSectionHeadings && (
+                  <span className="text-xs font-extrabold uppercase text-primary tracking-wider shrink-0 bg-primary/10 px-2 py-0.5 rounded border border-primary/20 max-w-fit">
+                    {section.title}
+                  </span>
+                )}
+                {section.items.map((item) => {
+                  const index = workspaceItems.findIndex((x) => x.id === item.id);
+                  if (index === -1) return null;
+                  const isCurrentPage = Math.floor(index / questionsPerPage) === currentPage;
+                  const active = isExam ? index === activeQuestionIndex : isCurrentPage;
+                  const answered = isAnswered(item, answers);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (isExam) {
+                          setActiveQuestionIndex(index);
+                          // Scroll the active answer input into view on the right sheet
+                          setTimeout(() => {
+                            const element = document.getElementById(`ans-q-${item.id}`);
+                            element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
+                        } else {
+                          setCurrentPage(Math.floor(index / questionsPerPage));
+                          setTimeout(() => {
+                            const element = document.getElementById(`q-${item.id}`);
+                            element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
+                        }
+                      }}
+                      className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all border ${
+                        active && !isExam
+                          ? answered
+                            ? "bg-primary border-primary text-deep-black font-bold ring-2 ring-primary ring-offset-2 ring-offset-brand-dark shadow-[0_0_6px_rgba(52,211,153,0.5)]"
+                            : "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
+                          : active && isExam
+                          ? "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
+                          : answered
+                          ? "bg-primary text-deep-black font-bold border-transparent"
+                          : "bg-surface-container-high border-outline-variant/30 text-muted-text hover:border-primary/50"
+                      }`}
+                    >
+                      {item.questionNumber}
+                    </button>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
         </div>
@@ -527,7 +693,7 @@ export default function StudentAssessmentWorkspacePage() {
                     href={workspaceData.sourceMediaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-caption text-primary hover:underline flex items-center gap-1 text-[11px] font-bold"
+                    className="text-caption text-primary hover:underline flex items-center gap-1 text-xs font-bold"
                   >
                     Mở tab mới
                     <ExternalLink size={12} />
@@ -556,12 +722,12 @@ export default function StudentAssessmentWorkspacePage() {
                   </div>
                   <h2 className="font-semibold text-sm text-cream">Phiếu đáp án (Answer Key)</h2>
                 </div>
-                <span className="text-[10px] text-muted-text font-bold uppercase">Tổng: {totalQuestions} câu</span>
+                <span className="text-xs text-muted-text font-bold uppercase">Tổng: {totalQuestions} câu</span>
               </div>
 
               {/* Progress track bar */}
               <div className="px-3.5 py-2 bg-surface-container border-b border-outline-variant/20 shrink-0">
-                <div className="flex justify-between items-center mb-1 text-[10px]">
+                <div className="flex justify-between items-center mb-1 text-xs">
                   <span className="text-muted-text font-semibold">Đã hoàn thành: <span className="text-primary font-bold">{answeredCount}/{totalQuestions}</span></span>
                   <span className="text-muted-text">Còn lại: {totalQuestions - answeredCount}</span>
                 </div>
@@ -601,7 +767,7 @@ export default function StudentAssessmentWorkspacePage() {
                     >
                       <div className="flex items-center justify-between mb-2 border-b border-outline-variant/10 pb-1">
                         <span className="font-bold text-xs text-cream">Câu {item.questionNumber}</span>
-                        <span className="text-[9px] text-muted-text uppercase font-bold tracking-wider">
+                        <span className="text-xs text-muted-text uppercase font-bold tracking-wider">
                           {item.itemType === "mcq" ? "Trắc nghiệm" : item.itemType === "true_false" ? "Đúng / Sai" : item.itemType === "numeric" ? "Điền số" : "Tự luận"}
                         </span>
                       </div>
@@ -650,7 +816,7 @@ export default function StudentAssessmentWorkspacePage() {
                             const selected = selections[option.id];
 
                             return (
-                              <div key={option.id} className="flex items-center justify-between text-[11px]">
+                              <div key={option.id} className="flex items-center justify-between text-xs">
                                 <span className="text-on-surface-variant font-medium">
                                   {String.fromCharCode(97 + oIdx)}) Mệnh đề {oIdx + 1}
                                 </span>
@@ -676,7 +842,7 @@ export default function StudentAssessmentWorkspacePage() {
                                         });
                                         setIsDirty(true);
                                       }}
-                                      className={`px-2.5 py-0.5 text-[9px] font-bold rounded-md transition ${
+                                      className={`px-2.5 py-0.5 text-xs font-bold rounded-md transition ${
                                         selected === val
                                           ? "bg-primary text-deep-black font-extrabold"
                                           : "text-muted-text hover:text-cream"
@@ -764,7 +930,7 @@ export default function StudentAssessmentWorkspacePage() {
                       <span className="bg-primary-container/20 text-primary px-3 py-1 rounded text-xs font-bold uppercase tracking-widest">
                         Câu {item.questionNumber}
                       </span>
-                      <span className="text-caption text-muted-text font-bold uppercase tracking-wider text-[11px]">
+                      <span className="text-caption text-muted-text font-bold uppercase tracking-wider text-xs">
                         {item.itemType === "mcq" ? "Trắc nghiệm" : item.itemType === "true_false" ? "Đúng / Sai" : item.itemType === "numeric" ? "Điền số" : "Tự luận"} • {item.maxScore} điểm
                       </span>
                     </div>
@@ -965,6 +1131,15 @@ export default function StudentAssessmentWorkspacePage() {
           </section>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 }

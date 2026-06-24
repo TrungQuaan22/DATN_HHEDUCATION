@@ -1,10 +1,9 @@
-import { CourseStatus, type Prisma } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
-import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { ensureMediaExists } from '~/common/ensures/media.ensure'
+import { validateImageMedia } from '~/common/policies/media.policy'
 import { AppError } from '~/common/error/app-error'
-import { applySearchCondition, normalizeText } from '~/common/utils/search'
+import { normalizeText } from '~/common/utils/search'
 import { createSlugFromText } from '~/common/utils/slug'
 
 import {
@@ -18,10 +17,10 @@ import {
 } from '../dto/admin-courses.dto'
 import {
   type CourseActor,
-  ensureCanManageCourse,
-  ensureCourseCanBeEdited,
-  ensureCoursePriceIsValid
-} from '../ensures/courses.ensure'
+  validateCourseCanBeEdited,
+  validateCourseCanManage,
+  validateCoursePrice
+} from '../policies/course.policy'
 import { mapAdminCourseDetailResponse, mapAdminCourseResponse } from '../mappers'
 import type {
   AdminCourseDetailRecord,
@@ -75,7 +74,9 @@ export class AdminCourseService {
     return course
   }
 
-  private ensureCourseDetailExists(course: AdminCourseDetailRecord | null): AdminCourseDetailRecord {
+  private ensureCourseDetailExists(
+    course: AdminCourseDetailRecord | null
+  ): AdminCourseDetailRecord {
     if (!course) {
       throw new AppError(404, ERROR_CODE.COURSE_NOT_FOUND, ERROR_MESSAGE.COURSE_NOT_FOUND)
     }
@@ -93,13 +94,11 @@ export class AdminCourseService {
     const media = input.thumbnailMediaId
       ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
       : null
-    const thumbnailMedia = input.thumbnailMediaId
-      ? ensureActorCanUseImageMedia({
-          actor,
-          media,
-          label: 'Thumbnail media'
-        })
-      : null
+    const thumbnailMedia = input.thumbnailMediaId ? ensureMediaExists(media) : null
+
+    if (thumbnailMedia) {
+      validateImageMedia(actor, thumbnailMedia, 'Thumbnail media')
+    }
 
     const slug = await this.createCourseSlug(input.title)
     const course = await this.courseRepository.createCourse({
@@ -115,24 +114,15 @@ export class AdminCourseService {
     actor: CourseActor,
     input: ListAdminCoursesDto
   ): Promise<ListAdminCoursesResponse> {
-    let where: Prisma.CourseWhereInput = {
-      deletedAt: null,
-      status: input.status,
-      teacherId: actor.role === 'admin' ? input.teacherId : actor.id,
-      isFeatured: input.isFeatured
-    }
-    where = applySearchCondition({
-      where,
-      search: input.search,
-      field: 'title',
-      tokenField: 'slug'
-    })
-
-    const skip = (input.page - 1) * input.limit
     const [items, totalItems] = await this.courseRepository.listAdminCourses({
-      where,
-      skip,
-      take: input.limit
+      filters: {
+        status: input.status,
+        teacherId: actor.role === 'admin' ? input.teacherId : actor.id,
+        isFeatured: input.isFeatured,
+        search: input.search
+      },
+      page: input.page,
+      limit: input.limit
     })
 
     return {
@@ -149,7 +139,8 @@ export class AdminCourseService {
   async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponse> {
     const courseRecord = await this.courseRepository.findCourseDetailById(input.courseId)
     const course = this.ensureCourseDetailExists(courseRecord)
-    ensureCanManageCourse({ actor, course })
+
+    validateCourseCanManage(course, actor)
 
     return mapAdminCourseDetailResponse(course)
   }
@@ -157,8 +148,9 @@ export class AdminCourseService {
   async updateCourse(actor: CourseActor, input: UpdateCourseDto): Promise<AdminCourseResponse> {
     const courseRecord = await this.courseRepository.findCourseById(input.courseId)
     const course = this.ensureCourseExists(courseRecord)
-    ensureCanManageCourse({ actor, course })
-    ensureCourseCanBeEdited(course.status)
+
+    validateCourseCanManage(course, actor)
+    validateCourseCanBeEdited(course)
 
     if (actor.role !== 'admin' && input.teacherId && input.teacherId !== actor.id) {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, ERROR_MESSAGE.FORBIDDEN)
@@ -172,13 +164,11 @@ export class AdminCourseService {
     const media = input.thumbnailMediaId
       ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
       : null
-    const thumbnailMedia = input.thumbnailMediaId
-      ? ensureActorCanUseImageMedia({
-          actor,
-          media,
-          label: 'Thumbnail media'
-        })
-      : null
+    const thumbnailMedia = input.thumbnailMediaId ? ensureMediaExists(media) : null
+
+    if (thumbnailMedia) {
+      validateImageMedia(actor, thumbnailMedia, 'Thumbnail media')
+    }
 
     const nextPrice = input.price ?? course.price
     let nextSalePrice = input.salePrice !== undefined ? input.salePrice : course.salePrice
@@ -188,15 +178,12 @@ export class AdminCourseService {
       nextSalePrice = null
     }
 
-    ensureCoursePriceIsValid({
-      price: nextPrice,
-      salePrice: nextSalePrice
-    })
+    validateCoursePrice(nextPrice, nextSalePrice)
 
     const updatedCourse = await this.courseRepository.updateCourse({
       ...input,
       thumbnailObjectKey:
-        input.thumbnailMediaId === undefined ? undefined : thumbnailMedia?.objectKey ?? null
+        input.thumbnailMediaId === undefined ? undefined : (thumbnailMedia?.objectKey ?? null)
     })
 
     return mapAdminCourseResponse(updatedCourse)
@@ -206,17 +193,17 @@ export class AdminCourseService {
     const courseRecord = await this.courseRepository.findCourseById(input.courseId)
     const course = this.ensureCourseExists(courseRecord)
 
-    if (course.status === CourseStatus.published) {
+    if (course.status === 'published') {
       return mapAdminCourseResponse(course)
     }
 
-    if (course.status !== CourseStatus.draft) {
+    if (course.status !== 'draft') {
       throw new AppError(400, ERROR_CODE.INVALID_COURSE_STATUS, ERROR_MESSAGE.INVALID_COURSE_STATUS)
     }
 
     const updatedCourse = await this.courseRepository.updateCourseStatus(
       input.courseId,
-      CourseStatus.published
+      'published'
     )
 
     return mapAdminCourseResponse(updatedCourse)
@@ -226,14 +213,11 @@ export class AdminCourseService {
     const courseRecord = await this.courseRepository.findCourseById(input.courseId)
     const course = this.ensureCourseExists(courseRecord)
 
-    if (course.status === CourseStatus.archived) {
+    if (course.status === 'archived') {
       return mapAdminCourseResponse(course)
     }
 
-    const updatedCourse = await this.courseRepository.updateCourseStatus(
-      input.courseId,
-      CourseStatus.archived
-    )
+    const updatedCourse = await this.courseRepository.updateCourseStatus(input.courseId, 'archived')
 
     return mapAdminCourseResponse(updatedCourse)
   }

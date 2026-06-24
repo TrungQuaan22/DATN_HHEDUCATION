@@ -8,28 +8,30 @@ import {
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 
-import type {
-  ListStudentAssessmentsDto,
-  SaveAnswerDto
-} from '../dto'
-import {
-  mapRuntimePlacement
-} from '../mappers/assessment.mapper'
+import type { ListStudentAssessmentsDto, SaveAnswerDto } from '../dto'
+import { mapRuntimePlacement } from '../mappers/assessment.mapper'
 import {
   addScores,
+  calculateTrueFalseRatio,
+  haveSameItems,
   multiplyScore,
   scoresAreEqual,
   zeroScore
-} from '../helpers/score.helper'
-import { Submission } from '../entities/submission.entity'
+} from '../policies/submission.policy'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
 import {
-  ensureSubmissionForStudentExists,
-  ensurePlacementAccess,
-  ensurePlacementAvailable,
-  ensureSubmissionAccess
+  ensureSubmissionForStudentExists
 } from '../ensures/assessment.ensure'
-import type { SubmissionDetail, StudentPlacementListItem, StudentSubmissionComplete } from '../types'
+import {
+  validatePlacementAccess,
+  validatePlacementAvailable,
+  validateSubmissionAccess
+} from '../policies/assessment-placement.policy'
+import type {
+  SubmissionDetail,
+  StudentPlacementListItem,
+  StudentSubmissionComplete
+} from '../types'
 
 const ensureSubmissionIsDoing = (status: SubmissionStatus) => {
   if (status !== SubmissionStatus.doing) {
@@ -109,8 +111,8 @@ export class StudentAssessmentService {
       subject: data.subject,
       grade: data.grade,
       status: data.status,
-      skip: (data.page - 1) * data.limit,
-      take: data.limit
+      page: data.page,
+      limit: data.limit
     })
 
     return {
@@ -185,7 +187,7 @@ export class StudentAssessmentService {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Assessment attempt is not active')
     }
 
-    ensurePlacementAvailable(submission.placement)
+    validatePlacementAvailable(submission.placement)
 
     const timeRemainingSeconds = calculateTimeRemainingSeconds({
       startTime: submission.startTime,
@@ -232,10 +234,13 @@ export class StudentAssessmentService {
         ? await this.repository.findEnrollmentForPlacement(data.userId, placement.id)
         : await this.repository.findEnrollmentForLessonPlacement(data.userId, placement.id)
       : null
-    ensurePlacementAccess(data.userId, placement, enrollment)
-    ensurePlacementAvailable(placement)
+    validatePlacementAccess(data.userId, placement, enrollment)
+    validatePlacementAvailable(placement)
 
-    const doingSubmission = await this.repository.findDoingSubmissionForPlacement(data.userId, placement.id)
+    const doingSubmission = await this.repository.findDoingSubmissionForPlacement(
+      data.userId,
+      placement.id
+    )
 
     if (doingSubmission) {
       return mapSubmissionForRuntime(doingSubmission)
@@ -269,10 +274,16 @@ export class StudentAssessmentService {
     const enrollment = submission.placement
       ? submission.placement.type === AssessmentPlacementType.course
         ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
-        : await this.repository.findEnrollmentForLessonPlacement(data.userId, submission.placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(
+            data.userId,
+            submission.placement.id
+          )
       : null
-    ensureSubmissionAccess(data.userId, submission, enrollment)
-    this.ensureAnswersBelongToAssessment(data.answers, flattenSections(submission.assessment.sections))
+    validateSubmissionAccess(data.userId, submission, enrollment)
+    this.ensureAnswersBelongToAssessment(
+      data.answers,
+      flattenSections(submission.assessment.sections)
+    )
 
     await this.repository.saveAnswers(data.submissionId, data.answers)
     return { submissionId: data.submissionId, saved: true }
@@ -290,12 +301,17 @@ export class StudentAssessmentService {
     const enrollment = submission.placement
       ? submission.placement.type === AssessmentPlacementType.course
         ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
-        : await this.repository.findEnrollmentForLessonPlacement(data.userId, submission.placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(
+            data.userId,
+            submission.placement.id
+          )
       : null
-    ensureSubmissionAccess(data.userId, submission, enrollment)
+    validateSubmissionAccess(data.userId, submission, enrollment)
 
     const grading = this.calculateObjectiveScore(submission)
-    const hasEssay = flattenSections(submission.assessment.sections).some((item) => item.itemType === AssessmentItemType.essay)
+    const hasEssay = flattenSections(submission.assessment.sections).some(
+      (item) => item.itemType === AssessmentItemType.essay
+    )
     const status = hasEssay ? SubmissionStatus.submitted : SubmissionStatus.completed
     const finalScore = hasEssay ? null : grading.autoScore
 
@@ -347,7 +363,11 @@ export class StudentAssessmentService {
         const isMultiple = scoringConfig?.mode === 'multiple'
 
         if (!isMultiple && answer.selectedOptionIds.length !== 1) {
-          throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Single-answer MCQ requires exactly one selected option')
+          throw new AppError(
+            400,
+            ERROR_CODE.BAD_REQUEST,
+            'Single-answer MCQ requires exactly one selected option'
+          )
         }
       }
 
@@ -355,7 +375,11 @@ export class StudentAssessmentService {
         const selectedOptionIds = new Set(answer.selections.map((selection) => selection.optionId))
 
         if (selectedOptionIds.size !== answer.selections.length) {
-          throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'True/False selections must be unique by statement')
+          throw new AppError(
+            400,
+            ERROR_CODE.BAD_REQUEST,
+            'True/False selections must be unique by statement'
+          )
         }
 
         if (!answer.selections.every((selection) => optionIds.has(selection.optionId))) {
@@ -384,8 +408,7 @@ export class StudentAssessmentService {
         const correctOptionIds = getQuestionOptions(item)
           .filter((option) => option.isCorrect)
           .map((option) => option.id)
-        const submissionEntity = new Submission({ id: submission.id })
-        const isCorrect = submissionEntity.isSameSet(selectedOptionIds, correctOptionIds)
+        const isCorrect = haveSameItems(selectedOptionIds, correctOptionIds)
         const pointEarned = isCorrect ? item.maxScore.toString() : zeroScore()
 
         if (answer) {
@@ -413,10 +436,9 @@ export class StudentAssessmentService {
           }
         }
 
-        const submissionEntity = new Submission({ id: submission.id })
         const pointEarned = multiplyScore(
           item.maxScore,
-          submissionEntity.calculateTrueFalseRatio(correctCount, options.length)
+          calculateTrueFalseRatio(correctCount, options.length)
         )
         const firstAnswer = answers[0]
 
@@ -432,12 +454,14 @@ export class StudentAssessmentService {
       }
 
       if (item.itemType === AssessmentItemType.numeric) {
-        const answer = submission.numericAnswers.find((numericAnswer) => numericAnswer.itemId === item.id)
+        const answer = submission.numericAnswers.find(
+          (numericAnswer) => numericAnswer.itemId === item.id
+        )
         const correctAnswer = item.correctAnswer as { value?: number } | null
         const isCorrect = Boolean(
           answer &&
-            correctAnswer?.value !== undefined &&
-            scoresAreEqual(answer.answerValue, correctAnswer.value)
+          correctAnswer?.value !== undefined &&
+          scoresAreEqual(answer.answerValue, correctAnswer.value)
         )
         const pointEarned = isCorrect ? item.maxScore.toString() : zeroScore()
 

@@ -86,10 +86,10 @@ export default function TeachersSection() {
     <section className="py-24 bg-brand-dark" id="teachers">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="mb-16 text-center max-w-2xl mx-auto">
-          <h2 className="text-[36px] font-[700] text-cream mb-4 tracking-tight">
+          <h2 className="text-4xl font-[700] text-cream mb-4 tracking-tight">
             Đội ngũ Giảng viên
           </h2>
-          <p className="text-[16px] text-muted-taupe leading-relaxed mb-8">
+          <p className="text-base text-muted-taupe leading-relaxed mb-8">
             Những người thắp sáng ngọn lửa tri thức và chắp cánh ước mơ cho hàng
             nghìn học sinh.
           </p>

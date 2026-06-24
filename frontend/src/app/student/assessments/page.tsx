@@ -10,44 +10,35 @@ import {
   BookOpenCheck,
   Clock,
   Search,
-  Filter,
-  CheckCircle2,
   Calendar,
   AlertTriangle,
-  FileText,
   PlayCircle
 } from "lucide-react";
 import { useStudentAssessmentsQuery } from "@/features/assessments/hooks";
-import { SUBJECT_LABELS, Subject } from "@/types/common";
 import { StudentAssessmentSummary } from "@/features/assessments/types";
 
-const subjects: Array<{ value: Subject | "all"; label: string }> = [
-  { value: "all", label: "Tất cả môn" },
-  { value: "math", label: "Toán học" },
-  { value: "physics", label: "Vật lý" },
-  { value: "chemistry", label: "Hóa học" },
-  { value: "literature", label: "Ngữ văn" },
-  { value: "english", label: "Tiếng Anh" },
-  { value: "biology", label: "Sinh học" },
-  { value: "history", label: "Lịch sử" },
-  { value: "geography", label: "Địa lý" },
-];
-
 export default function StudentAssessmentsPage() {
-  const [subjectFilter, setSubjectFilter] = useState<Subject | "all">("all");
-  const [gradeFilter, setGradeFilter] = useState<number | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past_due" | "completed">("upcoming");
+  const [courseFilter, setCourseFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch assessments list directly from GET /learning/assessments
-  const { data, isLoading } = useStudentAssessmentsQuery({
-    subject: subjectFilter === "all" ? undefined : subjectFilter,
-    grade: gradeFilter === "all" ? undefined : gradeFilter,
-  });
+  const { data, isLoading } = useStudentAssessmentsQuery();
 
   const rawItems = useMemo(() => data?.items || [], [data]);
 
-  // Apply frontend-side filters for status & search query
+  // Extract unique courses student is enrolled in from the raw assessments list
+  const registeredCourses = useMemo(() => {
+    const coursesMap = new Map<string, { id: string; title: string }>();
+    rawItems.forEach((item) => {
+      if (item.course) {
+        coursesMap.set(item.course.id, { id: item.course.id, title: item.course.title });
+      }
+    });
+    return Array.from(coursesMap.values());
+  }, [rawItems]);
+
+  // Apply search query and course filters
   const filteredItems = useMemo(() => {
     return rawItems.filter((item) => {
       // 1. Search Query filter (title or course title)
@@ -57,49 +48,57 @@ export default function StudentAssessmentsPage() {
         item.title.toLowerCase().includes(q) ||
         item.course.title.toLowerCase().includes(q);
 
-      // 2. Status Filter
-      // "not_started" (usedAttempts === 0)
-      // "doing" (latestSubmission.status === 'doing')
-      // "submitted" (latestSubmission.status === 'submitted')
-      // "completed" (latestSubmission.status === 'completed' or 'auto_submitted')
-      let matchStatus = true;
-      if (statusFilter !== "all") {
-        const latestStatus = item.attempt.latestSubmission?.status;
-        const used = item.attempt.usedAttempts;
+      // 2. Course Filter
+      const matchCourse = courseFilter === "all" || item.course.id === courseFilter;
 
-        if (statusFilter === "not_started") {
-          matchStatus = used === 0;
-        } else if (statusFilter === "doing") {
-          matchStatus = latestStatus === "doing";
-        } else if (statusFilter === "submitted") {
-          matchStatus = latestStatus === "submitted";
-        } else if (statusFilter === "completed") {
-          matchStatus = latestStatus === "completed" || latestStatus === "auto_submitted";
-        }
-      }
-
-      return matchSearch && matchStatus;
+      return matchSearch && matchCourse;
     });
-  }, [rawItems, searchQuery, statusFilter]);
+  }, [rawItems, searchQuery, courseFilter]);
 
-  // Group filtered assessments by subject
-  const groupedAssessments = useMemo(() => {
-    const groups: Record<Subject, StudentAssessmentSummary[]> = {} as Record<Subject, StudentAssessmentSummary[]>;
-    
+  // Categorize assessments into MS Teams-like tabs: Upcoming, Past Due, Completed
+  const tabsData = useMemo(() => {
+    const now = new Date();
+    const upcoming: StudentAssessmentSummary[] = [];
+    const pastDue: StudentAssessmentSummary[] = [];
+    const completed: StudentAssessmentSummary[] = [];
+
     filteredItems.forEach((item) => {
-      const sub = item.subject;
-      if (!groups[sub]) {
-        groups[sub] = [];
+      const used = item.attempt.usedAttempts;
+      const max = item.maxAttempts;
+      const latest = item.attempt.latestSubmission;
+
+      const isCompleted =
+        (latest && (latest.status === "completed" || latest.status === "auto_submitted")) ||
+        (max !== null && used >= max);
+
+      const isClosed = item.closeTime ? new Date(item.closeTime) < now : false;
+
+      if (isCompleted) {
+        completed.push(item);
+      } else if (isClosed) {
+        pastDue.push(item);
+      } else {
+        upcoming.push(item);
       }
-      groups[sub].push(item);
     });
 
-    return groups;
+    return { upcoming, past_due: pastDue, completed };
   }, [filteredItems]);
 
-  const activeSubjects = useMemo(() => {
-    return Object.keys(groupedAssessments) as Subject[];
-  }, [groupedAssessments]);
+  const currentList = tabsData[activeTab];
+
+  // Group current tab items by Course for structured display
+  const groupedByCourse = useMemo(() => {
+    const groups: Record<string, { title: string; items: StudentAssessmentSummary[] }> = {};
+    currentList.forEach((item) => {
+      const cId = item.course.id;
+      if (!groups[cId]) {
+        groups[cId] = { title: item.course.title, items: [] };
+      }
+      groups[cId].items.push(item);
+    });
+    return Object.values(groups);
+  }, [currentList]);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -108,8 +107,14 @@ export default function StudentAssessmentsPage() {
         <div>
           <nav className="mb-2">
             <ul className="flex items-center gap-2 text-caption text-muted-text">
-              <li><Link href="/student" className="hover:text-primary transition-colors">Không gian học tập</Link></li>
-              <li><ChevronRight size={14} className="text-muted-text/60" /></li>
+              <li>
+                <Link href="/student" className="hover:text-primary transition-colors">
+                  Không gian học tập
+                </Link>
+              </li>
+              <li>
+                <ChevronRight size={14} className="text-muted-text/60" />
+              </li>
               <li className="text-cream font-medium">Đánh giá & Bài kiểm tra</li>
             </ul>
           </nav>
@@ -118,68 +123,67 @@ export default function StudentAssessmentsPage() {
             Đánh giá của tôi
           </h1>
           <p className="mt-1 text-label-md text-muted-text">
-            Thực hiện các bài kiểm tra định kỳ, bài tập lộ trình và nhận đánh giá học tập.
+            Thực hiện các bài kiểm tra định kỳ, bài tập lộ trình và nhận đánh giá học tập theo khóa học.
           </p>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="glass-panel p-comp-md rounded-xl grid gap-4 md:grid-cols-12 items-center">
+      {/* Tabs Navigation (MS Teams-like) */}
+      <div className="flex border-b border-outline-variant/20 gap-6">
+        {[
+          { key: "upcoming", label: "Đang & Sắp diễn ra", count: tabsData.upcoming.length },
+          { key: "past_due", label: "Quá hạn", count: tabsData.past_due.length },
+          { key: "completed", label: "Đã hoàn thành", count: tabsData.completed.length },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key as any)}
+            className={`pb-4 text-sm font-bold relative transition-all active:scale-95 cursor-pointer flex items-center gap-2 ${
+              activeTab === t.key
+                ? "text-primary"
+                : "text-muted-text hover:text-cream"
+            }`}
+          >
+            <span>{t.label}</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-xs font-extrabold bg-surface-container-high border border-outline-variant/30 ${
+              activeTab === t.key ? "text-primary border-primary/30" : "text-muted-text"
+            }`}>
+              {t.count}
+            </span>
+            {activeTab === t.key && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full animate-slideIn" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Search and Course Filters */}
+      <div className="glass-panel p-4 rounded-xl grid gap-4 md:grid-cols-12 items-center">
         {/* Search */}
-        <div className="relative md:col-span-4">
+        <div className="relative md:col-span-6">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
           <input
             type="text"
-            placeholder="Tìm kiếm bài tập..."
+            placeholder="Tìm kiếm bài tập, bài kiểm tra..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container text-cream rounded-xl pl-10 pr-4 py-2 text-label-md border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
           />
         </div>
 
-        {/* Môn học */}
-        <div className="md:col-span-3">
+        {/* Lọc theo khóa học */}
+        <div className="md:col-span-6">
           <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value as Subject | "all")}
+            value={courseFilter}
+            onChange={(e) => setCourseFilter(e.target.value)}
             className="w-full bg-surface-container text-cream rounded-xl px-3 py-2 text-label-md border border-outline-variant/30 focus:border-primary outline-none cursor-pointer transition"
           >
-            {subjects.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
+            <option value="all">Tất cả khóa học đã đăng ký</option>
+            {registeredCourses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
               </option>
             ))}
-          </select>
-        </div>
-
-        {/* Khối lớp */}
-        <div className="md:col-span-2">
-          <select
-            value={gradeFilter}
-            onChange={(e) => setGradeFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
-            className="w-full bg-surface-container text-cream rounded-xl px-3 py-2 text-label-md border border-outline-variant/30 focus:border-primary outline-none cursor-pointer transition"
-          >
-            <option value="all">Khối lớp</option>
-            {[9, 10, 11, 12].map((value) => (
-              <option key={value} value={value}>
-                Lớp {value}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Trạng thái */}
-        <div className="md:col-span-3">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-surface-container text-cream rounded-xl px-3 py-2 text-label-md border border-outline-variant/30 focus:border-primary outline-none cursor-pointer transition"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="not_started">Chưa bắt đầu</option>
-            <option value="doing">Đang làm</option>
-            <option value="submitted">Đã nộp (Chờ chấm)</option>
-            <option value="completed">Đã hoàn thành</option>
           </select>
         </div>
       </div>
@@ -189,38 +193,34 @@ export default function StudentAssessmentsPage() {
         <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-low">
           <div className="text-center space-y-2">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-            <p className="text-label-md text-muted-text">Đang tải danh sách bài kiểm tra...</p>
+            <p className="text-label-md text-muted-text">Đang tải danh sách bài tập...</p>
           </div>
         </div>
-      ) : filteredItems.length === 0 ? (
+      ) : currentList.length === 0 ? (
         <div className="glass-panel p-12 text-center rounded-2xl border border-outline-variant/20">
           <BookOpenCheck className="mx-auto text-muted-text/30 mb-4" size={48} />
-          <h3 className="text-body-lg font-bold text-cream">Không có bài kiểm tra nào</h3>
+          <h3 className="text-body-lg font-bold text-cream">Không có bài tập nào</h3>
           <p className="mt-2 text-label-md text-muted-text max-w-md mx-auto">
-            Không tìm thấy bài kiểm tra nào phù hợp với bộ lọc hiện tại hoặc chưa được giáo viên giao.
+            Không tìm thấy bài tập nào trong mục này.
           </p>
         </div>
       ) : (
         <div className="space-y-8">
-          {activeSubjects.map((subKey) => {
-            const list = groupedAssessments[subKey];
-            const subjectLabel = SUBJECT_LABELS[subKey] || subKey;
-
+          {groupedByCourse.map((group) => {
             return (
-              <section key={subKey} className="space-y-4">
-                {/* Subject Group Title */}
+              <section key={group.title} className="space-y-4">
+                {/* Course Group Title */}
                 <div className="flex items-center gap-2 border-b border-outline-variant/20 pb-2">
                   <span className="w-1.5 h-6 rounded-full bg-primary" />
                   <h2 className="text-body-lg font-extrabold text-cream uppercase tracking-wide">
-                    {subjectLabel} ({list.length})
+                    {group.title} ({group.items.length})
                   </h2>
                 </div>
 
                 {/* Placements Cards Grid */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {list.map((item) => {
+                  {group.items.map((item) => {
                     const isQuiz = item.assessmentType === "quiz";
-                    const isMixed = item.gradingType === "mixed" || item.gradingType === "manual";
                     const used = item.attempt.usedAttempts;
                     const max = item.maxAttempts;
                     const latest = item.attempt.latestSubmission;
@@ -246,7 +246,6 @@ export default function StudentAssessmentsPage() {
                     const now = new Date();
                     const isOpen = item.openTime ? new Date(item.openTime) <= now : true;
                     const isClosed = item.closeTime ? new Date(item.closeTime) < now : false;
-                    const isLocked = !isOpen || isClosed;
 
                     return (
                       <div
@@ -256,10 +255,10 @@ export default function StudentAssessmentsPage() {
                         <div>
                           {/* Top row: Badges */}
                           <div className="flex items-center justify-between gap-2 mb-3">
-                            <span className="text-[10px] uppercase font-bold text-primary tracking-wider">
+                            <span className="text-xs uppercase font-bold text-primary tracking-wider">
                               Lớp {item.grade} • {isQuiz ? "Quiz Trắc Nghiệm" : "Exam PDF"}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${badgeClass}`}>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${badgeClass}`}>
                               {statusLabel}
                             </span>
                           </div>
@@ -297,7 +296,7 @@ export default function StudentAssessmentsPage() {
 
                           {/* Time constraints info */}
                           {item.closeTime && (
-                            <div className="mt-3 flex items-center gap-1 text-[11px] text-muted-text">
+                            <div className="mt-3 flex items-center gap-1 text-xs text-muted-text">
                               <Calendar size={11} className="text-muted-text" />
                               <span className="truncate">Hạn: {new Date(item.closeTime).toLocaleDateString("vi-VN")}</span>
                             </div>
@@ -312,10 +311,13 @@ export default function StudentAssessmentsPage() {
                               Đã hết hạn làm bài
                             </div>
                           ) : !isOpen ? (
-                            <div className="w-full bg-surface-container text-muted-text py-2 rounded-xl text-center text-caption font-bold flex items-center justify-center gap-1.5 cursor-not-allowed">
-                              <Calendar size={13} />
-                              Chưa đến giờ mở đề
-                            </div>
+                            <Link
+                              href={`/student/assessments/${item.placementId}`}
+                              className="w-full bg-surface-container border border-outline-variant/50 text-cream hover:bg-surface-container-high font-bold py-2 rounded-xl flex items-center justify-center gap-1 text-label-md transition-all transform active:scale-95"
+                            >
+                              Xem chi tiết (Chưa mở)
+                              <ChevronRight size={14} />
+                            </Link>
                           ) : latest?.status === "doing" ? (
                             <Link
                               href={`/student/assessments/${item.placementId}`}

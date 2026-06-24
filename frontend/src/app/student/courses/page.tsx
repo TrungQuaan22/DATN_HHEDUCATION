@@ -13,7 +13,7 @@ export default function MyCoursesPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-[22px] font-extrabold text-cream animate-pulse">
+          <h2 className="text-2xl font-extrabold text-cream animate-pulse">
             Khóa học của tôi
           </h2>
           <div className="h-4 bg-muted-text/20 w-48 rounded mt-2 animate-pulse" />
@@ -41,24 +41,24 @@ export default function MyCoursesPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-[22px] font-extrabold text-cream">
+          <h2 className="text-2xl font-extrabold text-cream">
             Khóa học của tôi
           </h2>
-          <p className="text-[13px] text-muted-text mt-1">
+          <p className="text-sm text-muted-text mt-1">
             Danh sách các lộ trình học tập bạn đã đăng ký
           </p>
         </div>
         <div className="flex flex-col items-center justify-center text-center p-12 bg-deep-black rounded border border-border-dark min-h-[350px]">
           <BookOpen size={48} className="text-brand-pink/50 mb-4" />
-          <h3 className="text-[16px] font-bold text-cream">
+          <h3 className="text-base font-bold text-cream">
             Bạn chưa đăng ký khóa học nào
           </h3>
-          <p className="text-[13px] text-muted-text max-w-sm mt-2">
+          <p className="text-sm text-muted-text max-w-sm mt-2">
             Hãy khám phá các khóa học bứt phá điểm số chất lượng cao tại HH Education!
           </p>
           <Link
             href="/courses"
-            className="mt-6 inline-flex items-center gap-2 bg-brand-pink text-brand-dark px-6 py-2.5 rounded font-bold text-[12px] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            className="mt-6 inline-flex items-center gap-2 bg-brand-pink text-brand-dark px-6 py-2.5 rounded font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
           >
             Khám phá ngay
             <ArrowRight size={14} />
@@ -71,10 +71,10 @@ export default function MyCoursesPage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-200">
       <div>
-        <h2 className="text-[22px] font-extrabold text-cream">
+        <h2 className="text-2xl font-extrabold text-cream">
           Khóa học của tôi
         </h2>
-        <p className="text-[13px] text-muted-text mt-1">
+        <p className="text-sm text-muted-text mt-1">
           Danh sách các lộ trình học tập bạn đã đăng ký
         </p>
       </div>

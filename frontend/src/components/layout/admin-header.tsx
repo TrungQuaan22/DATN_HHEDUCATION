@@ -39,7 +39,7 @@ export default function AdminHeader({
           <input
             type="text"
             placeholder="Tìm kiếm hệ thống..."
-            className="w-full bg-admin-surface-low border border-admin-border/30 rounded pl-10 pr-4 py-2 text-[14px] text-admin-cream placeholder:text-admin-muted/50 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink transition-all"
+            className="w-full bg-admin-surface-low border border-admin-border/30 rounded pl-10 pr-4 py-2 text-sm text-admin-cream placeholder:text-admin-muted/50 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink transition-all"
           />
         </div>
       </div>
@@ -64,10 +64,10 @@ export default function AdminHeader({
         {/* Profile info & Dropdown */}
         <div className="flex items-center gap-3 relative admin-profile-dropdown-container">
           <div className="text-right hidden sm:block">
-            <p className="text-[13px] font-bold text-admin-cream leading-tight">
+            <p className="text-sm font-bold text-admin-cream leading-tight">
               {user?.fullName || "Quản trị viên HH"}
             </p>
-            <p className="text-[10px] text-admin-pink uppercase font-semibold tracking-wider">
+            <p className="text-xs text-admin-pink uppercase font-semibold tracking-wider">
               {user?.role === "admin" ? "Super Administrator" : "Instructor"}
             </p>
           </div>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import EnrollButton from "@/features/courses/components/enroll-button";
+import { SafeImg } from "@/components/media/safe-image";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -100,36 +101,33 @@ export default async function CourseDetailPage({ params }: PageProps) {
           <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 bg-brand-pink/10 text-brand-pink px-4 py-1.5 rounded-full border border-brand-pink/20 text-[11px] font-bold tracking-wider uppercase">
+              <div className="inline-flex items-center gap-2 bg-brand-pink/10 text-brand-pink px-4 py-1.5 rounded-full border border-brand-pink/20 text-xs font-bold tracking-wider uppercase">
                 <GraduationCap size={14} />
                 <span>
                   {SUBJECT_LABELS[course.subject]} • Lớp {course.grade}
                 </span>
               </div>
 
-              <h1 className="text-[36px] md:text-[54px] font-extrabold text-cream leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-extrabold text-cream leading-tight tracking-tight">
                 {course.title}
               </h1>
 
-              <p className="text-[16px] md:text-[18px] text-muted-taupe leading-relaxed">
+              <p className="text-base md:text-lg text-muted-taupe leading-relaxed">
                 {course.description ||
                   "Chương trình ôn luyện toàn diện được thiết kế giúp học sinh ôn thi đạt kết quả tốt nhất."}
               </p>
 
               <div className="flex items-center gap-4 py-4">
-                <img
+                <SafeImg
                   alt={course.teacher.fullName}
                   className="w-14 h-14 rounded-full border-2 border-brand-pink object-cover"
-                  src={
-                    course.teacher.avatarUrl ||
-                    "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY"
-                  }
+                  src={course.teacher.avatarUrl}
                 />
                 <div>
-                  <p className="text-[10px] font-bold text-muted-taupe uppercase tracking-widest">
+                  <p className="text-xs font-bold text-muted-taupe uppercase tracking-widest">
                     Giảng viên chuyên môn
                   </p>
-                  <p className="text-[18px] font-bold text-cream mt-0.5">
+                  <p className="text-lg font-bold text-cream mt-0.5">
                     {course.teacher.fullName}
                   </p>
                 </div>
@@ -151,18 +149,18 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   <div className="flex items-baseline gap-3">
                     {course.salePrice ? (
                       <>
-                        <span className="text-[32px] font-extrabold text-cream">
+                        <span className="text-3xl font-extrabold text-cream">
                           {formatVND(course.salePrice)}
                         </span>
-                        <span className="text-[16px] text-muted-taupe line-through">
+                        <span className="text-base text-muted-taupe line-through">
                           {formatVND(course.price)}
                         </span>
-                        <span className="text-[11px] font-bold text-white bg-brand-pink px-2 py-0.5 rounded uppercase">
+                        <span className="text-xs font-bold text-white bg-brand-pink px-2 py-0.5 rounded uppercase">
                           -{discountPercent}%
                         </span>
                       </>
                     ) : (
-                      <span className="text-[32px] font-extrabold text-cream">
+                      <span className="text-3xl font-extrabold text-cream">
                         {formatVND(course.price)}
                       </span>
                     )}
@@ -171,15 +169,15 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   <EnrollButton course={course} />
 
                   <div className="space-y-4 pt-4 border-t border-border-dark">
-                    <div className="flex items-center gap-3 text-muted-taupe text-[13px]">
+                    <div className="flex items-center gap-3 text-muted-taupe text-sm">
                       <Clock size={18} className="text-sky-blue" />
                       <span>{course.totalLessons || 0} bài học chuyên sâu</span>
                     </div>
-                    <div className="flex items-center gap-3 text-muted-taupe text-[13px]">
+                    <div className="flex items-center gap-3 text-muted-taupe text-sm">
                       <BookOpen size={18} className="text-sky-blue" />
                       <span>Tài liệu & bài kiểm tra bám sát ôn luyện</span>
                     </div>
-                    <div className="flex items-center gap-3 text-muted-taupe text-[13px]">
+                    <div className="flex items-center gap-3 text-muted-taupe text-sm">
                       <ShieldCheck size={18} className="text-sky-blue" />
                       <span>Hỗ trợ hỏi đáp cùng đội ngũ giáo viên 24/7</span>
                     </div>
@@ -197,10 +195,10 @@ export default async function CourseDetailPage({ params }: PageProps) {
             <div className="lg:col-span-8 space-y-16">
               {/* Description */}
               <div>
-                <h2 className="text-[24px] font-bold text-cream mb-6">
+                <h2 className="text-2xl font-bold text-cream mb-6">
                   Mô tả khóa học
                 </h2>
-                <div className="text-[15px] text-muted-taupe leading-relaxed space-y-4">
+                <div className="text-base text-muted-taupe leading-relaxed space-y-4">
                   <p>
                     Chào mừng bạn đến với khóa học chuyên sâu được thiết kế
                     riêng dành cho học sinh chuẩn bị bứt phá điểm số và ôn luyện
@@ -221,10 +219,10 @@ export default async function CourseDetailPage({ params }: PageProps) {
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
                   <div>
-                    <h2 className="text-[24px] font-bold text-cream mb-2">
+                    <h2 className="text-2xl font-bold text-cream mb-2">
                       Nội dung chương trình
                     </h2>
-                    <p className="text-[13px] text-muted-taupe">
+                    <p className="text-sm text-muted-taupe">
                       {course.chapters.length} Chương •{" "}
                       {course.chapters.reduce(
                         (acc: number, c) => acc + c.lessons.length,
@@ -243,45 +241,42 @@ export default async function CourseDetailPage({ params }: PageProps) {
             <aside className="lg:col-span-4 space-y-8">
               {/* Teacher bio card */}
               <div className="bg-deep-black border border-border-dark rounded p-8 text-center shadow-lg transition-colors duration-200">
-                <img
+                <SafeImg
                   alt={course.teacher.fullName}
                   className="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-brand-dark"
-                  src={
-                    course.teacher.avatarUrl ||
-                    "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY"
-                  }
+                  src={course.teacher.avatarUrl}
                 />
-                <h3 className="text-[18px] font-bold text-cream">
+                <h3 className="text-lg font-bold text-cream">
                   {course.teacher.fullName}
                 </h3>
-                <p className="text-brand-pink text-[13px] font-semibold mt-1">
+                <p className="text-brand-pink text-sm font-semibold mt-1">
                   Giảng viên chuyên môn
                 </p>
 
                 <div className="flex justify-center gap-4 mt-6">
                   <div className="text-center px-4">
-                    <p className="font-extrabold text-cream text-[16px]">10+</p>
-                    <p className="text-[9px] text-muted-taupe uppercase tracking-widest font-bold mt-1">
+                    <p className="font-extrabold text-cream text-base">10+</p>
+                    <p className="text-xs text-muted-taupe uppercase tracking-widest font-bold mt-1">
                       Năm kinh nghiệm
                     </p>
                   </div>
                   <div className="w-px h-10 bg-border-dark"></div>
                   <div className="text-center px-4">
-                    <p className="font-extrabold text-cream text-[16px]">
+                    <p className="font-extrabold text-cream text-base">
                       5000+
                     </p>
-                    <p className="text-[9px] text-muted-taupe uppercase tracking-widest font-bold mt-1">
+                    <p className="text-xs text-muted-taupe uppercase tracking-widest font-bold mt-1">
                       Học viên đạt điểm 9+
                     </p>
                   </div>
                 </div>
 
-                <p className="text-[13px] text-muted-taupe mt-6 leading-relaxed">
+                <p className="text-sm text-muted-taupe mt-6 leading-relaxed">
                   Đội ngũ giáo viên giàu kinh nghiệm luyện thi, tốt nghiệp sư
                   phạm đầu ngành luôn tận tâm sát cánh cùng học sinh vượt qua
                   mọi khó khăn.
                 </p>
-                <button className="mt-6 text-[12px] font-bold text-brand-pink border border-brand-pink hover:bg-brand-pink hover:text-white w-full py-2.5 rounded-lg transition-colors cursor-pointer">
+                <button className="mt-6 text-xs font-bold text-brand-pink border border-brand-pink hover:bg-brand-pink hover:text-white w-full py-2.5 rounded-lg transition-colors cursor-pointer">
                   Xem hồ sơ chi tiết
                 </button>
               </div>
@@ -289,7 +284,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               {/* Related Courses Widget */}
               {relatedCourses.length > 0 && (
                 <div className="space-y-6">
-                  <h3 className="text-[12px] font-bold text-muted-taupe uppercase tracking-widest">
+                  <h3 className="text-xs font-bold text-muted-taupe uppercase tracking-widest">
                     Khóa học liên quan
                   </h3>
                   <div className="space-y-4">
@@ -300,17 +295,17 @@ export default async function CourseDetailPage({ params }: PageProps) {
                         className="flex gap-4 items-center p-3 rounded-lg hover:bg-deep-black border border-transparent hover:border-border-dark transition-all group"
                       >
                         <div className="w-20 h-15 rounded-lg overflow-hidden flex-shrink-0 bg-brand-dark/50">
-                          <img
+                          <SafeImg
                             alt={rel.title}
                             className="w-full h-full object-cover transition-all duration-300"
-                            src={rel.thumbnailUrl || ""}
+                            src={rel.thumbnailUrl}
                           />
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-[13px] font-bold text-cream line-clamp-2 leading-snug group-hover:text-brand-pink transition-colors">
+                          <h4 className="text-sm font-bold text-cream line-clamp-2 leading-snug group-hover:text-brand-pink transition-colors">
                             {rel.title}
                           </h4>
-                          <p className="text-brand-pink font-bold text-[13px] mt-1">
+                          <p className="text-brand-pink font-bold text-sm mt-1">
                             {formatVND(rel.price)}
                           </p>
                         </div>
@@ -322,14 +317,14 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
               {/* Sticky Info CTA */}
               <div className="bg-deep-black border border-border-dark p-6 rounded text-cream shadow-2xl space-y-4">
-                <p className="text-[11px] font-bold text-accent-orange uppercase tracking-wider flex items-center gap-1.5">
+                <p className="text-xs font-bold text-accent-orange uppercase tracking-wider flex items-center gap-1.5">
                   <Phone size={12} /> Hotline đăng ký gấp
                 </p>
-                <h4 className="text-[18px] font-bold">
+                <h4 className="text-lg font-bold">
                   Sẵn sàng để bứt phá điểm số?
                 </h4>
                 <EnrollButton course={course} />
-                <p className="text-[10px] text-center text-muted-taupe leading-relaxed">
+                <p className="text-xs text-center text-muted-taupe leading-relaxed">
                   Hotline tư vấn lộ trình: 1900 6789 (Hỗ trợ 24/7 miễn phí).
                 </p>
               </div>

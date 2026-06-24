@@ -48,21 +48,21 @@ export function FeaturedSideCard({ post }: FeaturedSideCardProps) {
       className="flex-1 bg-deep-black p-6 rounded border border-border-dark hover:border-brand-pink transition-all group cursor-pointer flex flex-col justify-between"
     >
       <div>
-        <span className="text-brand-pink text-[10px] font-bold uppercase tracking-widest block mb-2">
-          {post.category || "Chia sẻ"}
+        <span className="text-brand-pink text-xs font-bold uppercase tracking-widest block mb-2">
+          {post.category?.name || "Chia sẻ"}
         </span>
         <Link href={postHref}>
-          <h3 className="text-[16px] md:text-[18px] font-bold text-cream mb-2 leading-snug group-hover:text-brand-pink transition-colors line-clamp-2">
+          <h3 className="text-base md:text-lg font-bold text-cream mb-2 leading-snug group-hover:text-brand-pink transition-colors line-clamp-2">
             {post.title}
           </h3>
         </Link>
-        <p className="text-[13px] text-muted-taupe line-clamp-2 leading-relaxed">
+        <p className="text-sm text-muted-taupe line-clamp-2 leading-relaxed">
           {post.excerpt}
         </p>
       </div>
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-border-dark/50">
-        <span className="text-[11px] text-muted-taupe">
+        <span className="text-xs text-muted-taupe">
           {post.readingMinutes} phút đọc
         </span>
         <span className="text-brand-pink transition-transform group-hover:translate-x-1">

@@ -2,10 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { CheckCircle, Archive, Edit } from "lucide-react";
 import { SUBJECT_LABELS } from "@/types/common";
 import { AdminCourseSummary } from "@/features/courses/types";
+import { SafeImage } from "@/components/media/safe-image";
 
 interface CourseRowProps {
   course: AdminCourseSummary;
@@ -45,17 +45,17 @@ export default function CourseRow({
   const hasDiscount = course.salePrice !== null;
 
   return (
-    <tr className="group hover:bg-admin-surface-low/20 transition-colors text-[14px]">
+    <tr className="group hover:bg-admin-surface-low/20 transition-colors text-sm">
       {/* Thumbnail & Title */}
       <td className="pl-6 py-4">
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg border border-admin-border/20 flex-shrink-0 overflow-hidden bg-admin-surface-low">
-            <Image
+            <SafeImage
               alt={course.title}
               fill
               sizes="48px"
               className="object-cover"
-              src={course.thumbnailUrl || "https://via.placeholder.com/150"}
+              src={course.thumbnailUrl}
             />
           </div>
           <div className="min-w-0 z-10">
@@ -72,7 +72,7 @@ export default function CourseRow({
             >
               {course.title}
               {course.isFeatured && (
-                <span className="inline-block bg-amber-500/10 text-amber-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20 flex-shrink-0">
+                <span className="inline-block bg-amber-500/10 text-amber-500 text-xs font-bold px-1.5 py-0.5 rounded border border-amber-500/20 flex-shrink-0">
                   HOT
                 </span>
               )}
@@ -85,7 +85,7 @@ export default function CourseRow({
       <td className="py-4 font-semibold text-admin-cream">
         <div>
           <p>{course.teacher.fullName}</p>
-          <p className="text-[10px] text-admin-muted font-normal leading-none mt-0.5">
+          <p className="text-xs text-admin-muted font-normal leading-none mt-0.5">
             {course.teacher.email}
           </p>
         </div>
@@ -104,17 +104,17 @@ export default function CourseRow({
       {/* Status */}
       <td className="py-4">
         {course.status === "published" && (
-          <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+          <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-500/20">
             PUBLISHED
           </span>
         )}
         {course.status === "draft" && (
-          <span className="px-2 py-0.5 rounded bg-admin-pink/10 text-admin-pink text-[10px] font-bold uppercase tracking-wider border border-admin-pink/20">
+          <span className="px-2 py-0.5 rounded bg-admin-pink/10 text-admin-pink text-xs font-bold uppercase tracking-wider border border-admin-pink/20">
             DRAFT
           </span>
         )}
         {course.status === "archived" && (
-          <span className="px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 text-[10px] font-bold uppercase tracking-wider border border-zinc-500/20">
+          <span className="px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 text-xs font-bold uppercase tracking-wider border border-zinc-500/20">
             ARCHIVED
           </span>
         )}
@@ -125,7 +125,7 @@ export default function CourseRow({
         {hasDiscount ? (
           <div>
             <p className="text-admin-cream">{formatPrice(course.salePrice!)}</p>
-            <p className="text-[11px] text-admin-muted line-through leading-none mt-0.5 font-normal">
+            <p className="text-xs text-admin-muted line-through leading-none mt-0.5 font-normal">
               {formatPrice(course.price)}
             </p>
           </div>
@@ -154,7 +154,7 @@ export default function CourseRow({
         <div className="flex items-center justify-end gap-2">
           <Link
             href={`/admin/courses/${course.id}/builder`}
-            className={`bg-admin-surface-low hover:border-admin-pink border border-admin-border/30 text-admin-cream px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors cursor-pointer min-w-fit ${
+            className={`bg-admin-surface-low hover:border-admin-pink border border-admin-border/30 text-admin-cream px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer min-w-fit ${
               isActionPending ? "pointer-events-none opacity-40" : ""
             }`}
           >

@@ -22,8 +22,8 @@ export interface StudentAssessmentRepositoryPort {
     subject?: Subject
     grade?: number
     status?: SubmissionStatus | 'not_started'
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[StudentPlacementListItem[], number]>
 
   findRuntimePlacementById(placementId: string): Promise<RuntimePlacement | null>

@@ -77,7 +77,7 @@ export function AssessmentListTable({
         </h3>
         <button
           onClick={onRefresh}
-          className="inline-flex items-center gap-1.5 rounded-md border border-admin-border bg-admin-bg px-3 py-1.5 text-[11px] font-bold text-admin-cream transition hover:border-admin-pink cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-admin-border bg-admin-bg px-3 py-1.5 text-xs font-bold text-admin-cream transition hover:border-admin-pink cursor-pointer"
         >
           <RefreshCw size={12} />
           Tải lại
@@ -99,21 +99,21 @@ export function AssessmentListTable({
             >
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap gap-2 items-center">
-                  <span className="rounded bg-admin-pink/15 px-2.5 py-0.5 text-[10px] font-bold uppercase text-admin-pink">
+                  <span className="rounded bg-admin-pink/15 px-2.5 py-0.5 text-xs font-bold uppercase text-admin-pink">
                     {SUBJECT_LABELS[assessment.subject as Subject] ||
                       assessment.subject}{" "}
                     - Lớp {assessment.grade}
                   </span>
-                  <span className="rounded bg-admin-bg border border-admin-border px-2 py-0.5 text-[10px] font-bold uppercase text-admin-cream">
+                  <span className="rounded bg-admin-bg border border-admin-border px-2 py-0.5 text-xs font-bold uppercase text-admin-cream">
                     {GRADING_LABELS[assessment.gradingType as GradingType] ||
                       assessment.gradingType}
                   </span>
                   {assessment.visibility === "draft" ? (
-                    <span className="rounded bg-zinc-800 text-zinc-400 px-2 py-0.5 text-[10px] font-bold">
+                    <span className="rounded bg-zinc-800 text-zinc-400 px-2 py-0.5 text-xs font-bold">
                       Bản nháp
                     </span>
                   ) : (
-                    <span className="rounded bg-emerald-950 text-emerald-400 border border-emerald-900 px-2 py-0.5 text-[10px] font-bold">
+                    <span className="rounded bg-emerald-950 text-emerald-400 border border-emerald-900 px-2 py-0.5 text-xs font-bold">
                       Đã xuất bản
                     </span>
                   )}

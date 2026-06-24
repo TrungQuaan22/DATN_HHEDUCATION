@@ -1,16 +1,13 @@
-import { UserRole, UserStatus } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { authRepository } from '~/modules/auth/repository'
-import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { ensureMediaExists } from '~/common/ensures/media.ensure'
+import { validateImageMedia } from '~/common/policies/media.policy'
 import {
   mapAuthUserToCreateTeacherResponse,
   mapUserProfileToAdminItemResponse,
   mapTeacherOptionToResponse
 } from '../mappers'
-import { mediaRepository } from '~/modules/media/repository'
 import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
 
 import type {
@@ -22,11 +19,9 @@ import type {
   ListUsersResponse,
   UpdateUserStatusDto
 } from '../dto'
-import { userRepository } from '../repository'
 import type { UserRepositoryPort } from '../ports/user-repository.port'
 import type { AuthRepositoryPort } from '~/modules/auth/ports/auth-repository.port'
 import type { PasswordHasherPort } from '~/modules/auth/ports/password-hasher.port'
-import { BcryptPasswordHasherAdapter } from '~/modules/auth/adapters/bcrypt-password-hasher.adapter'
 
 export class AdminUserService {
   constructor(
@@ -47,13 +42,11 @@ export class AdminUserService {
     const media = input.avatarMediaId
       ? await this.mediaRepository.findMediaById(input.avatarMediaId)
       : null
-    const avatarMedia = input.avatarMediaId
-      ? ensureActorCanUseImageMedia({
-          actor: { id: input.actorId, role: UserRole.admin },
-          media,
-          label: 'Avatar media'
-        })
-      : null
+    const avatarMedia = input.avatarMediaId ? ensureMediaExists(media) : null
+
+    if (avatarMedia) {
+      validateImageMedia({ id: input.actorId, role: 'admin' }, avatarMedia, 'Avatar media')
+    }
 
     const user = await this.auth.createTeacher({
       fullName: input.fullName,
@@ -67,7 +60,6 @@ export class AdminUserService {
   }
 
   async getAllUsers(input: ListUsersDto): Promise<ListUsersResponse> {
-    const skip = (input.page - 1) * input.limit
     const newUsersFrom = new Date()
     newUsersFrom.setDate(newUsersFrom.getDate() - 30)
 
@@ -77,8 +69,8 @@ export class AdminUserService {
           role: input.role,
           status: input.status,
           search: input.search,
-          skip,
-          take: input.limit
+          page: input.page,
+          limit: input.limit
         }),
         this.users.getUserStats({ newUsersFrom })
       ])
@@ -99,14 +91,11 @@ export class AdminUserService {
     }
   }
 
-  async listTeacherOptions(
-    input: ListTeacherOptionsDto
-  ): Promise<ListTeacherOptionsResponse> {
-    const skip = (input.page - 1) * input.limit
+  async listTeacherOptions(input: ListTeacherOptionsDto): Promise<ListTeacherOptionsResponse> {
     const [teachers, totalItems] = await this.users.listTeacherOptions({
       search: input.search,
-      skip,
-      take: input.limit
+      page: input.page,
+      limit: input.limit
     })
 
     return {
@@ -130,10 +119,3 @@ export class AdminUserService {
     await this.users.updateUserStatus(input)
   }
 }
-
-export const adminService = new AdminUserService(
-  userRepository,
-  authRepository,
-  new BcryptPasswordHasherAdapter(),
-  mediaRepository
-)

@@ -124,10 +124,10 @@ export default function LearningDashboardLayout({
       <aside className="hidden md:flex flex-col fixed left-0 top-0 h-full w-[260px] bg-deep-black border-r border-border-dark z-30">
         {/* Brand Logo Header */}
         <div className="px-6 py-6 border-b border-border-dark/50 flex flex-col gap-1.5">
-          <Link href="/" className="text-[20px] font-bold text-cream tracking-tight hover:opacity-90">
+          <Link href="/" className="text-xl font-bold text-cream tracking-tight hover:opacity-90">
             HH <span className="text-brand-pink font-extrabold">Education</span>
           </Link>
-          <span className="text-[11px] font-semibold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded-full w-fit">
+          <span className="text-xs font-semibold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded-full w-fit">
             {getRoleLabel(user?.role)}
           </span>
         </div>
@@ -136,7 +136,7 @@ export default function LearningDashboardLayout({
         <nav className="flex-grow px-4 py-6 space-y-1">
           <Link
             href="/learning-dashboard"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard") && (pathname === "/learning-dashboard" || pathname.endsWith("overview"))
                 ? "bg-brand-pink text-brand-dark shadow-l2 scale-[1.02]"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -147,7 +147,7 @@ export default function LearningDashboardLayout({
           </Link>
           <Link
             href="/learning-dashboard/courses"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/courses")
                 ? "bg-brand-pink text-brand-dark shadow-l2 scale-[1.02]"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -158,7 +158,7 @@ export default function LearningDashboardLayout({
           </Link>
           <Link
             href="/learning-dashboard/assessments"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/assessments")
                 ? "bg-brand-pink text-brand-dark shadow-l2 scale-[1.02]"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -169,7 +169,7 @@ export default function LearningDashboardLayout({
           </Link>
           <Link
             href="/learning-dashboard/practice"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/practice")
                 ? "bg-brand-pink text-brand-dark shadow-l2 scale-[1.02]"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -184,7 +184,7 @@ export default function LearningDashboardLayout({
         <div className="p-4 border-t border-border-dark/50 space-y-4">
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border-dark bg-surface-input text-[13px] font-semibold text-cream hover:border-brand-pink hover:text-brand-pink transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border-dark bg-surface-input text-sm font-semibold text-cream hover:border-brand-pink hover:text-brand-pink transition-all active:scale-95"
           >
             <Home size={15} />
             Trở về trang chủ
@@ -199,7 +199,7 @@ export default function LearningDashboardLayout({
             </div>
             <div className="truncate flex-grow">
               <p className="text-xs font-bold text-cream truncate">{user?.fullName || "Nguyễn Văn A"}</p>
-              <p className="text-[10px] text-muted-text uppercase font-semibold mt-0.5">{getRoleLabel(user?.role)}</p>
+              <p className="text-xs text-muted-text uppercase font-semibold mt-0.5">{getRoleLabel(user?.role)}</p>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function LearningDashboardLayout({
         }`}
       >
         <div className="px-6 py-6 border-b border-border-dark/50 flex items-center justify-between">
-          <Link href="/" className="text-[20px] font-bold text-cream tracking-tight">
+          <Link href="/" className="text-xl font-bold text-cream tracking-tight">
             HH <span className="text-brand-pink font-extrabold">Education</span>
           </Link>
           <button onClick={() => setIsSidebarOpen(false)} className="text-cream hover:text-brand-pink">
@@ -232,7 +232,7 @@ export default function LearningDashboardLayout({
           <Link
             href="/learning-dashboard"
             onClick={() => setIsSidebarOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard") && (pathname === "/learning-dashboard" || pathname.endsWith("overview"))
                 ? "bg-brand-pink text-brand-dark"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -244,7 +244,7 @@ export default function LearningDashboardLayout({
           <Link
             href="/learning-dashboard/courses"
             onClick={() => setIsSidebarOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/courses")
                 ? "bg-brand-pink text-brand-dark"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -256,7 +256,7 @@ export default function LearningDashboardLayout({
           <Link
             href="/learning-dashboard/assessments"
             onClick={() => setIsSidebarOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/assessments")
                 ? "bg-brand-pink text-brand-dark"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -268,7 +268,7 @@ export default function LearningDashboardLayout({
           <Link
             href="/learning-dashboard/practice"
             onClick={() => setIsSidebarOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
               isActive("/learning-dashboard/practice")
                 ? "bg-brand-pink text-brand-dark"
                 : "text-cream hover:bg-surface-input hover:text-brand-pink"
@@ -282,7 +282,7 @@ export default function LearningDashboardLayout({
         <div className="p-4 border-t border-border-dark/50 space-y-4">
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border-dark bg-surface-input text-[13px] font-semibold text-cream"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border-dark bg-surface-input text-sm font-semibold text-cream"
           >
             <Home size={15} />
             Trở về trang chủ
@@ -295,7 +295,7 @@ export default function LearningDashboardLayout({
             />
             <div className="truncate">
               <p className="text-xs font-bold text-cream truncate">{user?.fullName || "Nguyễn Văn A"}</p>
-              <p className="text-[10px] text-muted-text uppercase font-semibold">{getRoleLabel(user?.role)}</p>
+              <p className="text-xs text-muted-text uppercase font-semibold">{getRoleLabel(user?.role)}</p>
             </div>
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function LearningDashboardLayout({
             >
               <Menu size={20} />
             </button>
-            <div className="hidden sm:flex items-center gap-2 text-[12px] font-semibold text-muted-text">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-muted-text">
               <span>Không gian học tập</span>
               <ChevronRight size={14} className="text-muted-text/60" />
               <span className="text-brand-pink uppercase tracking-wider font-extrabold">
@@ -349,7 +349,7 @@ export default function LearningDashboardLayout({
               <div className="absolute right-0 mt-2.5 w-72 rounded-xl border border-border-dark bg-brand-dark shadow-l4 py-2 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all z-50">
                 <div className="px-4 py-1.5 border-b border-border-dark/40 flex justify-between items-center">
                   <span className="text-xs font-bold text-cream">Thông báo mới</span>
-                  <span className="text-[10px] text-brand-pink cursor-pointer font-semibold">Đánh dấu tất cả đã đọc</span>
+                  <span className="text-xs text-brand-pink cursor-pointer font-semibold">Đánh dấu tất cả đã đọc</span>
                 </div>
                 <div className="p-1 space-y-1">
                   {mockNotifications.map((n) => (
@@ -358,7 +358,7 @@ export default function LearningDashboardLayout({
                         {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-brand-pink shrink-0" />}
                         <p className="text-xs font-bold text-cream truncate">{n.title}</p>
                       </div>
-                      <span className="text-[10px] text-muted-text pl-3">{n.time}</span>
+                      <span className="text-xs text-muted-text pl-3">{n.time}</span>
                     </div>
                   ))}
                 </div>
@@ -388,7 +388,7 @@ export default function LearningDashboardLayout({
                     <Link
                       href="/profile"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-cream hover:bg-surface-input hover:text-brand-pink transition-colors cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-cream hover:bg-surface-input hover:text-brand-pink transition-colors cursor-pointer"
                     >
                       <User size={15} />
                       Cập nhật thông tin cá nhân
@@ -398,7 +398,7 @@ export default function LearningDashboardLayout({
                         setIsDropdownOpen(false);
                         clearSession();
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
                     >
                       <LogOut size={15} />
                       Đăng xuất

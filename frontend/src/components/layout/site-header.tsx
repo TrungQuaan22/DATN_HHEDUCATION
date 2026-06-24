@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMeQuery } from "@/features/auth/hooks";
 import { useCartStore } from "@/stores/cart-store";
@@ -15,10 +15,17 @@ import SiteMobileMenu from "./site-mobile-menu";
 
 export default function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isAuthenticated, clearSession } = useAuthStore();
   const { data: user } = useMeQuery();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (mounted && isAuthenticated && (user?.role === "admin" || user?.role === "teacher")) {
+      router.push("/admin");
+    }
+  }, [mounted, isAuthenticated, user?.role, router]);
 
   const items = useCartStore((state) => state.items);
   const itemCount = mounted ? items.length : 0;
@@ -44,7 +51,7 @@ export default function SiteHeader() {
         <div className="col-span-6 md:col-span-3">
           <Link
             href="/"
-            className="text-[24px] font-bold text-cream tracking-tight"
+            className="text-2xl font-bold text-cream tracking-tight"
           >
             HH <span className="text-brand-pink font-extrabold">Education</span>
           </Link>
@@ -68,7 +75,7 @@ export default function SiteHeader() {
           >
             <ShoppingCart size={18} />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-brand-pink text-brand-dark rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-l1 animate-in zoom-in duration-200">
+              <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-brand-pink text-brand-dark rounded-full flex items-center justify-center text-xs font-extrabold shadow-l1 animate-in zoom-in duration-200">
                 {itemCount}
               </span>
             )}
@@ -81,7 +88,7 @@ export default function SiteHeader() {
 
               <Link
                 href="/student"
-                className="bg-brand-pink text-brand-dark px-3 py-2.5 rounded-md text-[14px] font-bold shadow-l1 hover:scale-105 active:scale-95 transition-all min-w-fit"
+                className="bg-brand-pink text-brand-dark px-3 py-2.5 rounded-md text-sm font-bold shadow-l1 hover:scale-105 active:scale-95 transition-all min-w-fit"
               >
                 Vào học
               </Link>
@@ -93,13 +100,13 @@ export default function SiteHeader() {
             <div className="flex items-center gap-4">
               <Link
                 href="/login"
-                className="text-cream hover:text-brand-pink text-[14px] font-medium transition-colors hidden lg:block cursor-pointer"
+                className="text-cream hover:text-brand-pink text-sm font-medium transition-colors hidden lg:block cursor-pointer"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="bg-brand-pink text-white px-5 py-2.5 rounded-md text-[14px] font-semibold shadow-l1 hover:scale-105 active:scale-95 transition-all"
+                className="bg-brand-pink text-white px-5 py-2.5 rounded-md text-sm font-semibold shadow-l1 hover:scale-105 active:scale-95 transition-all"
               >
                 Enroll Now
               </Link>

@@ -28,10 +28,10 @@ export default function FinalCTA() {
       <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
         {/* Info Column */}
         <div className="flex flex-col justify-center space-y-8">
-          <h2 className="text-[48px] font-[800] text-cream leading-tight">
+          <h2 className="text-5xl font-[800] text-cream leading-tight">
             Sẵn sàng bứt phá cùng HH Education?
           </h2>
-          <p className="text-[20px] text-muted-taupe leading-relaxed">
+          <p className="text-xl text-muted-taupe leading-relaxed">
             Nhận tư vấn lộ trình học tập miễn phí và bộ tài liệu độc quyền dành
             riêng cho bạn.
           </p>
@@ -41,10 +41,10 @@ export default function FinalCTA() {
               <PhoneCall size={24} />
             </div>
             <div>
-              <div className="text-[14px] text-muted-taupe uppercase font-semibold">
+              <div className="text-sm text-muted-taupe uppercase font-semibold">
                 Hotline hỗ trợ
               </div>
-              <div className="text-[24px] font-bold text-cream">1900 6789</div>
+              <div className="text-2xl font-bold text-cream">1900 6789</div>
             </div>
           </div>
         </div>
@@ -53,11 +53,11 @@ export default function FinalCTA() {
         <div className="bg-brand-dark p-8 md:p-12 rounded border border-border-dark shadow-l4">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[12px] font-semibold text-muted-taupe uppercase">
+              <label className="text-xs font-semibold text-muted-taupe uppercase">
                 Họ và tên
               </label>
               <input
-                className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-[14px] outline-none transition-all focus:ring-1"
+                className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-sm outline-none transition-all focus:ring-1"
                 placeholder="Nguyễn Văn A"
                 type="text"
                 value={formData.fullName}
@@ -69,11 +69,11 @@ export default function FinalCTA() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[12px] font-semibold text-muted-taupe uppercase">
+              <label className="text-xs font-semibold text-muted-taupe uppercase">
                 Số điện thoại
               </label>
               <input
-                className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-[14px] outline-none transition-all focus:ring-1"
+                className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-sm outline-none transition-all focus:ring-1"
                 placeholder="0901 234 567"
                 type="tel"
                 value={formData.phone}
@@ -85,12 +85,12 @@ export default function FinalCTA() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[12px] font-semibold text-muted-taupe uppercase">
+              <label className="text-xs font-semibold text-muted-taupe uppercase">
                 Môn học quan tâm
               </label>
               <div className="relative">
                 <select
-                  className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-[14px] outline-none transition-all appearance-none cursor-pointer"
+                  className="w-full bg-surface-input border border-border-dark rounded-md focus:ring-brand-pink focus:border-brand-pink text-cream p-3 text-sm outline-none transition-all appearance-none cursor-pointer"
                   value={formData.subject}
                   onChange={(e) =>
                     setFormData({ ...formData, subject: e.target.value })
@@ -114,13 +114,13 @@ export default function FinalCTA() {
             </div>
 
             <button
-              className="w-full bg-brand-pink text-white font-bold text-[14px] py-4 rounded shadow-l4 hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer"
+              className="w-full bg-brand-pink text-white font-bold text-sm py-4 rounded shadow-l4 hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer"
               type="submit"
             >
               Đăng ký ngay
             </button>
 
-            <p className="text-center text-[11px] text-muted-taupe">
+            <p className="text-center text-xs text-muted-taupe">
               Chúng tôi cam kết bảo mật thông tin đăng ký của bạn.
             </p>
           </form>

@@ -35,12 +35,14 @@ model Media {
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
 
-  uploadedBy       User?      @relation("UploadedMedia", fields: [uploadedById], references: [id], onDelete: SetNull)
-  userAvatars      User[]     @relation("UserAvatarMedia")
-  courseThumbnails Course[]   @relation("CourseThumbnailMedia")
-  blogThumbnails   BlogPost[] @relation("BlogThumbnailMedia")
-  lessonVideos     Lesson[]   @relation("LessonVideoMedia")
-  assessmentSources Assessment[] @relation("AssessmentSourceMedia")
+  uploadedBy        User?           @relation("UploadedMedia", fields: [uploadedById], references: [id], onDelete: SetNull)
+  userAvatars       User[]          @relation("UserAvatarMedia")
+  courseThumbnails  Course[]        @relation("CourseThumbnailMedia")
+  blogThumbnails    BlogPost[]      @relation("BlogThumbnailMedia")
+  lessonVideos      Lesson[]        @relation("LessonVideoMedia")
+  lessonMaterials   LessonMaterial[] @relation("LessonMaterialMedia")
+  assessmentSources Assessment[]    @relation("AssessmentSourceMedia")
+  blogPostContent   BlogPostMedia[]
 
   @@unique([objectKey])
   @@index([type])

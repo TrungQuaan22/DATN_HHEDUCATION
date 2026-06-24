@@ -35,12 +35,12 @@ export function PracticeResult({
         </div>
 
         <div className="space-y-1 relative z-10">
-          <h3 className="text-[15px] font-bold text-muted-text uppercase tracking-widest">
+          <h3 className="text-base font-bold text-muted-text uppercase tracking-widest">
             KẾT QUẢ TỰ LUYỆN AI
           </h3>
-          <div className="text-[52px] font-black text-brand-pink leading-none drop-shadow-[0_0_15px_rgba(255,105,180,0.4)]">
+          <div className="text-5xl font-black text-brand-pink leading-none drop-shadow-[0_0_15px_rgba(255,105,180,0.4)]">
             {finalScore}{" "}
-            <span className="text-[20px] text-muted-text font-bold">/ 10</span>
+            <span className="text-xl text-muted-text font-bold">/ 10</span>
           </div>
           <p className="text-xs text-muted-text max-w-sm mx-auto pt-2">
             Bạn trả lời đúng{" "}
@@ -55,7 +55,7 @@ export function PracticeResult({
           <button
             type="button"
             onClick={quitPractice}
-            className="bg-brand-pink text-brand-dark font-extrabold text-[12px] px-6 py-2.5 rounded hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+            className="bg-brand-pink text-brand-dark font-extrabold text-xs px-6 py-2.5 rounded hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
           >
             Quay lại Phòng luyện tập
           </button>
@@ -64,7 +64,7 @@ export function PracticeResult({
 
       {/* Details list of questions with answers and explanation */}
       <div className="space-y-5">
-        <h4 className="text-[14px] font-bold text-cream px-1">
+        <h4 className="text-sm font-bold text-cream px-1">
           Chi tiết đáp án & giải thích
         </h4>
 
@@ -95,7 +95,7 @@ export function PracticeResult({
                 </span>
               </div>
 
-              <p className="text-[14px] font-bold text-cream leading-relaxed">
+              <p className="text-sm font-bold text-cream leading-relaxed">
                 {q.content}
               </p>
 
@@ -121,10 +121,10 @@ export function PracticeResult({
                   return (
                     <div
                       key={opt.key}
-                      className={`p-3.5 rounded text-[12.5px] font-semibold border flex items-center gap-3 ${btnStyle}`}
+                      className={`p-3.5 rounded text-xs font-semibold border flex items-center gap-3 ${btnStyle}`}
                     >
                       <span
-                        className={`w-5.5 h-5.5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${badgeStyle}`}
+                        className={`w-5.5 h-5.5 rounded-md flex items-center justify-center text-xs font-black shrink-0 ${badgeStyle}`}
                       >
                         {opt.key}
                       </span>

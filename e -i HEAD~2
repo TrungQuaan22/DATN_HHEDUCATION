@@ -1,0 +1,186 @@
+[33mcommit e644791887706cf7f34ec44de54f7d32a8a0d795[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrefactor/clean-architecture-entity[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Mon Jun 22 01:54:21 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon Jun 22 01:54:21 2026 +0700
+
+    refactor: extend Rich Domain Model (Entities) to auth, blogs, and payments modules
+
+[33mcommit 3b7367acdbf5d6732af7f25da07ebd5438b3e7e1[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Mon Jun 22 01:49:25 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon Jun 22 01:49:25 2026 +0700
+
+    refactor: implement Rich Domain Model (Entities) across orders, assessments, courses, and enrollments
+
+[33mcommit 5ec2e36aad2f73a050a6317134412f292828058d[m[33m ([m[1;32mrefactor/clean-architecture-pattern[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sun Jun 14 18:24:32 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon Jun 22 01:41:49 2026 +0700
+
+    refactor: complete order invariants and idempotency security audit fixes
+
+[33mcommit f1c4629ed025e3895a0d8b5712a8449291251de5[m[33m ([m[1;31morigin/feature/assessment[m[33m, [m[1;32mfeature/assessment[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Thu Jun 11 18:12:49 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Thu Jun 11 18:12:49 2026 +0700
+
+    refactor(app): align course media and auth integrations
+
+[33mcommit 369f58030b40ffbfd5f9fa4149d36f7c33f2e571[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Thu Jun 11 14:37:22 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Thu Jun 11 14:37:22 2026 +0700
+
+    feat(assessment): refactor assessment sections and item workflows
+
+[33mcommit d7572fa8e1bb1a96e91446723e26218fd736c799[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sun Jun 7 17:40:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sun Jun 7 17:40:00 2026 +0700
+
+    feat(frontend): update admin workspace, learning flow UI, and fix course price validation
+
+[33mcommit efdfb196771e0a444bee518c84476a3f8681d258[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sat Jun 6 14:52:13 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sat Jun 6 14:52:13 2026 +0700
+
+    refactor(backend): optimize learning progress updates and paginate enrolled courses
+
+[33mcommit 67ff870278c77e75a88ecc90d9e73ada8fa60bf0[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Fri Jun 5 10:18:47 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Fri Jun 5 10:18:47 2026 +0700
+
+    refactor(backend): improve payments module with MoMo, VNPay, and SePay providers
+
+[33mcommit ed2592b2bb9c86a94fa27b5a08c0fc09b8bb6858[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Thu Jun 4 15:30:22 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Thu Jun 4 15:30:22 2026 +0700
+
+    refactor(backend): restructure orders module and integrate idempotency mechanism
+
+[33mcommit 76b3f899a16503cb3b1b6221e6b788502f93b8e2[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Wed Jun 3 11:05:19 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Wed Jun 3 11:05:19 2026 +0700
+
+    refactor(backend): update shared middlewares and complete idempotency infrastructure
+
+[33mcommit 809bb23aeeeadc2693d3e97ccaa6650519eed621[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Tue Jun 2 16:12:05 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Tue Jun 2 16:12:05 2026 +0700
+
+    refactor(backend): convert enrollments module to Ports & Adapters
+
+[33mcommit 2b07e4d812622b27869e8e6a7c63349b4cc9e356[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sun May 31 09:23:41 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sun May 31 09:23:41 2026 +0700
+
+    refactor(backend): restructure course management and public browsing APIs
+
+[33mcommit 6498b9eecb07f3aaea94d549f6c3188c5664783e[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sat May 30 14:45:12 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sat May 30 14:45:12 2026 +0700
+
+    refactor(backend): update storage infrastructure and improve media module
+
+[33mcommit d5a63b4e35ceff7e13f2b4ff1bedf75fa4346abd[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Fri May 29 10:14:32 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Fri May 29 10:14:32 2026 +0700
+
+    refactor(backend): restructure and improve auth, users, and blogs modules using Ports & Adapters
+
+[33mcommit 0431054903bbc975e0a4ad8491248fc324585c9f[m[33m ([m[1;31morigin/frontend[m[33m, [m[1;32mfrontend[m[33m, [m[1;32mfeature/courses[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Thu May 28 08:57:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Thu May 28 08:57:00 2026 +0700
+
+    feat(frontend): add learning and admin workspace UI
+
+[33mcommit c807685d6f354e590fa7186662874a480d76a506[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Mon May 25 11:42:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon May 25 11:42:00 2026 +0700
+
+    feat(frontend): add landing and public browsing UI
+
+[33mcommit 79d52592d44b727087cdd96a0ab5b3461c23181d[m[33m ([m[1;31morigin/feature/blog[m[33m, [m[1;32mfeature/blog[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sat May 23 16:19:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sat May 23 16:19:00 2026 +0700
+
+    feat(blog): add blog management and public blog APIs
+
+[33mcommit eef7c3d4d906de9a7e4d9ee8b84db63587e72a06[m[33m ([m[1;31morigin/feature/courses[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Thu May 21 09:48:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Thu May 21 09:48:00 2026 +0700
+
+    feat(courses): add catalog and learning course APIs
+
+[33mcommit 3389740c86dec0765483749d2d253f1b97911fc7[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Mon May 18 14:26:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon May 18 14:26:00 2026 +0700
+
+    feat(courses): add admin course content APIs
+
+[33mcommit ba6767b78137f4786097785062a7673ede845159[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Sat May 16 10:37:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Sat May 16 10:37:00 2026 +0700
+
+    chore(backend): consolidate schema and media foundations
+
+[33mcommit e5a7c08c057e4a71c30a7c72b60daff8bb0ca6bb[m[33m ([m[1;32mbackup/wip-before-split-2026-05-28[m[33m)[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Fri May 15 10:00:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Fri May 15 10:00:00 2026 +0700
+
+    feat(courses): add media domain and upload flow
+
+[33mcommit f45d182e9c19ca84f0a5113054700103e5be67ea[m
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Mon May 11 09:00:00 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Mon May 11 09:00:00 2026 +0700
+
+    feat(courses): implement course flow through chapters
+
+[33mcommit 13d335334c6dc4ab890e2af7a2c94a037c384e26[m
+Merge: dd87192 29b7d70
+Author:     TrungQuaan22 <giangtrungquan01@gmail.com>
+AuthorDate: Fri May 8 11:34:52 2026 +0700
+Commit:     TrungQuaan22 <giangtrungquan01@gmail.com>
+CommitDate: Fri May 8 11:34:52 2026 +0700
+
+    Merge feature/users into develop
+
+[33mcommit 29b7d701d647a28ca15de7f14d4be05db55e36ff[m[33m ([m[1;31morigin/feature/users[m[33m, [m[1;32mfeature/us

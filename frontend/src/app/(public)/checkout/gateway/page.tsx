@@ -142,11 +142,11 @@ function GatewayPageContent() {
       <div className="max-w-[1000px] mx-auto px-6">
         <div className="flex justify-between items-center mb-10 border-b border-border-dark/60 pb-6">
           <div className="flex items-center gap-2">
-            <h1 className="text-[20px] font-bold text-cream tracking-tight">
+            <h1 className="text-xl font-bold text-cream tracking-tight">
               HH <span className="text-brand-pink font-extrabold">Education Payment</span>
             </h1>
           </div>
-          <span className="text-[11px] font-bold text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 flex items-center gap-1.5 tracking-wider uppercase">
+          <span className="text-xs font-bold text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 flex items-center gap-1.5 tracking-wider uppercase">
             <ShieldCheck size={14} /> Bảo mật
           </span>
         </div>
@@ -154,10 +154,10 @@ function GatewayPageContent() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-5 flex flex-col items-center bg-deep-black border border-border-dark/60 p-6 rounded-xl text-center space-y-6">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-muted-taupe uppercase tracking-widest block">
+              <span className="text-xs font-bold text-muted-taupe uppercase tracking-widest block">
                 Thời gian thanh toán còn lại
               </span>
-              <span className="text-[28px] font-extrabold text-brand-pink font-mono block tracking-wider">
+              <span className="text-3xl font-extrabold text-brand-pink font-mono block tracking-wider">
                 {formatTime(secondsLeft)}
               </span>
             </div>
@@ -176,7 +176,7 @@ function GatewayPageContent() {
               )}
             </div>
 
-            <p className="text-[11px] text-muted-taupe leading-relaxed max-w-[240px]">
+            <p className="text-xs text-muted-taupe leading-relaxed max-w-[240px]">
               Quét mã QR bằng ứng dụng ngân hàng. Hệ thống sẽ tự xác nhận khi SePay gửi webhook thanh toán.
             </p>
           </div>
@@ -184,23 +184,23 @@ function GatewayPageContent() {
           <div className="md:col-span-7 space-y-6">
             <div className="bg-deep-black border border-border-dark/60 p-6 rounded-xl space-y-6">
               <div className="flex items-center justify-between gap-4 border-b border-border-dark/40 pb-4">
-                <h3 className="font-bold text-[14px] uppercase tracking-wider text-brand-pink">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-brand-pink">
                   Thông tin chuyển khoản
                 </h3>
-                <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-taupe uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-muted-taupe uppercase tracking-wider">
                   <RefreshCw size={13} className={isPolling ? "animate-spin" : ""} />
                   Đang đối soát
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-y-4 text-[13px] md:text-[14px]">
+              <div className="grid grid-cols-2 gap-y-4 text-sm md:text-sm">
                 <div className="text-muted-taupe">Mã đơn hàng</div>
                 <div className="font-bold text-cream text-right font-mono">
                   {order.orderInvoiceNumber}
                 </div>
 
                 <div className="text-muted-taupe">Số tiền</div>
-                <div className="font-extrabold text-brand-pink text-right text-[16px]">
+                <div className="font-extrabold text-brand-pink text-right text-base">
                   {formatVND(order.totalAmount)}
                 </div>
 
@@ -216,12 +216,12 @@ function GatewayPageContent() {
               <button
                 type="button"
                 onClick={copyPaymentCode}
-                className="w-full rounded-lg border border-border-dark bg-off-black px-4 py-3 text-[13px] font-bold uppercase tracking-wider text-cream transition hover:border-brand-pink hover:text-brand-pink flex items-center justify-center gap-2"
+                className="w-full rounded-lg border border-border-dark bg-off-black px-4 py-3 text-sm font-bold uppercase tracking-wider text-cream transition hover:border-brand-pink hover:text-brand-pink flex items-center justify-center gap-2"
               >
                 <Copy size={15} /> Sao chép nội dung chuyển khoản
               </button>
 
-              <div className="bg-brand-pink/5 border border-brand-pink/15 rounded-lg p-3.5 flex items-start gap-2.5 text-[11px] text-muted-taupe leading-relaxed">
+              <div className="bg-brand-pink/5 border border-brand-pink/15 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-muted-taupe leading-relaxed">
                 <Info size={16} className="text-brand-pink shrink-0 mt-0.5" />
                 <p>
                   Vui lòng nhập đúng nội dung chuyển khoản{" "}
@@ -236,11 +236,11 @@ function GatewayPageContent() {
             <div className="bg-deep-black border border-green-500/20 p-6 rounded-xl space-y-4">
               <div className="flex items-center gap-2 border-b border-border-dark/40 pb-3">
                 <CheckCircle size={16} className="text-green-400" />
-                <h4 className="font-bold text-[13px] uppercase tracking-wider text-green-400">
+                <h4 className="font-bold text-sm uppercase tracking-wider text-green-400">
                   Tự động kích hoạt khóa học
                 </h4>
               </div>
-              <p className="text-[12px] text-muted-taupe leading-relaxed">
+              <p className="text-xs text-muted-taupe leading-relaxed">
                 Sau khi giao dịch khớp mã đơn và số tiền, khóa học sẽ được cấp vào tài khoản của bạn tự động.
               </p>
             </div>

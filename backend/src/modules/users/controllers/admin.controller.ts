@@ -9,7 +9,8 @@ import type {
   ListUsersDto,
   UpdateUserStatusDto
 } from '../dto'
-import { AdminUserService, adminService } from '../services/admin.service'
+import type { AdminUserService } from '../services/admin.service'
+import { adminUserService } from '../wiring'
 import {
   createTeacherSchema,
   listTeacherOptionsSchema,
@@ -65,7 +66,7 @@ export class AdminUserController {
   }
 }
 
-export const adminUserController = new AdminUserController(adminService)
+export const adminUserController = new AdminUserController(adminUserService)
 
 export const createTeacherController = adminUserController.createTeacher
 export const getAllUsersController = adminUserController.getAllUsers

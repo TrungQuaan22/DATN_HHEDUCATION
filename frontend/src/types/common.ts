@@ -128,8 +128,20 @@ export type RichContent = {
 };
 
 export type RichNode =
-  | { type: "paragraph"; content?: RichNode[] }
-  | { type: "heading"; attrs: { level: 1 | 2 | 3 }; content?: RichNode[] }
+  | {
+      type: "paragraph";
+      attrs?: { textAlign?: "left" | "center" | "right" | "justify" };
+      content?: RichNode[];
+    }
+  | {
+      type: "heading";
+      attrs: {
+        level: 1 | 2 | 3;
+        id?: string;
+        textAlign?: "left" | "center" | "right" | "justify";
+      };
+      content?: RichNode[];
+    }
   | {
       type: "text";
       text: string;
@@ -146,6 +158,8 @@ export type RichNode =
   | { type: "orderedList"; content?: RichNode[] }
   | { type: "listItem"; content?: RichNode[] }
   | { type: "blockquote"; content?: RichNode[] }
+  | { type: "hardBreak" }
+  | { type: "horizontalRule" }
   | { type: "codeBlock"; attrs?: { language?: string }; content?: RichNode[] }
   | { type: "html"; attrs?: { html?: string } };
 

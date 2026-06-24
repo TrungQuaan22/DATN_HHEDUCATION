@@ -61,14 +61,14 @@ export default function CurriculumAccordion({
               className="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-off-black transition-colors text-left font-sans"
             >
               <div className="flex items-center gap-4">
-                <span className="w-8 h-8 rounded bg-brand-pink text-white flex items-center justify-center font-bold text-[14px]">
+                <span className="w-8 h-8 rounded bg-brand-pink text-white flex items-center justify-center font-bold text-sm">
                   {numLabel}
                 </span>
                 <div>
-                  <p className="text-[14px] md:text-[15px] font-bold text-cream">
+                  <p className="text-sm md:text-base font-bold text-cream">
                     {chapter.title}
                   </p>
-                  <p className="text-[11px] text-muted-taupe mt-0.5">
+                  <p className="text-xs text-muted-taupe mt-0.5">
                     {chapter.lessons.length} bài học • {totalMins} phút
                   </p>
                 </div>
@@ -112,17 +112,17 @@ export default function CurriculumAccordion({
                               : "text-muted-taupe group-hover:text-brand-pink"
                           }`}
                         />
-                        <span className="text-[14px] font-medium text-cream group-hover:text-brand-pink transition-colors">
+                        <span className="text-sm font-medium text-cream group-hover:text-brand-pink transition-colors">
                           Bài {index + 1}: {lesson.title}
                         </span>
                         {isTrial && (
-                          <span className="text-[9px] font-bold text-white bg-sky-blue px-1.5 py-0.5 rounded tracking-wider uppercase scale-90">
+                          <span className="text-xs font-bold text-white bg-sky-blue px-1.5 py-0.5 rounded tracking-wider uppercase scale-90">
                             Học thử
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-4 text-[12px] text-muted-taupe">
+                      <div className="flex items-center gap-4 text-xs text-muted-taupe">
                         <span>{formatDuration(lesson.durationSec)}</span>
                         {lesson.allowPreview ? (
                           <span title="Xem thử miễn phí">
@@ -154,10 +154,10 @@ export default function CurriculumAccordion({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border-dark bg-off-black">
               <div>
-                <span className="text-[10px] font-bold text-brand-pink uppercase tracking-widest block mb-0.5">
+                <span className="text-xs font-bold text-brand-pink uppercase tracking-widest block mb-0.5">
                   Bài học thử miễn phí
                 </span>
-                <h3 className="text-[15px] font-bold text-cream">
+                <h3 className="text-base font-bold text-cream">
                   {activePreviewLesson.title}
                 </h3>
               </div>
@@ -184,7 +184,7 @@ export default function CurriculumAccordion({
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                   <PlayCircle size={48} className="text-muted-taupe mb-4" />
-                  <p className="text-[14px] text-muted-taupe">
+                  <p className="text-sm text-muted-taupe">
                     Không thể tải video bài học này. Vui lòng liên hệ hỗ trợ.
                   </p>
                 </div>

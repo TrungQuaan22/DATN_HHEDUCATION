@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { OrderStatus, PaymentStatus } from '../ports/order-repository.port'
+import type { Prisma } from '@prisma/client'
 import z from 'zod'
 
+import type { OrderStatus, PaymentStatus } from '../ports/order-repository.port'
 import type { listAdminOrdersQuerySchema } from '../validators/admin-order.validator'
 
 export type ListAdminOrdersDto = z.infer<typeof listAdminOrdersQuerySchema>
@@ -16,7 +16,7 @@ export type AdminOrderPaymentResponse = {
   checkoutUrl: string | null
   qrCodeUrl: string | null
   expiresAt: Date | null
-  metadata: any
+  metadata: Prisma.JsonValue
   status: PaymentStatus
   createdAt: Date
   paidAt: Date | null
@@ -68,7 +68,7 @@ export type AdminOrderDetailResponse = AdminOrderListItemResponse & {
     direction: 'inbound' | 'outbound'
     transactionDate: Date | null
     matchStatus: string
-    metadata: any
+    metadata: Prisma.JsonValue
     createdAt: Date
     paymentId: string | null
   }>

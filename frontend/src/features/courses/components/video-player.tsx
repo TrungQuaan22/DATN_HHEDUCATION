@@ -203,15 +203,15 @@ function VideoPlayerContent({
       }}
     >
       {!canPlay && !displayError && (
-        <div className="pointer-events-none absolute left-3 top-3 z-10 rounded bg-black/60 px-2 py-1 text-[11px] font-semibold text-muted-text">
+        <div className="pointer-events-none absolute left-3 top-3 z-10 rounded bg-black/60 px-2 py-1 text-xs font-semibold text-muted-text">
           Đang tải video...
         </div>
       )}
 
       {displayError && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/85 p-6 text-center">
-          <h4 className="text-[14px] font-bold text-cream">Không phát được video</h4>
-          <p className="mt-2 max-w-md break-all text-[12px] text-muted-text">
+          <h4 className="text-sm font-bold text-cream">Không phát được video</h4>
+          <p className="mt-2 max-w-md break-all text-xs text-muted-text">
             {displayError}
           </p>
         </div>
@@ -236,8 +236,8 @@ export function VideoPlayer(props: VideoPlayerProps) {
     return (
       <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-lg border border-border-dark bg-deep-black p-6 text-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-pink border-t-transparent" />
-        <h4 className="text-[14px] font-bold text-cream">Video đang được xử lý</h4>
-        <p className="max-w-xs text-[12px] text-muted-text">
+        <h4 className="text-sm font-bold text-cream">Video đang được xử lý</h4>
+        <p className="max-w-xs text-xs text-muted-text">
           Hệ thống đang chuyển đổi video sang HLS. Vui lòng quay lại sau ít phút.
         </p>
       </div>

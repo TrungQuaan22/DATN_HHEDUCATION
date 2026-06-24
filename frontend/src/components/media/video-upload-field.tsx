@@ -158,7 +158,7 @@ export default function VideoUploadField({
             Kéo thả file video vào đây hoặc{" "}
             <span className="text-admin-pink">chọn từ máy tính</span>
           </p>
-          <p className="text-[10px] text-admin-muted mt-1">
+          <p className="text-xs text-admin-muted mt-1">
             Hỗ trợ định dạng video MP4 (Tối đa 500MB)
           </p>
         </div>

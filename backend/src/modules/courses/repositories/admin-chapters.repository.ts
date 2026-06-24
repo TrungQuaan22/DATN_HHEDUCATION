@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client'
+import type { Chapter, Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
@@ -67,7 +67,7 @@ const buildFinalChapterOrderUpdates = (chapterIds: string[]) => {
   })
 }
 
-function mapToChapterRecord(chapter: any): AdminChapterRecord {
+function mapToChapterRecord(chapter: Chapter): AdminChapterRecord {
   return {
     id: chapter.id,
     courseId: chapter.courseId,
@@ -89,8 +89,12 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
         course: {
           select: {
             id: true,
+            title: true,
+            slug: true,
             teacherId: true,
             status: true,
+            price: true,
+            salePrice: true,
             deletedAt: true
           }
         }
@@ -103,8 +107,12 @@ export class PrismaAdminChapterRepository implements AdminChapterRepositoryPort 
       ...mapToChapterRecord(chapter),
       course: {
         id: chapter.course.id,
+        title: chapter.course.title,
+        slug: chapter.course.slug,
         teacherId: chapter.course.teacherId,
         status: chapter.course.status,
+        price: Number(chapter.course.price),
+        salePrice: chapter.course.salePrice === null ? null : Number(chapter.course.salePrice),
         deletedAt: chapter.course.deletedAt
       }
     }

@@ -146,7 +146,7 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-admin-border/30 pb-3">
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-admin-pink">
+                        <div className="text-xs font-bold uppercase tracking-wider text-admin-pink">
                           Câu {item?.questionNumber || "-"} | Điểm tối đa: {maxScore}đ
                         </div>
                         <h4 className="mt-1 text-sm font-bold text-admin-cream">{contentLabel}</h4>
@@ -159,7 +159,7 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                     </div>
 
                     <div className="space-y-1">
-                      <div className="text-[11px] font-bold text-admin-muted">
+                      <div className="text-xs font-bold text-admin-muted">
                         Bài làm của học sinh:
                       </div>
                       <div className="whitespace-pre-wrap rounded-lg border border-admin-border bg-admin-deep p-4 text-sm leading-relaxed text-admin-cream">
@@ -170,7 +170,7 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                     {/* Grading Form */}
                     <div className="grid gap-3 sm:grid-cols-[140px_1fr_120px] items-end pt-2">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-admin-muted">Nhập điểm:</label>
+                        <label className="text-xs font-bold text-admin-muted">Nhập điểm:</label>
                         <input
                           type="number"
                           min={0}
@@ -191,7 +191,7 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-admin-muted">
+                        <label className="text-xs font-bold text-admin-muted">
                           Nhận xét của giáo viên:
                         </label>
                         <input

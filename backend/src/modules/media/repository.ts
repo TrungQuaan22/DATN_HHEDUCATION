@@ -1,8 +1,8 @@
-import { MediaStatus, type MediaType, type Prisma } from '@prisma/client'
+import { MediaStatus, type MediaType } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
-import type { MediaRepositoryPort } from './ports/media-repository.port'
+import type { MediaRepositoryPort, UpdateMediaData } from './ports/media-repository.port'
 
 export class PrismaMediaRepository implements MediaRepositoryPort {
   createMedia(data: {
@@ -27,7 +27,7 @@ export class PrismaMediaRepository implements MediaRepositoryPort {
     })
   }
 
-  updateMediaById(mediaId: string, data: Prisma.MediaUpdateInput) {
+  updateMediaById(mediaId: string, data: UpdateMediaData) {
     return prisma.media.update({
       where: {
         id: mediaId
@@ -57,10 +57,16 @@ export class PrismaMediaRepository implements MediaRepositoryPort {
         blogThumbnails: {
           none: {}
         },
+        blogPostContent: {
+          none: {}
+        },
         userAvatars: {
           none: {}
         },
         lessonVideos: {
+          none: {}
+        },
+        lessonMaterials: {
           none: {}
         }
       },

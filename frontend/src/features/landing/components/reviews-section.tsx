@@ -43,10 +43,10 @@ export default function ReviewsSection() {
     <section className="py-24 bg-brand-dark">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-[36px] font-[700] text-cream mb-4">
+          <h2 className="text-4xl font-[700] text-cream mb-4">
             Cảm nhận từ học viên
           </h2>
-          <p className="text-[16px] text-muted-taupe max-w-2xl mx-auto">
+          <p className="text-base text-muted-taupe max-w-2xl mx-auto">
             Những kết quả thực tế là niềm tự hào lớn nhất của chúng tôi.
           </p>
         </div>
@@ -64,17 +64,17 @@ export default function ReviewsSection() {
                   src={rev.avatarUrl}
                 />
                 <div>
-                  <div className="text-[16px] font-bold text-cream">
+                  <div className="text-base font-bold text-cream">
                     {rev.name}
                   </div>
-                  <div className="text-[12px] text-muted-taupe">
+                  <div className="text-xs text-muted-taupe">
                     {rev.class}
                   </div>
                 </div>
               </div>
 
               <div
-                className={`inline-block px-3 py-1 border rounded-full text-[12px] font-bold mb-4 ${rev.badgeColorClass}`}
+                className={`inline-block px-3 py-1 border rounded-full text-xs font-bold mb-4 ${rev.badgeColorClass}`}
               >
                 {rev.badge}
               </div>
@@ -96,7 +96,7 @@ export default function ReviewsSection() {
                 })}
               </div>
 
-              <p className="text-[14px] text-muted-taupe italic leading-relaxed">
+              <p className="text-sm text-muted-taupe italic leading-relaxed">
                 {rev.quote}
               </p>
             </div>

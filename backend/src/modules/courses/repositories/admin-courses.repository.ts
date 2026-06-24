@@ -1,11 +1,4 @@
-import {
-  CourseStatus,
-  MediaStatus,
-  UserRole,
-  UserStatus,
-  type Prisma,
-  type Subject
-} from '@prisma/client'
+import { CourseStatus, UserRole, UserStatus, type Prisma, type Subject } from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 import { prisma } from '~/config/db'
@@ -13,11 +6,45 @@ import { prisma } from '~/config/db'
 import type {
   AdminCourseDetailRecord,
   AdminCourseRecord,
-  AdminCourseRepositoryPort
+  AdminCourseRepositoryPort,
+  ListAdminCoursesFilters
 } from '../ports/admin-course-repository.port'
 import { adminTeacherSelect, lessonVideoMediaSelect } from './shared'
 
-function mapToCourseRecord(course: any): AdminCourseRecord {
+const ADMIN_COURSE_INCLUDE = {
+  teacher: {
+    select: adminTeacherSelect
+  },
+  _count: {
+    select: {
+      enrollments: true
+    }
+  }
+} satisfies Prisma.CourseInclude
+
+type PrismaAdminCourse = Prisma.CourseGetPayload<{
+  include: typeof ADMIN_COURSE_INCLUDE
+}>
+
+function buildAdminCourseWhere(filters: ListAdminCoursesFilters): Prisma.CourseWhereInput {
+  const where: Prisma.CourseWhereInput = {
+    deletedAt: null,
+    status: filters.status,
+    teacherId: filters.teacherId,
+    isFeatured: filters.isFeatured
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { slug: { contains: filters.search, mode: 'insensitive' } }
+    ]
+  }
+
+  return where
+}
+
+function mapToCourseRecord(course: PrismaAdminCourse): AdminCourseRecord {
   return {
     id: course.id,
     title: course.title,
@@ -59,8 +86,6 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     })
   }
 
-
-
   async findActiveTeacherById(teacherId: string) {
     return prisma.user.findFirst({
       where: {
@@ -81,16 +106,7 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         id: courseId,
         deletedAt: null
       },
-      include: {
-        teacher: {
-          select: adminTeacherSelect
-        },
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      }
+      include: ADMIN_COURSE_INCLUDE
     })
 
     if (!course) return null
@@ -104,14 +120,7 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         deletedAt: null
       },
       include: {
-        teacher: {
-          select: adminTeacherSelect
-        },
-        _count: {
-          select: {
-            enrollments: true
-          }
-        },
+        ...ADMIN_COURSE_INCLUDE,
         topics: {
           orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
           select: {
@@ -159,6 +168,13 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
                 videoMedia: {
                   select: lessonVideoMediaSelect
                 },
+                materials: {
+                  where: { deletedAt: null },
+                  select: {
+                    id: true,
+                    processingStatus: true
+                  }
+                },
                 assessmentPlacements: {
                   where: { type: 'lesson' },
                   select: { assessmentId: true }
@@ -205,36 +221,31 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
                 durationSec: lesson.videoMedia.durationSec
               }
             : null,
-          assessmentId: lesson.assessmentPlacements[0]?.assessmentId ?? null
+          assessmentId: lesson.assessmentPlacements[0]?.assessmentId ?? null,
+          hasRagError: lesson.materials?.some((m) => m.processingStatus === 'failed') ?? false
         }))
       }))
     }
   }
 
   async listAdminCourses(data: {
-    where: Prisma.CourseWhereInput
-    skip: number
-    take: number
+    filters: ListAdminCoursesFilters
+    page: number
+    limit: number
   }): Promise<[AdminCourseRecord[], number]> {
+    const where = buildAdminCourseWhere(data.filters)
+    const skip = (data.page - 1) * data.limit
+
     const [courses, total] = await prisma.$transaction([
       prisma.course.findMany({
-        where: data.where,
-        skip: data.skip,
-        take: data.take,
+        where,
+        skip,
+        take: data.limit,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        include: {
-          teacher: {
-            select: adminTeacherSelect
-          },
-          _count: {
-            select: {
-              enrollments: true
-            }
-          }
-        }
+        include: ADMIN_COURSE_INCLUDE
       }),
       prisma.course.count({
-        where: data.where
+        where
       })
     ])
 
@@ -268,16 +279,7 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         salePrice: data.salePrice,
         isFeatured: data.isFeatured
       },
-      include: {
-        teacher: {
-          select: adminTeacherSelect
-        },
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      }
+      include: ADMIN_COURSE_INCLUDE
     })
 
     return mapToCourseRecord(course)
@@ -312,16 +314,7 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
         salePrice: data.salePrice,
         isFeatured: data.isFeatured
       },
-      include: {
-        teacher: {
-          select: adminTeacherSelect
-        },
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      }
+      include: ADMIN_COURSE_INCLUDE
     })
 
     return mapToCourseRecord(course)
@@ -335,22 +328,11 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
       data: {
         status
       },
-      include: {
-        teacher: {
-          select: adminTeacherSelect
-        },
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      }
+      include: ADMIN_COURSE_INCLUDE
     })
 
     return mapToCourseRecord(course)
   }
-
-
 }
 
 export const adminCourseRepository = new PrismaAdminCourseRepository()

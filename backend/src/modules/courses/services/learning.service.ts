@@ -1,10 +1,12 @@
-import { MediaStatus } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
-import { ensureLessonAvailable, ensureUserIsEnrolled } from '../ensures/courses.ensure'
-import { LearningProgress } from '../entities/learning-progress.entity'
+import { ensureEnrollmentExists, ensureLessonExists } from '../ensures/courses.ensure'
+import {
+  calculateProgress,
+  getLessonDuration,
+  validateProgressRange
+} from '../policies/learning-progress.policy'
 
 import type {
   LearningCourseOverviewDto,
@@ -53,13 +55,10 @@ export class LearningCourseService {
     page: number
     limit: number
   }): Promise<ListLearningCoursesResponse> {
-    const skip = (data.page - 1) * data.limit
-    const take = data.limit
-
     const [enrollments, totalItems] = await this.courseRepository.listEnrolledCourses({
       userId: data.userId,
-      skip,
-      take
+      page: data.page,
+      limit: data.limit
     })
 
     return {
@@ -99,11 +98,7 @@ export class LearningCourseService {
     return mapLearningLessonDetail(lesson)
   }
 
-  async getLearningLessonHlsFile(data: {
-    userId: string
-    lessonId: string
-    fileName: string
-  }) {
+  async getLearningLessonHlsFile(data: { userId: string; lessonId: string; fileName: string }) {
     ensureValidHlsFileName(data.fileName)
 
     const lesson = await this.courseRepository.findEnrolledSystemVideoLessonForHls(data)
@@ -112,7 +107,7 @@ export class LearningCourseService {
       throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, ERROR_MESSAGE.LESSON_NOT_FOUND)
     }
 
-    if (lesson.videoMedia.status !== MediaStatus.ready) {
+    if (lesson.videoMedia.status !== 'ready') {
       throw new AppError(409, ERROR_CODE.CONFLICT, 'Video is not ready')
     }
 
@@ -139,20 +134,24 @@ export class LearningCourseService {
     const now = new Date()
 
     const lesson = await this.courseRepository.findLessonForProgress(data.lessonId)
-    ensureLessonAvailable(lesson)
+    ensureLessonExists(lesson)
+
+    if (lesson.chapter.course.deletedAt) {
+      throw new AppError(404, ERROR_CODE.LESSON_NOT_FOUND, 'Lesson not found')
+    }
 
     const courseId = lesson.chapter.courseId
     const enrollment = await this.courseRepository.findEnrollment(data.userId, courseId)
-    ensureUserIsEnrolled(enrollment)
+    ensureEnrollmentExists(enrollment)
 
-    const durationSec = LearningProgress.getLessonDuration(lesson)
-    LearningProgress.validateProgressRange(data.watchedSeconds, data.lastPositionSec, durationSec)
+    const durationSec = getLessonDuration(lesson)
+    validateProgressRange(data.watchedSeconds, data.lastPositionSec, durationSec)
 
     const existingProgress = await this.courseRepository.findLessonProgress(
       data.userId,
       data.lessonId
     )
-    const progressState = LearningProgress.calculateProgressState({
+    const progress = calculateProgress({
       existingProgress,
       watchedSeconds: data.watchedSeconds,
       lastPositionSec: data.lastPositionSec,
@@ -164,12 +163,12 @@ export class LearningCourseService {
       userId: data.userId,
       lessonId: data.lessonId,
       courseId,
-      watchedSeconds: progressState.finalWatchedSeconds,
+      watchedSeconds: progress.watchedSeconds,
       lastPositionSec: data.lastPositionSec,
       durationSec,
-      isCompleted: progressState.isNowCompleted,
-      completedAt: progressState.completedAt,
-      newlyCompleted: progressState.newlyCompleted,
+      isCompleted: progress.isCompleted,
+      completedAt: progress.completedAt,
+      newlyCompleted: progress.newlyCompleted,
       now
     })
 

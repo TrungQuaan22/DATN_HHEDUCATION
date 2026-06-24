@@ -53,12 +53,12 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
         <div className="max-w-[1200px] mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end gap-8">
             <div className="max-w-2xl">
-              <h1 className="text-[32px] md:text-[48px] font-extrabold text-cream mb-4 leading-tight">
+              <h1 className="text-3xl md:text-5xl font-extrabold text-cream mb-4 leading-tight">
                 Khám Phá Tri Thức,
                 <br />
                 Làm Chủ Tương Lai
               </h1>
-              <p className="text-muted-taupe text-[16px] md:text-[18px] max-w-xl leading-relaxed">
+              <p className="text-muted-taupe text-base md:text-lg max-w-xl leading-relaxed">
                 Hệ thống bài giảng chuyên sâu từ các chuyên gia hàng đầu, giúp
                 học sinh từ lớp 9 đến 12 đạt kết quả cao nhất trong các kỳ thi.
               </p>
@@ -69,7 +69,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-taupe group-focus-within:text-brand-pink transition-colors w-5 h-5" />
                 <input
-                  className="w-full md:w-[400px] pl-12 pr-4 py-4 rounded border border-border-dark focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all outline-none bg-deep-black text-cream shadow-sm text-[14px]"
+                  className="w-full md:w-[400px] pl-12 pr-4 py-4 rounded border border-border-dark focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all outline-none bg-deep-black text-cream shadow-sm text-sm"
                   placeholder="Tìm kiếm khóa học..."
                   type="text"
                   value={searchQuery}
@@ -89,7 +89,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
             {/* Subjects filter */}
             <div>
               <div className="flex justify-between items-end mb-4 border-b border-border-dark pb-2">
-                <h3 className="text-[13px] font-bold text-cream uppercase tracking-widest">
+                <h3 className="text-sm font-bold text-cream uppercase tracking-widest">
                   Môn Học
                 </h3>
                 {(selectedSubjects.length > 0 ||
@@ -97,7 +97,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                   searchQuery !== "") && (
                   <button
                     onClick={resetFilters}
-                    className="text-[11px] text-brand-pink hover:underline flex items-center gap-1 cursor-pointer font-bold uppercase tracking-wider pb-0.5"
+                    className="text-xs text-brand-pink hover:underline flex items-center gap-1 cursor-pointer font-bold uppercase tracking-wider pb-0.5"
                   >
                     <Trash2 size={12} /> Đặt lại
                   </button>
@@ -111,7 +111,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                     className="w-5 h-5 rounded border-border-dark bg-deep-black text-brand-pink focus:ring-brand-pink cursor-pointer"
                     type="checkbox"
                   />
-                  <span className="text-[14px] font-medium text-cream group-hover:text-brand-pink transition-colors">
+                  <span className="text-sm font-medium text-cream group-hover:text-brand-pink transition-colors">
                     Tất cả môn học
                   </span>
                 </label>
@@ -126,7 +126,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                       className="w-5 h-5 rounded border-border-dark bg-deep-black text-brand-pink focus:ring-brand-pink cursor-pointer"
                       type="checkbox"
                     />
-                    <span className="text-[14px] font-medium text-cream group-hover:text-brand-pink transition-colors">
+                    <span className="text-sm font-medium text-cream group-hover:text-brand-pink transition-colors">
                       {subj.label}
                     </span>
                   </label>
@@ -137,14 +137,14 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
             {/* Grades filter */}
             <div>
               <div className="border-b border-border-dark pb-2 mb-4">
-                <h3 className="text-[13px] font-bold text-cream uppercase tracking-widest">
+                <h3 className="text-sm font-bold text-cream uppercase tracking-widest">
                   Khối Lớp
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleGradeToggle(null as any)}
-                  className={`px-5 py-2 rounded-lg text-[13px] font-medium transition-all cursor-pointer border ${
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer border ${
                     selectedGrade === null
                       ? "bg-brand-pink text-white border-brand-pink"
                       : "border-border-dark text-cream hover:bg-deep-black"
@@ -156,7 +156,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                   <button
                     key={grade}
                     onClick={() => handleGradeToggle(grade)}
-                    className={`px-5 py-2 rounded-lg text-[13px] font-medium transition-all cursor-pointer border ${
+                    className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer border ${
                       selectedGrade === grade
                         ? "bg-brand-pink text-white border-brand-pink"
                         : "border-border-dark text-cream hover:bg-deep-black"
@@ -167,22 +167,6 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                 ))}
               </div>
             </div>
-
-            {/* Offer Box */}
-            <div className="bg-deep-black p-6 rounded text-cream relative overflow-hidden group border border-border-dark transition-colors duration-200">
-              <div className="relative z-10">
-                <h4 className="text-[18px] font-bold mb-2">Gói Ưu Đãi</h4>
-                <p className="text-[13px] text-muted-taupe mb-6 leading-relaxed">
-                  Đăng ký combo 3 môn giảm ngay 20% học phí trọn đời.
-                </p>
-                <button className="w-full bg-brand-pink text-white py-3 rounded font-bold hover:opacity-90 transition-all text-[13px] shadow-sm cursor-pointer">
-                  Xem chi tiết
-                </button>
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500 text-cream pointer-events-none">
-                <SlidersHorizontal size={120} />
-              </div>
-            </div>
           </aside>
 
           {/* Grid Area */}
@@ -191,7 +175,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
               <>
                 {/* Header count & sort bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                  <p className="text-[14px] font-medium text-muted-taupe">
+                  <p className="text-sm font-medium text-muted-taupe">
                     Hiển thị{" "}
                     <span className="text-cream font-bold">
                       {filteredAndSortedCourses.length}
@@ -200,11 +184,11 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                   </p>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] text-muted-taupe">
+                    <span className="text-sm text-muted-taupe">
                       Sắp xếp:
                     </span>
                     <select
-                      className="bg-deep-black border border-border-dark rounded-lg px-3 py-1.5 focus:ring-brand-pink text-cream text-[13px] cursor-pointer outline-none"
+                      className="bg-deep-black border border-border-dark rounded-lg px-3 py-1.5 focus:ring-brand-pink text-cream text-sm cursor-pointer outline-none"
                       value={sortBy}
                       onChange={(e) =>
                         setSortBy(
@@ -212,7 +196,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                             | "newest"
                             | "hotest"
                             | "priceAsc"
-                            | "priceDesc"
+                            | "priceDesc",
                         )
                       }
                     >
@@ -247,7 +231,7 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                       <button
                         key={i}
                         onClick={() => changePage(i + 1)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-[13px] cursor-pointer transition-all ${
+                        className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm cursor-pointer transition-all ${
                           currentPage === i + 1
                             ? "bg-brand-pink text-white"
                             : "border border-border-dark text-cream hover:bg-deep-black"
@@ -258,7 +242,9 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
                     ))}
                     <button
                       disabled={currentPage === totalPages}
-                      onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                      onClick={() =>
+                        changePage(Math.min(totalPages, currentPage + 1))
+                      }
                       className="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-cream hover:bg-deep-black disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
                     >
                       <ChevronRight size={18} />
@@ -269,13 +255,15 @@ export default function CourseCatalog({ initialCourses }: CourseCatalogProps) {
             ) : (
               /* Empty State */
               <EmptyState
-                icon={<SlidersHorizontal className="w-10 h-10 text-muted-taupe" />}
+                icon={
+                  <SlidersHorizontal className="w-10 h-10 text-muted-taupe" />
+                }
                 title="Không tìm thấy khóa học"
                 description="Chúng tôi không tìm thấy kết quả phù hợp với lựa chọn của bạn. Vui lòng thử lại với các tiêu chí lọc khác."
                 action={
                   <button
                     onClick={resetFilters}
-                    className="bg-brand-pink text-white px-6 py-3 rounded-lg text-[13px] font-bold shadow-md hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                    className="bg-brand-pink text-white px-6 py-3 rounded-lg text-sm font-bold shadow-md hover:opacity-90 active:scale-95 transition-all cursor-pointer"
                   >
                     Đặt lại tất cả bộ lọc
                   </button>

@@ -77,14 +77,14 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-8 border-t border-deep-black pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-[11px] text-muted-text">
+          <span className="text-xs text-muted-text">
             © {currentYear} HH Education. All rights reserved.
           </span>
           <div className="flex gap-4">
-            <Link href="/terms" className="text-[11px] text-muted-text hover:text-brand-pink">
+            <Link href="/terms" className="text-xs text-muted-text hover:text-brand-pink">
               Điều khoản dịch vụ
             </Link>
-            <Link href="/privacy" className="text-[11px] text-muted-text hover:text-brand-pink">
+            <Link href="/privacy" className="text-xs text-muted-text hover:text-brand-pink">
               Chính sách bảo mật
             </Link>
           </div>

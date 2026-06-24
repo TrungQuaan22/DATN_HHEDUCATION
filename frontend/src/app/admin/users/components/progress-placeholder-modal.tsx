@@ -64,7 +64,7 @@ export default function ProgressPlaceholderModal({
 
         {/* Header */}
         <div className="px-8 pt-8 pb-6 border-b border-admin-border/20 bg-admin-surface-low/30">
-          <h3 className="text-2xl font-bold font-serif text-admin-cream flex items-center gap-2">
+          <h3 className="text-lg font-bold text-admin-cream flex items-center gap-2">
             <Award className="text-admin-pink w-6 h-6" />
             Tiến Độ Học Tập
           </h3>
@@ -78,15 +78,15 @@ export default function ProgressPlaceholderModal({
           {/* General KPIs mockup */}
           <div className="grid grid-cols-3 gap-4 bg-admin-surface-low/40 p-4 rounded-xl border border-admin-border/10">
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-admin-muted tracking-wider">Khóa học</p>
+              <p className="text-xs uppercase font-bold text-admin-muted tracking-wider">Khóa học</p>
               <p className="text-xl font-bold text-admin-cream mt-1">3</p>
             </div>
             <div className="text-center border-x border-admin-border/10">
-              <p className="text-[10px] uppercase font-bold text-admin-muted tracking-wider">Đang học</p>
+              <p className="text-xs uppercase font-bold text-admin-muted tracking-wider">Đang học</p>
               <p className="text-xl font-bold text-amber-400 mt-1">2</p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-admin-muted tracking-wider">Hoàn thành</p>
+              <p className="text-xs uppercase font-bold text-admin-muted tracking-wider">Hoàn thành</p>
               <p className="text-xl font-bold text-emerald-400 mt-1">0</p>
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function ProgressPlaceholderModal({
                   </div>
 
                   {/* Extra statistics */}
-                  <div className="flex justify-between items-center text-[11px] text-admin-muted pt-1">
+                  <div className="flex justify-between items-center text-xs text-admin-muted pt-1">
                     <div className="flex items-center gap-1">
                       <BookOpen size={12} />
                       <span>{course.completed}/{course.total} bài học</span>

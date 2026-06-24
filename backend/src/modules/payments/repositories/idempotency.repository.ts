@@ -65,7 +65,11 @@ export class PrismaIdempotencyRepository implements IdempotencyRepositoryPort {
     return result.count === 1
   }
 
-  async deleteByScopeKeyAndUser(data: { scope: string; key: string; userId: string }): Promise<void> {
+  async deleteByScopeKeyAndUser(data: {
+    scope: string
+    key: string
+    userId: string
+  }): Promise<void> {
     await prisma.idempotencyKey
       .delete({
         where: {

@@ -54,7 +54,7 @@ export default function CoursesFilters({
     <div className="bg-admin-surface-low p-6 rounded border border-admin-border/30 flex flex-wrap items-center gap-4 shadow-sm text-admin-cream">
       {/* Search input */}
       <div className="flex-grow min-w-[200px]">
-        <label className="block text-[10px] font-bold uppercase text-admin-muted mb-2 tracking-wider">
+        <label className="block text-xs font-bold uppercase text-admin-muted mb-2 tracking-wider">
           Tìm kiếm
         </label>
         <div className="relative">
@@ -64,14 +64,14 @@ export default function CoursesFilters({
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Tên khóa học, slug..."
-            className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-full pl-9 pr-4 py-2 text-[14px] text-admin-cream placeholder:text-admin-muted/40"
+            className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-full pl-9 pr-4 py-2 text-sm text-admin-cream placeholder:text-admin-muted/40"
           />
         </div>
       </div>
 
       {/* Status Filter */}
       <div className="w-40">
-        <label className="block text-[10px] font-bold uppercase text-admin-muted mb-2 tracking-wider">
+        <label className="block text-xs font-bold uppercase text-admin-muted mb-2 tracking-wider">
           Trạng thái
         </label>
         <select
@@ -79,7 +79,7 @@ export default function CoursesFilters({
           onChange={(e) =>
             onStatusChange(e.target.value as CourseStatus | "all")
           }
-          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-[14px] text-admin-cream appearance-none"
+          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-sm text-admin-cream appearance-none"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
             backgroundRepeat: "no-repeat",
@@ -96,13 +96,13 @@ export default function CoursesFilters({
 
       {/* Subject Filter */}
       <div className="w-40">
-        <label className="block text-[10px] font-bold uppercase text-admin-muted mb-2 tracking-wider">
+        <label className="block text-xs font-bold uppercase text-admin-muted mb-2 tracking-wider">
           Môn học
         </label>
         <select
           value={subject}
           onChange={(e) => onSubjectChange(e.target.value as Subject | "all")}
-          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-[14px] text-admin-cream appearance-none"
+          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-sm text-admin-cream appearance-none"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
             backgroundRepeat: "no-repeat",
@@ -121,7 +121,7 @@ export default function CoursesFilters({
 
       {/* Grade Filter */}
       <div className="w-32">
-        <label className="block text-[10px] font-bold uppercase text-admin-muted mb-2 tracking-wider">
+        <label className="block text-xs font-bold uppercase text-admin-muted mb-2 tracking-wider">
           Khối lớp
         </label>
         <select
@@ -133,7 +133,7 @@ export default function CoursesFilters({
                 : (Number(e.target.value) as Grade),
             )
           }
-          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-[14px] text-admin-cream appearance-none"
+          className="w-full bg-admin-deep border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-0 py-2 px-3 rounded-2xl text-sm text-admin-cream appearance-none"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
             backgroundRepeat: "no-repeat",

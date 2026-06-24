@@ -151,14 +151,14 @@ export function PublicPracticeCatalog() {
               >
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
-                    <span className="rounded bg-brand-pink/10 px-2 py-1 text-[10px] font-black uppercase text-brand-pink">
+                    <span className="rounded bg-brand-pink/10 px-2 py-1 text-xs font-black uppercase text-brand-pink">
                       {subjectLabel[item.assessment.subject] ?? item.assessment.subject}
                     </span>
-                    <span className="rounded bg-off-black px-2 py-1 text-[10px] font-black uppercase text-muted-text">
+                    <span className="rounded bg-off-black px-2 py-1 text-xs font-black uppercase text-muted-text">
                       Lớp {item.assessment.grade}
                     </span>
                     {item.isFeatured && (
-                      <span className="rounded bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase text-amber-300">
+                      <span className="rounded bg-amber-500/10 px-2 py-1 text-xs font-black uppercase text-amber-300">
                         Nổi bật
                       </span>
                     )}

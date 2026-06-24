@@ -18,20 +18,20 @@ export function AssessmentStats({ stats }: AssessmentStatsProps) {
     <div className="lg:col-span-4 space-y-6">
       {/* GPA Card */}
       <div className="bg-deep-black rounded p-6 border border-border-dark space-y-5">
-        <h3 className="text-[14px] font-bold text-cream flex items-center gap-2 border-b border-border-dark/40 pb-3">
+        <h3 className="text-sm font-bold text-cream flex items-center gap-2 border-b border-border-dark/40 pb-3">
           <Trophy size={16} className="text-brand-pink" />
           Tổng kết kết quả
         </h3>
 
         <div className="flex flex-col items-center justify-center p-6 rounded bg-brand-dark border border-border-dark space-y-2 relative overflow-hidden group">
           <div className="absolute w-24 h-24 bg-brand-pink/5 rounded-full blur-2xl group-hover:bg-brand-pink/10 transition-colors duration-300"></div>
-          <span className="text-[12px] font-bold text-muted-text uppercase tracking-wider">
+          <span className="text-xs font-bold text-muted-text uppercase tracking-wider">
             GPA Trung bình thi
           </span>
-          <span className="text-[44px] font-extrabold text-brand-pink leading-none drop-shadow-[0_0_15px_rgba(255,105,180,0.3)]">
+          <span className="text-5xl font-extrabold text-brand-pink leading-none drop-shadow-[0_0_15px_rgba(255,105,180,0.3)]">
             {stats.averageGPA}
           </span>
-          <span className="text-[10px] text-muted-text font-semibold text-center">
+          <span className="text-xs text-muted-text font-semibold text-center">
             tính trên các bài thi chính thức (thang 10)
           </span>
         </div>
@@ -69,7 +69,7 @@ export function AssessmentStats({ stats }: AssessmentStatsProps) {
         </div>
 
         <div className="border-t border-border-dark/40 pt-4 text-center">
-          <div className="text-[11px] text-muted-text leading-relaxed">
+          <div className="text-xs text-muted-text leading-relaxed">
             Tích cực hoàn thiện các bài thi đúng hạn để nâng cao điểm trung
             bình GPA nhé!
           </div>
@@ -78,7 +78,7 @@ export function AssessmentStats({ stats }: AssessmentStatsProps) {
 
       {/* Subject Breakdown Card */}
       <div className="bg-deep-black rounded p-6 border border-border-dark space-y-4">
-        <h3 className="text-[13px] font-bold text-cream border-b border-border-dark/40 pb-3">
+        <h3 className="text-sm font-bold text-cream border-b border-border-dark/40 pb-3">
           Môn học của bạn
         </h3>
         <div className="space-y-3">

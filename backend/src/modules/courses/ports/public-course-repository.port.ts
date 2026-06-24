@@ -1,5 +1,4 @@
-import type { Prisma } from '@prisma/client'
-
+import type { SubjectValue } from '~/common/constant/taxonomy'
 import type { CourseChapterPublic, CourseSummary } from '../dto/course-shared.types'
 
 export type PublicCourseTeacherRecord = {
@@ -17,17 +16,26 @@ export type CatalogCourseDetailRecord = CatalogCourseRecord & {
   chapters: CourseChapterPublic[]
 }
 
+export type ListCatalogCoursesFilters = {
+  subjects?: SubjectValue[]
+  featured?: boolean
+  grade?: number
+  search?: string
+}
+
+export type CatalogCourseSort = 'newest' | 'hotest' | 'priceAsc' | 'priceDesc'
+
 export interface PublicCourseRepositoryPort {
   listCatalogCourses(data: {
-    where: Prisma.CourseWhereInput
-    skip: number
-    take: number
-    orderBy: Prisma.CourseOrderByWithRelationInput[]
+    filters: ListCatalogCoursesFilters
+    sort: CatalogCourseSort
+    page: number
+    limit: number
   }): Promise<[CatalogCourseRecord[], number]>
   findPublishedCourseBySlug(slug: string): Promise<CatalogCourseDetailRecord | null>
   listRelatedCatalogCourses(data: {
     courseId: string
     grade: number
-    take: number
+    limit: number
   }): Promise<CatalogCourseRecord[]>
 }

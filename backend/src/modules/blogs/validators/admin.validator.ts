@@ -27,11 +27,10 @@ const tagsSchema = z.array(z.string().trim().min(1).max(50)).max(10).default([])
 export const createBlogPostBodySchema = z
   .object({
     title: z.string().trim().min(2).max(255),
-    slug: slugSchema.optional(),
     excerpt: z.string().trim().max(500).optional().nullable(),
-    category: z.string().trim().min(1).max(100).optional().nullable(),
+    categoryId: z.string().uuid().optional().nullable(),
     tags: tagsSchema.optional(),
-    content: richContentSchema,
+    content: richContentSchema.optional(),
     thumbnailMediaId: z.string().uuid().optional().nullable(),
     isFeatured: z.boolean().optional()
   })
@@ -40,9 +39,8 @@ export const createBlogPostBodySchema = z
 export const updateBlogPostBodySchema = z
   .object({
     title: z.string().trim().min(2).max(255).optional(),
-    slug: slugSchema.optional(),
     excerpt: z.string().trim().max(500).optional().nullable(),
-    category: z.string().trim().min(1).max(100).optional().nullable(),
+    categoryId: z.string().uuid().optional().nullable(),
     tags: tagsSchema.optional(),
     content: richContentSchema.optional(),
     thumbnailMediaId: z.string().uuid().optional().nullable(),
@@ -59,7 +57,7 @@ export const listAdminBlogPostsQuerySchema = z
     limit: z.coerce.number().int().min(1).max(100).default(20),
     status: z.nativeEnum(BlogPostStatus).optional(),
     authorId: z.string().uuid().optional(),
-    category: z.string().trim().min(1).max(100).optional(),
+    categorySlug: slugSchema.optional(),
     tag: z.string().trim().min(1).max(50).optional(),
     isFeatured: queryBooleanSchema.optional(),
     search: z.string().trim().min(1).max(100).optional()
@@ -102,6 +100,19 @@ export const listAdminBlogCategoriesSchema = z.object({
       limit: z.coerce.number().int().min(1).max(100).default(50)
     })
     .strict()
+})
+
+export const createBlogCategoryBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(100),
+    slug: slugSchema.optional()
+  })
+  .strict()
+
+export const createBlogCategorySchema = z.object({
+  body: createBlogCategoryBodySchema,
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
 })
 
 export const getAdminBlogPostSchema = z.object({

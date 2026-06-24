@@ -1,6 +1,5 @@
 import { AppError } from '~/common/error/app-error'
 import { ERROR_CODE } from '~/common/constant/error-code'
-import { adminPaymentTransactionRepository } from '../repositories/admin-payment-transaction.repository'
 import type { AdminPaymentTransactionRepositoryPort } from '../ports/admin-payment-transaction-repository.port'
 import type {
   AdminPaymentTransactionDetailResponse,
@@ -18,8 +17,6 @@ export class AdminPaymentTransactionService {
   async listTransactions(
     input: ListAdminPaymentTransactionsDto
   ): Promise<ListAdminPaymentTransactionsResponse> {
-    const skip = (input.page - 1) * input.limit
-
     const [items, totalItems] = await this.transactionRepository.listTransactions({
       filters: {
         provider: input.provider,
@@ -33,8 +30,8 @@ export class AdminPaymentTransactionService {
         createdTo: input.createdTo,
         search: input.search
       },
-      skip,
-      take: input.limit
+      page: input.page,
+      limit: input.limit
     })
 
     return {
@@ -58,7 +55,3 @@ export class AdminPaymentTransactionService {
     return mapAdminPaymentTransactionDetail(transaction)
   }
 }
-
-export const adminPaymentTransactionService = new AdminPaymentTransactionService(
-  adminPaymentTransactionRepository
-)

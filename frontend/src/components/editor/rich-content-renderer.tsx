@@ -26,7 +26,8 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
       return (
         <p
           key={index}
-          className="text-[15px] md:text-[16px] text-cream/90 leading-relaxed"
+          className="text-base md:text-base text-cream/90 leading-relaxed"
+          style={{ textAlign: node.attrs?.textAlign }}
         >
           {node.content
             ? node.content.map((child, cIdx) => renderNode(child, cIdx))
@@ -40,7 +41,7 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
       const text = node.content
         ? node.content.map((c) => (c.type === "text" ? c.text : "")).join("")
         : "";
-      const id = text
+      const fallbackId = text
         .toLowerCase()
         .replace(
           /[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ\s-]/g,
@@ -50,15 +51,20 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
         .replace(/\s+/g, "-");
 
       const sizeClasses = {
-        1: "text-[28px] md:text-[36px] font-extrabold text-cream mb-4 mt-8",
-        2: "text-[22px] md:text-[28px] font-bold text-brand-pink mb-4 mt-8",
-        3: "text-[18px] md:text-[22px] font-bold text-cream mb-2 mt-6",
+        1: "text-3xl md:text-4xl font-extrabold text-cream mb-4 mt-8",
+        2: "text-2xl md:text-3xl font-bold text-brand-pink mb-4 mt-8",
+        3: "text-lg md:text-2xl font-bold text-cream mb-2 mt-6",
       };
 
       const classes = sizeClasses[level as 1 | 2 | 3] || sizeClasses[2];
 
       return (
-        <HeadingTag key={index} id={id} className={classes}>
+        <HeadingTag
+          key={index}
+          id={node.attrs?.id || fallbackId}
+          className={`${classes} scroll-mt-28`}
+          style={{ textAlign: node.attrs?.textAlign }}
+        >
           {node.content
             ? node.content.map((child, cIdx) => renderNode(child, cIdx))
             : null}
@@ -95,10 +101,20 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
             element = (
               <code
                 key={index}
-                className="bg-deep-black text-brand-pink px-1.5 py-0.5 rounded font-mono text-[13px]"
+                className="bg-deep-black text-brand-pink px-1.5 py-0.5 rounded font-mono text-sm"
               >
                 {element}
               </code>
+            );
+          }
+          if (mark.type === "link" && typeof mark.attrs?.href === "string") {
+            element = <a key={index} href={mark.attrs.href} className="text-brand-pink underline underline-offset-4">{element}</a>;
+          }
+          if (mark.type === "textStyle" && typeof mark.attrs?.fontSize === "string") {
+            element = (
+              <span key={index} style={{ fontSize: mark.attrs.fontSize }}>
+                {element}
+              </span>
             );
           }
         });
@@ -110,7 +126,7 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
       return (
         <blockquote
           key={index}
-          className="border-l-2 border-brand-pink/50 bg-deep-black px-6 py-4 my-8 italic text-cream text-[16px] md:text-[18px] leading-relaxed"
+          className="border-l-2 border-brand-pink/50 bg-deep-black px-6 py-4 my-8 italic text-cream text-base md:text-lg leading-relaxed"
         >
           {node.content
             ? node.content.map((child, cIdx) => renderNode(child, cIdx))
@@ -122,7 +138,7 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
       return (
         <ul
           key={index}
-          className="list-disc list-inside space-y-2 text-[15px] text-muted-taupe ml-4 my-4"
+          className="list-disc list-inside space-y-2 text-base text-muted-taupe ml-4 my-4"
         >
           {node.content
             ? node.content.map((child, cIdx) => renderNode(child, cIdx))
@@ -134,7 +150,7 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
       return (
         <ol
           key={index}
-          className="list-decimal list-inside space-y-2 text-[15px] text-muted-taupe ml-4 my-4"
+          className="list-decimal list-inside space-y-2 text-base text-muted-taupe ml-4 my-4"
         >
           {node.content
             ? node.content.map((child, cIdx) => renderNode(child, cIdx))
@@ -164,12 +180,18 @@ function renderNode(node: RichNode, index: number): React.ReactNode {
             />
           </div>
           {node.attrs?.caption && (
-            <p className="text-center text-[12px] text-muted-taupe italic">
+            <p className="text-center text-xs text-muted-taupe italic">
               {node.attrs.caption}
             </p>
           )}
         </div>
       );
+
+    case "hardBreak":
+      return <br key={index} />;
+
+    case "horizontalRule":
+      return <hr key={index} className="my-8 border-border-dark" />;
 
     case "youtube":
       return (

@@ -10,21 +10,56 @@ export const api = axios.create({
   },
 });
 
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: unknown) => void;
-  reject: (error: unknown) => void;
-}> = [];
+let refreshPromise: Promise<string> | null = null;
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
+export const refreshAccessToken = async (): Promise<string> => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    const refreshToken = useAuthStore.getState().refreshToken;
+
+    if (!refreshToken) {
+      useAuthStore.getState().clearSession();
+      if (typeof window !== 'undefined') {
+        const callbackUrl = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        window.location.href = `/login?callbackUrl=${callbackUrl}`;
+      }
+      throw new Error('No refresh token available');
     }
-  });
-  failedQueue = [];
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+        refreshToken,
+      });
+
+      const data = response.data;
+      if (data && data.success) {
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.data;
+        
+        useAuthStore.getState().setTokens({
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        });
+
+        return newAccessToken;
+      } else {
+        throw new Error('Refresh token response success is false');
+      }
+    } catch (refreshError) {
+      useAuthStore.getState().clearSession();
+      if (typeof window !== 'undefined') {
+        const callbackUrl = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        window.location.href = `/login?callbackUrl=${callbackUrl}`;
+      }
+      throw refreshError;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 };
 
 // Request interceptor to attach access token
@@ -55,60 +90,14 @@ api.interceptors.response.use(
     const isTokenExpired = errorCode === 'ACCESS_TOKEN_EXPIRED';
     
     if (error.response?.status === 401 && isTokenExpired && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = useAuthStore.getState().refreshToken;
-
-      if (!refreshToken) {
-        useAuthStore.getState().clearSession();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
-          refreshToken,
-        });
-
-        const data = response.data;
-        if (data && data.success) {
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.data;
-          
-          useAuthStore.getState().setTokens({
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-          });
-
-          processQueue(null, newAccessToken);
-          
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
-        } else {
-          throw new Error('Refresh failed');
-        }
+        const newAccessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        useAuthStore.getState().clearSession();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

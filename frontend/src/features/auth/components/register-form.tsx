@@ -56,11 +56,11 @@ export function RegisterForm() {
       <div className="flex mb-8 bg-brand-dark/50 rounded-lg p-1 border border-border-dark">
         <Link
           href={loginHref}
-          className="flex-grow py-2 text-center text-[14px] font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
+          className="flex-grow py-2 text-center text-sm font-bold rounded-md text-muted-text hover:text-cream transition-colors cursor-pointer"
         >
           Đăng nhập
         </Link>
-        <button className="flex-grow py-2 text-center text-[14px] font-bold rounded-md bg-brand-pink text-brand-dark transition-all">
+        <button className="flex-grow py-2 text-center text-sm font-bold rounded-md bg-brand-pink text-brand-dark transition-all">
           Đăng ký
         </button>
       </div>
@@ -69,12 +69,12 @@ export function RegisterForm() {
       {(isSuccess || errorMessage) && (
         <div className="mb-6">
           {isSuccess && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-[13px] leading-relaxed">
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm leading-relaxed">
               Đăng ký thành công! Đang đăng nhập tự động...
             </div>
           )}
           {errorMessage && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-[13px] leading-relaxed">
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm leading-relaxed">
               {errorMessage}
             </div>
           )}
@@ -86,7 +86,7 @@ export function RegisterForm() {
         {/* Full Name Field */}
         <div>
           <label
-            className="block text-[14px] font-bold text-cream mb-2"
+            className="block text-sm font-bold text-cream mb-2"
             htmlFor="fullName"
           >
             Họ và tên
@@ -117,7 +117,7 @@ export function RegisterForm() {
         {/* Email Field */}
         <div>
           <label
-            className="block text-[14px] font-bold text-cream mb-2"
+            className="block text-sm font-bold text-cream mb-2"
             htmlFor="email"
           >
             Email
@@ -148,7 +148,7 @@ export function RegisterForm() {
         {/* Password Field */}
         <div>
           <label
-            className="block text-[14px] font-bold text-cream mb-2"
+            className="block text-sm font-bold text-cream mb-2"
             htmlFor="password"
           >
             Mật khẩu
@@ -186,7 +186,7 @@ export function RegisterForm() {
         {/* Confirm Password Field */}
         <div>
           <label
-            className="block text-[14px] font-bold text-cream mb-2"
+            className="block text-sm font-bold text-cream mb-2"
             htmlFor="confirmPassword"
           >
             Xác nhận mật khẩu
@@ -225,7 +225,7 @@ export function RegisterForm() {
               {...register("agree")}
             />
             <label
-              className="text-[12px] text-muted-text select-none cursor-pointer"
+              className="text-xs text-muted-text select-none cursor-pointer"
               htmlFor="agree"
             >
               Tôi đồng ý với{" "}
@@ -268,7 +268,7 @@ export function RegisterForm() {
 
       {/* Switch Text */}
       <div className="mt-8 text-center">
-        <p className="text-[13px] text-muted-text">
+        <p className="text-sm text-muted-text">
           Đã có tài khoản?
           <Link
             href={loginHref}

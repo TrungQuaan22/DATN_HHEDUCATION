@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { X, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 import { SearchableTeacherSelect } from "@/features/courses/components/SearchableTeacherSelect";
 import { SearchableCourseSelect } from "./SearchableCourseSelect";
 import { getAdminCourses } from "@/features/courses/api";
@@ -17,15 +21,43 @@ type EnrollStudentModalProps = {
   student: AdminUserItem | null;
 };
 
+const enrollStudentSchema = z.object({
+  teacherId: z.string().min(1, "Vui lòng chọn giảng viên phụ trách để hiển thị khóa học"),
+  courseId: z.string().min(1, "Vui lòng chọn khóa học muốn gán"),
+  manualReason: z.string().max(500, "Lý do tối đa 500 ký tự").optional().default(""),
+});
+
+type EnrollStudentFormValues = z.infer<typeof enrollStudentSchema>;
+
 export default function EnrollStudentModal({
   isOpen,
   onClose,
   student,
 }: EnrollStudentModalProps) {
-  const [teacherId, setTeacherId] = useState("");
-  const [courseId, setCourseId] = useState("");
-  const [manualReason, setManualReason] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<EnrollStudentFormValues>({
+    resolver: zodResolver(enrollStudentSchema),
+    defaultValues: {
+      teacherId: "",
+      courseId: "",
+      manualReason: "",
+    },
+  });
+
+  const teacherId = watch("teacherId");
+  const courseId = watch("courseId");
+  const manualReason = watch("manualReason");
+
+  // Reset course selection when teacher changes
+  useEffect(() => {
+    setValue("courseId", "");
+  }, [teacherId, setValue]);
 
   // Fetch published courses assigned to the selected teacher to filter options locally
   const { data: coursesData, isLoading: isLoadingCourses } = useQuery({
@@ -50,7 +82,6 @@ export default function EnrollStudentModal({
     onError: (err: unknown) => {
       console.error("Error manual enrollment:", err);
       const errMsg = getApiErrorMessage(err, "Gán khóa học thủ công thất bại.");
-      setFormError(errMsg);
       toast.error(errMsg);
     },
   });
@@ -59,41 +90,22 @@ export default function EnrollStudentModal({
 
   useEffect(() => {
     if (isOpen) {
-      setTeacherId("");
-      setCourseId("");
-      setManualReason("");
-      setFormError(null);
+      reset();
     }
-  }, [isOpen]);
+  }, [isOpen, reset]);
 
   if (!isOpen || !student) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    if (!teacherId) {
-      setFormError("Vui lòng chọn giảng viên phụ trách để hiển thị khóa học");
-      return;
-    }
-    if (!courseId) {
-      setFormError("Vui lòng chọn khóa học muốn gán");
-      return;
-    }
-
-    // Only send userId, courseId, and manualReason to the backend API
+  const onFormSubmit = (data: EnrollStudentFormValues) => {
     enrollMutation.mutate({
       userId: student.id,
-      courseId,
-      manualReason: manualReason.trim() || undefined,
+      courseId: data.courseId,
+      manualReason: data.manualReason.trim() || undefined,
     });
   };
 
   const handleClose = () => {
-    setTeacherId("");
-    setCourseId("");
-    setManualReason("");
-    setFormError(null);
+    reset();
     onClose();
   };
 
@@ -110,50 +122,50 @@ export default function EnrollStudentModal({
         </button>
 
         <div className="px-8 pt-8 pb-6 text-center border-b border-admin-border/20 bg-admin-surface-low/30">
-          <h3 className="text-2xl font-bold font-serif text-admin-cream flex items-center justify-center gap-2">
+          <h3 className="text-lg font-bold text-admin-cream flex items-center justify-center gap-2">
             Gán Khóa Học Thủ Công
           </h3>
           <p className="text-sm text-admin-muted mt-2 max-w-sm mx-auto">
-            Gán khóa học đã phát hành cho học sinh <span className="font-bold text-admin-cream">{student.fullName}</span> ({student.email})
+            Gán khóa học đã phát hành cho học sinh{" "}
+            <span className="font-bold text-admin-cream">{student.fullName}</span> ({student.email})
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto px-8 py-6 space-y-4 custom-scrollbar">
-          {formError && (
-            <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm">
-              <AlertCircle size={18} className="flex-shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
-
+        <form
+          onSubmit={handleSubmit(onFormSubmit)}
+          className="flex-grow overflow-y-auto px-8 py-6 space-y-4 custom-scrollbar"
+        >
           {/* Teacher Select for local filtering */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Chọn giảng viên để lọc khóa học <span className="text-admin-pink">*</span>
             </label>
             <SearchableTeacherSelect
               value={teacherId}
-              onChange={(val) => {
-                setTeacherId(val);
-                setCourseId(""); // reset course when teacher changes
-              }}
-              error={!teacherId && !!formError}
+              onChange={(val) => setValue("teacherId", val, { shouldValidate: true })}
+              error={!!errors.teacherId}
             />
+            {errors.teacherId && (
+              <p className="text-red-400 text-xs mt-1">{errors.teacherId.message}</p>
+            )}
           </div>
 
           {/* Course Select */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Chọn khóa học <span className="text-admin-pink">*</span>
             </label>
             <SearchableCourseSelect
               value={courseId}
-              onChange={setCourseId}
+              onChange={(val) => setValue("courseId", val, { shouldValidate: true })}
               coursesList={coursesList}
               isLoading={isLoadingCourses}
               disabled={!teacherId || isLoadingCourses}
-              error={!courseId && !!formError}
+              error={!!errors.courseId}
             />
+            {errors.courseId && (
+              <p className="text-red-400 text-xs mt-1">{errors.courseId.message}</p>
+            )}
             {!teacherId && (
               <p className="text-xs text-admin-muted italic mt-1">
                 * Vui lòng chọn giảng viên phụ trách trước để xem danh sách khóa học.
@@ -163,21 +175,28 @@ export default function EnrollStudentModal({
 
           {/* Reason */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Lý do thêm thủ công <span className="text-admin-muted/50">(Tùy chọn)</span>
             </label>
             <textarea
-              value={manualReason}
-              onChange={(e) => setManualReason(e.target.value)}
+              {...register("manualReason")}
               placeholder="Nhập lý do cấp quyền học tập (Ví dụ: Học bổng nội bộ, hỗ trợ đặc biệt...)"
               rows={3}
               maxLength={500}
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] resize-none"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm resize-none"
             />
-            <div className="text-right text-[11px] text-admin-muted">
-              {manualReason.length}/500 ký tự
+            {errors.manualReason && (
+              <p className="text-red-400 text-xs mt-1">{errors.manualReason.message}</p>
+            )}
+            <div className="text-right text-xs text-admin-muted">
+              {(manualReason || "").length}/500 ký tự
             </div>
           </div>
+
+          {/* Form submit button in the form for semantic structure */}
+          <button type="submit" className="hidden" id="enroll-student-submit-btn">
+            Submit
+          </button>
         </form>
 
         <div className="px-8 py-5 border-t border-admin-border/20 bg-admin-surface-low/30 flex items-center justify-between rounded-b-2xl">
@@ -191,8 +210,8 @@ export default function EnrollStudentModal({
           </button>
 
           <button
-            type="submit"
-            onClick={handleSubmit}
+            type="button"
+            onClick={() => document.getElementById("enroll-student-submit-btn")?.click()}
             disabled={isSaving}
             className="bg-admin-pink text-white px-6 py-2.5 text-sm font-bold rounded shadow-lg shadow-admin-pink/20 hover:brightness-110 transition-all flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
           >

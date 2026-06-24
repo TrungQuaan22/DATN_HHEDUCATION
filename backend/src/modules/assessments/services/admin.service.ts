@@ -10,6 +10,7 @@ import {
 
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
+import { createSlugFromText } from '~/common/utils/slug'
 
 import type {
   AssessmentActorDto,
@@ -21,9 +22,9 @@ import type {
   GradeEssayDto,
   ListAdminAssessmentsDto
 } from '../dto'
+import type { AssessmentForPublishDetail } from '../types'
 import { mapPlacementSummary } from '../mappers/assessment.mapper'
-import { addScores, zeroScore } from '../helpers/score.helper'
-import { Assessment } from '../entities/assessment.entity'
+import { addScores, zeroScore } from '../policies/submission.policy'
 import type { AdminAssessmentRepositoryPort } from '../ports/admin-assessment-repository.port'
 import {
   ensureAssessmentExists,
@@ -31,11 +32,27 @@ import {
   ensureSectionExists,
   ensureSectionBelongsToAssessment,
   ensureItemExists,
-  ensureSubmissionForGradingExists,
-  ensureTeacherOwnsCourse,
-  ensureItemsCanUseCourseTopics,
-  ensurePlacementTargetIsValid
+  ensureSubmissionForGradingExists
 } from '../ensures/assessment.ensure'
+import {
+  canManageAssessment,
+  validateCanGradeAssessment,
+  validateCanManageAssessment,
+  validateCanManagePlacement,
+  validateCanViewAssessment
+} from '../policies/assessment-access.policy'
+import {
+  validateAssessmentCanPublish,
+  validateImportedItems,
+  validateItemsForMode,
+  validateSectionsForGrading,
+  validateSectionType
+} from '../policies/assessment-content.policy'
+import {
+  validateCourseTopics,
+  validatePlacementTarget,
+  validateTeacherOwnsCourse
+} from '../policies/assessment-placement.policy'
 
 const ensureNonOwnerKeepsPlacementTarget = (
   actor: AssessmentActorDto,
@@ -49,8 +66,7 @@ const ensureNonOwnerKeepsPlacementTarget = (
   },
   data: Omit<CreatePlacementDto, 'assessmentId'>
 ) => {
-  const assessmentEntity = new Assessment(assessment as any)
-  if (assessmentEntity.canManage(actor)) {
+  if (canManageAssessment(assessment.createdById, actor)) {
     return
   }
 
@@ -79,7 +95,7 @@ export class AdminAssessmentService {
   async listAdminAssessments(data: ListAdminAssessmentsDto & { actor: AssessmentActorDto }) {
     if (data.actor.role === UserRole.teacher && data.scope === 'course' && data.courseId) {
       const course = await this.repository.findCourseForPlacement(data.courseId)
-      ensureTeacherOwnsCourse(data.actor, course)
+      validateTeacherOwnsCourse(data.actor, course)
     }
 
     const [items, totalItems] = await this.repository.listAdminAssessments({
@@ -92,8 +108,8 @@ export class AdminAssessmentService {
         gradingType: data.gradingType,
         teacherId: data.actor.role === UserRole.teacher ? data.actor.id : undefined
       },
-      skip: (data.page - 1) * data.limit,
-      take: data.limit
+      page: data.page,
+      limit: data.limit
     })
 
     return {
@@ -132,10 +148,7 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentForPublish(data.assessmentId)
     const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canView(data.actor, assessment.placements)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot view this assessment')
-    }
+    validateCanViewAssessment(assessment, data.actor, assessment.placements)
 
     return {
       id: assessment.id,
@@ -206,8 +219,8 @@ export class AdminAssessmentService {
     const [items, totalItems] = await this.repository.listGradingSubmissions({
       actor: data.actor,
       assessmentId: data.assessmentId,
-      skip: (data.page - 1) * data.limit,
-      take: data.limit
+      page: data.page,
+      limit: data.limit
     })
 
     return {
@@ -244,10 +257,7 @@ export class AdminAssessmentService {
     const submissionRecord = await this.repository.findSubmissionForGrading(submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)
 
-    const assessmentEntity = new Assessment(submission.assessment as any)
-    if (!assessmentEntity.canGrade(actor, submission.placement)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot grade this submission')
-    }
+    validateCanGradeAssessment(submission.assessment, actor, submission.placement)
 
     return {
       id: submission.id,
@@ -309,7 +319,11 @@ export class AdminAssessmentService {
       const media = await this.repository.findDocumentMediaById(data.sourceMediaId)
 
       if (!media) {
-        throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'sourceMediaId must be a ready PDF document')
+        throw new AppError(
+          400,
+          ERROR_CODE.BAD_REQUEST,
+          'sourceMediaId must be a ready PDF document'
+        )
       }
     }
 
@@ -319,17 +333,22 @@ export class AdminAssessmentService {
     })
   }
 
-  async updateAssessment(actor: AssessmentActorDto, assessmentId: string, data: Partial<CreateAssessmentDto>) {
+  async updateAssessment(
+    actor: AssessmentActorDto,
+    assessmentId: string,
+    data: Partial<CreateAssessmentDto>
+  ) {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only manage assessments you created')
-    }
+    validateCanManageAssessment(assessment, actor)
 
     if (data.type !== undefined && data.type !== assessment.type) {
-      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Assessment type cannot be changed after creation')
+      throw new AppError(
+        400,
+        ERROR_CODE.BAD_REQUEST,
+        'Assessment type cannot be changed after creation'
+      )
     }
 
     if (assessment._count.submissions > 0) {
@@ -355,12 +374,18 @@ export class AdminAssessmentService {
       const media = await this.repository.findDocumentMediaById(data.sourceMediaId)
 
       if (!media) {
-        throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'sourceMediaId must be a ready PDF document')
+        throw new AppError(
+          400,
+          ERROR_CODE.BAD_REQUEST,
+          'sourceMediaId must be a ready PDF document'
+        )
       }
     }
 
     if (data.gradingType && data.gradingType !== assessment.gradingType) {
-      Assessment.validateSectionsCompatibleWithGradingType(data.gradingType, assessment.sections)
+      const newGradingType = data.gradingType
+
+      validateSectionsForGrading(newGradingType, assessment.sections)
     }
 
     return this.repository.updateAssessment(assessmentId, data)
@@ -370,10 +395,7 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(data.assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManagePlacement(actor, assessment.placements)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot manage this assessment placement')
-    }
+    validateCanManagePlacement(assessment, actor, assessment.placements)
     ensureNonOwnerKeepsPlacementTarget(actor, assessment, data)
 
     let course = null
@@ -384,7 +406,14 @@ export class AdminAssessmentService {
     if (data.type === AssessmentPlacementType.lesson && data.lessonId) {
       lesson = await this.repository.findLessonForPlacement(data.lessonId)
     }
-    ensurePlacementTargetIsValid(actor, assessment, data, course, lesson)
+    validatePlacementTarget(actor, assessment, data, course, lesson)
+
+    let slug: string | null = null
+    if (data.type === AssessmentPlacementType.public_practice) {
+      const baseSlug = createSlugFromText(assessment.title)
+      const timestampSuffix = Date.now().toString().slice(-7)
+      slug = `${baseSlug}-${timestampSuffix}`
+    }
 
     const placement = await this.repository.upsertSinglePlacement(data.assessmentId, {
       type: data.type,
@@ -393,7 +422,7 @@ export class AdminAssessmentService {
       openTime: data.openTime,
       closeTime: data.closeTime,
       maxAttempts: data.maxAttempts,
-      slug: data.slug,
+      slug,
       isFeatured: data.isFeatured
     })
     return mapPlacementSummary(placement)
@@ -407,10 +436,7 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManagePlacement(actor, assessment.placements)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot manage this assessment placement')
-    }
+    validateCanManagePlacement(assessment, actor, assessment.placements)
     ensureNonOwnerKeepsPlacementTarget(actor, assessment, data)
 
     let course = null
@@ -421,9 +447,19 @@ export class AdminAssessmentService {
     if (data.type === AssessmentPlacementType.lesson && data.lessonId) {
       lesson = await this.repository.findLessonForPlacement(data.lessonId)
     }
-    ensurePlacementTargetIsValid(actor, assessment, { ...data, assessmentId }, course, lesson)
+    validatePlacementTarget(actor, assessment, { ...data, assessmentId }, course, lesson)
 
-    const placement = await this.repository.upsertSinglePlacement(assessmentId, data)
+    let slug: string | null = null
+    if (data.type === AssessmentPlacementType.public_practice) {
+      const baseSlug = createSlugFromText(assessment.title)
+      const timestampSuffix = Date.now().toString().slice(-7)
+      slug = `${baseSlug}-${timestampSuffix}`
+    }
+
+    const placement = await this.repository.upsertSinglePlacement(assessmentId, {
+      ...data,
+      slug
+    })
     return mapPlacementSummary(placement)
   }
 
@@ -431,10 +467,7 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only manage assessments you created')
-    }
+    validateCanManageAssessment(assessment, actor)
     await this.repository.deleteSinglePlacement(assessmentId)
 
     return {
@@ -451,14 +484,15 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
-    Assessment.validateSectionItemTypeAllowedByGradingType(assessment.gradingType, data.itemType)
+    validateSectionType(assessment.gradingType, data.itemType)
 
     return this.repository.createSection({
       assessmentId,
@@ -477,12 +511,13 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
 
     ensureSectionExists(assessment, sectionId)
@@ -498,12 +533,13 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
 
     const section = ensureSectionExists(assessment, sectionId)
@@ -525,31 +561,38 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
 
     const section = ensureSectionBelongsToAssessment(assessment, sectionId)
 
     if (assessment.type === AssessmentType.exam && !assessment.sourceMediaId) {
-      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Exam item creation requires a PDF source media')
+      throw new AppError(
+        400,
+        ERROR_CODE.BAD_REQUEST,
+        'Exam item creation requires a PDF source media'
+      )
     }
 
-    Assessment.validateSectionItemTypeAllowedByGradingType(assessment.gradingType, section.itemType)
-    Assessment.validateSectionItemsMatchAssessmentMode(assessment.type, section.itemType, data.items)
-    Assessment.validateImportItemsAreValid(
-      data.items.map((item) => ({ ...item, itemType: section.itemType })),
-      assessment.type
-    )
+    validateSectionType(assessment.gradingType, section.itemType)
 
-    if (data.courseId) {
-      const course = await this.repository.findCourseForPlacement(data.courseId)
-      const courseTopics = await this.repository.listTopicsByCourse(data.courseId)
-      ensureItemsCanUseCourseTopics(assessment, data.items, course, courseTopics)
+    if (assessment.visibility === AssessmentVisibility.published) {
+      validateItemsForMode(assessment.type, section.itemType, data.items)
+      validateImportedItems(
+        data.items.map((item) => ({ ...item, itemType: section.itemType }))
+      )
+
+      if (data.courseId) {
+        const course = await this.repository.findCourseForPlacement(data.courseId)
+        const courseTopics = await this.repository.listTopicsByCourse(data.courseId)
+        validateCourseTopics(assessment, data.items, course, courseTopics)
+      }
     }
 
     const createdItems = await this.repository.createSectionItems({
@@ -576,17 +619,18 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
 
     const item = ensureItemExists(assessment, itemId)
 
-    Assessment.validateSectionItemTypeAllowedByGradingType(assessment.gradingType, item.itemType)
+    validateSectionType(assessment.gradingType, item.itemType)
 
     const updated = await this.repository.updateSectionItem({
       assessmentId,
@@ -605,12 +649,13 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only edit assessment content you own')
-    }
+    validateCanManageAssessment(assessment, actor)
     if ((assessment._count?.submissions ?? 0) > 0) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Assessment content is locked after submissions exist')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Assessment content is locked after submissions exist'
+      )
     }
 
     const deleted = await this.repository.deleteSectionItem(assessmentId, itemId)
@@ -622,15 +667,37 @@ export class AdminAssessmentService {
     return { itemId, deleted: true }
   }
 
+  private async validatePublishCourseTopics(assessment: AssessmentForPublishDetail) {
+    for (const placement of assessment.placements) {
+      let courseId: string | null = null
+      if (placement.type === AssessmentPlacementType.course && placement.courseId) {
+        courseId = placement.courseId
+      } else if (placement.type === AssessmentPlacementType.lesson && placement.lessonId) {
+        const lesson = await this.repository.findLessonForPlacement(placement.lessonId)
+        courseId = lesson?.chapter.course.id ?? null
+      }
+
+      if (courseId) {
+        const course = await this.repository.findCourseForPlacement(courseId)
+        const courseTopics = await this.repository.listTopicsByCourse(courseId)
+        const items = assessment.sections.flatMap((section) =>
+          section.items.map((item) => ({
+            topicId: item.topicId,
+            topicName: item.topic?.name ?? null
+          }))
+        )
+        validateCourseTopics(assessment, items, course, courseTopics)
+      }
+    }
+  }
+
   async publishAssessment(actor: AssessmentActorDto, assessmentId: string) {
     const assessmentRecord = await this.repository.findAssessmentForPublish(assessmentId)
     const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only manage assessments you created')
-    }
-    assessmentEntity.validateCanPublish()
+    validateCanManageAssessment(assessment, actor)
+    validateAssessmentCanPublish(assessment)
+    await this.validatePublishCourseTopics(assessment)
 
     return this.repository.publishAssessment(assessmentId)
   }
@@ -643,13 +710,11 @@ export class AdminAssessmentService {
     const assessmentRecord = await this.repository.findAssessmentForPublish(assessmentId)
     const assessment = ensureAssessmentForPublishExists(assessmentRecord)
 
-    const assessmentEntity = new Assessment(assessment as any)
-    if (!assessmentEntity.canManage(actor)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You can only manage assessments you created')
-    }
+    validateCanManageAssessment(assessment, actor)
 
     if (visibility === AssessmentVisibility.published) {
-      assessmentEntity.validateCanPublish()
+      validateAssessmentCanPublish(assessment)
+      await this.validatePublishCourseTopics(assessment)
     }
 
     if (visibility === AssessmentVisibility.draft && assessment._count.submissions > 0) {
@@ -672,10 +737,7 @@ export class AdminAssessmentService {
     )
 
     if (!isPublicPractice) {
-      const assessmentEntity = new Assessment(source as any)
-      if (!assessmentEntity.canView(actor, source.placements)) {
-        throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot view this assessment')
-      }
+      validateCanViewAssessment(source, actor, source.placements)
     }
 
     const title = data.title?.trim() || `${source.title} (Copy)`
@@ -698,16 +760,15 @@ export class AdminAssessmentService {
     const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)
 
-    const assessmentEntity = new Assessment(submission.assessment as any)
-    if (!assessmentEntity.canGrade(data.actor, submission.placement)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot grade this submission')
-    }
+    validateCanGradeAssessment(submission.assessment, data.actor, submission.placement)
 
     if (submission.status === SubmissionStatus.doing) {
       throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission has not been submitted')
     }
 
-    const item = flattenSections(submission.assessment.sections).find((assessmentItem) => assessmentItem.id === data.itemId)
+    const item = flattenSections(submission.assessment.sections).find(
+      (assessmentItem) => assessmentItem.id === data.itemId
+    )
 
     if (!item || item.itemType !== AssessmentItemType.essay) {
       throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Essay item not found in submission')
@@ -724,17 +785,18 @@ export class AdminAssessmentService {
     const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)
 
-    const assessmentEntity = new Assessment(submission.assessment as any)
-    if (!assessmentEntity.canGrade(data.actor, submission.placement)) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'You cannot grade this submission')
-    }
+    validateCanGradeAssessment(submission.assessment, data.actor, submission.placement)
 
     if (submission.status === SubmissionStatus.doing) {
       throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission has not been submitted')
     }
 
     if (submission.assessment.gradingType === GradingType.auto) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'Auto assessment does not require manual finalize')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'Auto assessment does not require manual finalize'
+      )
     }
 
     const essayItemIds = flattenSections(submission.assessment.sections)
@@ -748,7 +810,11 @@ export class AdminAssessmentService {
       gradedEssayAnswers.length !== essayItemIds.length ||
       gradedEssayAnswers.some((answer) => answer.teacherScore === null)
     ) {
-      throw new AppError(409, ERROR_CODE.CONFLICT, 'All essay answers must be graded before finalize')
+      throw new AppError(
+        409,
+        ERROR_CODE.CONFLICT,
+        'All essay answers must be graded before finalize'
+      )
     }
 
     const essayScore = gradedEssayAnswers.reduce(

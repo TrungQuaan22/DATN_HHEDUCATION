@@ -3,21 +3,15 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import {
-  type AdminPaymentTransactionService,
-  adminPaymentTransactionService
-} from '../services/admin-payment-transaction.service'
+import type { AdminPaymentTransactionService } from '../services/admin-payment-transaction.service'
+import { adminPaymentTransactionService } from '../wiring'
 import {
   getAdminPaymentTransactionSchema,
   listAdminPaymentTransactionsSchema
 } from '../validators/admin-payment-transaction.validator'
 
-type ListAdminPaymentTransactionsValidated = z.infer<
-  typeof listAdminPaymentTransactionsSchema
->
-type GetAdminPaymentTransactionValidated = z.infer<
-  typeof getAdminPaymentTransactionSchema
->
+type ListAdminPaymentTransactionsValidated = z.infer<typeof listAdminPaymentTransactionsSchema>
+type GetAdminPaymentTransactionValidated = z.infer<typeof getAdminPaymentTransactionSchema>
 
 export class AdminPaymentTransactionController {
   constructor(private readonly service: AdminPaymentTransactionService) {}

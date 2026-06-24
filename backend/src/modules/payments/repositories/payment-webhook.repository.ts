@@ -2,45 +2,42 @@ import { EnrollmentSource, OrderStatus, Prisma } from '@prisma/client'
 
 import { prisma } from '~/config/db'
 
+import type { NormalizedPaymentEvent } from '../dto'
 import type {
+  CreateManualReviewPaymentData,
+  CreateWebhookEventData,
   PaymentWebhookRepositoryPort,
-  PaymentWebhookTransactionPort
+  PaymentWebhookTransactionPort,
+  UpdatePaymentTransactionData,
+  UpdatePendingPaymentData,
+  UpdateWebhookEventStatusData
 } from '../ports/payment-webhook-repository.port'
 import { paymentRepository } from './payment.repository'
 
 class PrismaPaymentWebhookTransaction implements PaymentWebhookTransactionPort {
   constructor(private readonly tx: Prisma.TransactionClient) {}
 
-  createWebhookEvent(data: Parameters<PaymentWebhookTransactionPort['createWebhookEvent']>[0]) {
+  createWebhookEvent(data: CreateWebhookEventData) {
     return paymentRepository.createWebhookEvent(this.tx, data)
   }
 
-  updateWebhookEventStatus(
-    data: Parameters<PaymentWebhookTransactionPort['updateWebhookEventStatus']>[0]
-  ) {
+  updateWebhookEventStatus(data: UpdateWebhookEventStatusData) {
     return paymentRepository.updateWebhookEventStatus(this.tx, data)
   }
 
-  createPaymentTransaction(event: Parameters<PaymentWebhookTransactionPort['createPaymentTransaction']>[0]) {
+  createPaymentTransaction(event: NormalizedPaymentEvent) {
     return paymentRepository.createPaymentTransaction(this.tx, event)
   }
 
-  updatePaymentTransaction(
-    data: Parameters<PaymentWebhookTransactionPort['updatePaymentTransaction']>[0]
-  ) {
+  updatePaymentTransaction(data: UpdatePaymentTransactionData) {
     return paymentRepository.updatePaymentTransaction(this.tx, data)
   }
 
-  createManualReviewPayment(
-    data: Parameters<PaymentWebhookTransactionPort['createManualReviewPayment']>[0]
-  ) {
+  createManualReviewPayment(data: CreateManualReviewPaymentData) {
     return paymentRepository.createManualReviewPayment(this.tx, data)
   }
 
-  updatePayment(
-    paymentId: string,
-    data: Parameters<PaymentWebhookTransactionPort['updatePayment']>[1]
-  ) {
+  updatePayment(paymentId: string, data: UpdatePendingPaymentData) {
     return paymentRepository.updatePayment(this.tx, paymentId, {
       status: data.status,
       amount: data.amount,

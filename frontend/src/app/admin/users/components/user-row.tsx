@@ -55,7 +55,7 @@ export default function UserRow({
   };
 
   return (
-    <tr className="group hover:bg-admin-surface-low/20 transition-colors text-[14px]">
+    <tr className="group hover:bg-admin-surface-low/20 transition-colors text-sm">
       {/* User Info (Avatar, Name, Email) */}
       <td className="pl-6 py-4">
         <div className="flex items-center gap-3">
@@ -89,14 +89,14 @@ export default function UserRow({
 
       {/* Role */}
       <td className="py-4">
-        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${roleConfig.class}`}>
+        <span className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${roleConfig.class}`}>
           {roleConfig.text}
         </span>
       </td>
 
       {/* Status */}
       <td className="py-4">
-        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${statusConfig.class}`}>
+        <span className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${statusConfig.class}`}>
           {statusConfig.text}
         </span>
       </td>

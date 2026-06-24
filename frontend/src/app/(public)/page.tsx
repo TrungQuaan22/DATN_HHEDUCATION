@@ -9,7 +9,7 @@ import { ScrollReveal } from "@/components/layout/scroll-reveal";
 
 export default function LandingPage() {
   return (
-    <div className="w-full">
+    <div className="landing-pattern-page w-full">
       {/* 1. Hero Carousel Section */}
       <HeroSection />
 

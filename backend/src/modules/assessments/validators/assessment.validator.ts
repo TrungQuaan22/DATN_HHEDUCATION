@@ -10,17 +10,23 @@ import {
 import z from 'zod'
 
 const uuidSchema = z.string().uuid()
-const optionalDateSchema = z.string().datetime().nullable().optional()
+const optionalDateSchema = z
+  .preprocess((val) => {
+    if (typeof val === 'string' && val.trim() === '') return null
+    return val
+  }, z.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid datetime' }))
+  .nullable()
+  .optional()
 const topicNameSchema = z.string().trim().min(1).max(100).nullable().optional()
 const explanationSchema = z.string().trim().min(1).max(20000).nullable().optional()
 const commonItemSchema = {
   topicId: uuidSchema.nullable().optional(),
   topicName: topicNameSchema,
   explanation: explanationSchema,
-  difficulty: z.nativeEnum(QuestionDifficulty),
-  maxScore: z.number().positive()
+  difficulty: z.nativeEnum(QuestionDifficulty).optional(),
+  maxScore: z.number().positive().optional()
 }
-const quizContentLabelSchema = z.string().trim().min(1).max(20000)
+const quizContentLabelSchema = z.string().trim().max(20000)
 const answerOptionLabelSchema = z.string().trim().regex(/^[A-Z]$/, 'Answer option must be A-Z')
 const placementBodySchema = z
   .object({
@@ -30,7 +36,6 @@ const placementBodySchema = z
     openTime: optionalDateSchema,
     closeTime: optionalDateSchema,
     maxAttempts: z.number().int().positive().nullable().optional(),
-    slug: z.string().trim().min(2).max(255).nullable().optional(),
     isFeatured: z.boolean().optional(),
     orderIndex: z.number().int().nullable().optional()
   })
@@ -38,39 +43,39 @@ const placementBodySchema = z
 
 const quizMcqItemSchema = z.object({
   ...commonItemSchema,
-  contentLabel: quizContentLabelSchema,
+  contentLabel: quizContentLabelSchema.nullable().optional(),
   options: z
     .array(
       z
         .object({
-          content: z.string().trim().min(1).max(1000),
-          isCorrect: z.boolean()
+          content: z.string().trim().max(1000).nullable().optional(),
+          isCorrect: z.boolean().optional()
         })
         .strict()
     )
-    .min(2),
-  mode: z.enum(['single', 'multiple'])
+    .optional(),
+  mode: z.enum(['single', 'multiple']).optional()
 }).strict()
 
 const examMcqItemSchema = z.object({
   ...commonItemSchema,
-  optionCount: z.number().int().min(2).max(26),
-  correctOptions: z.array(answerOptionLabelSchema).min(1)
+  optionCount: z.number().int().min(2).max(26).optional(),
+  correctOptions: z.array(answerOptionLabelSchema).optional()
 }).strict()
 
 const quizTrueFalseItemSchema = z.object({
   ...commonItemSchema,
-  contentLabel: quizContentLabelSchema,
+  contentLabel: quizContentLabelSchema.nullable().optional(),
   statements: z
     .array(
       z
         .object({
-          label: z.string().trim().min(1).max(1000),
-          correctValue: z.boolean()
+          label: z.string().trim().max(1000).nullable().optional(),
+          correctValue: z.boolean().optional()
         })
         .strict()
     )
-    .min(1)
+    .optional()
 }).strict()
 
 const examTrueFalseItemSchema = z.object({
@@ -79,27 +84,27 @@ const examTrueFalseItemSchema = z.object({
     .array(
       z
         .object({
-          correctValue: z.boolean()
+          correctValue: z.boolean().optional()
         })
         .strict()
     )
-    .min(1)
+    .optional()
 }).strict()
 
 const quizNumericItemSchema = z.object({
   ...commonItemSchema,
-  contentLabel: quizContentLabelSchema,
-  correctAnswer: z.number()
+  contentLabel: quizContentLabelSchema.nullable().optional(),
+  correctAnswer: z.number().nullable().optional()
 }).strict()
 
 const examNumericItemSchema = z.object({
   ...commonItemSchema,
-  correctAnswer: z.number()
+  correctAnswer: z.number().nullable().optional()
 }).strict()
 
 const quizEssayItemSchema = z.object({
   ...commonItemSchema,
-  contentLabel: quizContentLabelSchema,
+  contentLabel: quizContentLabelSchema.nullable().optional(),
   rubric: z.unknown().optional()
 }).strict()
 

@@ -3,6 +3,7 @@ import type {
   Enrollment,
   GradingType,
   LessonProgress,
+  LessonMaterialType,
   LessonType,
   MediaStatus,
   Subject,
@@ -98,6 +99,20 @@ export type LearningLessonDetailRecord = {
     durationSec: number | null
   } | null
   assessmentPlacements: LearningAssessmentPlacementRecord[]
+  materials: Array<{
+    id: string
+    title: string
+    type: LessonMaterialType
+    contentText: string | null
+    media: {
+      id: string
+      objectKey: string
+      originalName: string | null
+      mimeType: string
+      sizeBytes: number
+      status: MediaStatus
+    } | null
+  }>
   progress: LearningLessonProgressRecord[]
 }
 
@@ -127,8 +142,8 @@ export type LearningLessonForProgressRecord = {
 export interface LearningCourseRepositoryPort {
   listEnrolledCourses(data: {
     userId: string
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[LearningEnrollmentCourseRecord[], number]>
   findEnrolledCourseOverviewBySlug(data: {
     userId: string

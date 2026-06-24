@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +14,7 @@ import { useBlogCatalog } from "../hooks";
 import { FeaturedSideCard } from "./featured-side-card";
 import { BlogPostCard } from "./blog-post-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SafeImage } from "@/components/media/safe-image";
 
 const formatDate = (dateStr: string) => {
   try {
@@ -32,25 +32,21 @@ const formatDate = (dateStr: string) => {
 const getCategoryColorClass = (category: string) => {
   const classes: Record<string, string> = {
     "Bí kíp luyện thi":
-      "text-brand-pink border-brand-pink/20 bg-brand-pink/5",
+      "text-white bg-brand-pink border-transparent",
     "Công nghệ giáo dục":
-      "text-accent-orange border-accent-orange/20 bg-accent-orange/5",
-    "Hướng nghiệp": "text-sky-blue border-sky-blue/20 bg-sky-blue/5",
-    "Phương pháp học": "text-brand-pink border-brand-pink/20 bg-brand-pink/5",
-    "Kỹ năng mềm": "text-sky-blue border-sky-blue/20 bg-sky-blue/5",
-    "Tin tức": "text-muted-taupe border-border-dark bg-surface-input",
+      "text-white bg-accent-orange border-transparent",
+    "Hướng nghiệp": "text-white bg-sky-blue border-transparent",
+    "Phương pháp học": "text-white bg-brand-pink border-transparent",
+    "Kỹ năng mềm": "text-white bg-sky-blue border-transparent",
+    "Tin tức": "text-white bg-neutral-600 border-transparent",
   };
   return (
     classes[category] ||
-    "text-brand-pink border-brand-pink/20 bg-brand-pink/5"
+    "text-white bg-brand-pink border-transparent"
   );
 };
 
-type BlogCatalogProps = {
-  initialPosts?: BlogPostSummary[];
-};
-
-export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
+export default function BlogCatalog() {
   const {
     searchInput,
     setSearchInput,
@@ -71,16 +67,16 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
     handleLargeTouchStart,
     selectCategory,
     changePage,
-  } = useBlogCatalog(initialPosts);
+  } = useBlogCatalog();
 
   return (
     <main className="min-h-screen pb-20 pt-24 bg-brand-dark transition-colors duration-200">
       {/* Title & Search Section */}
       <section className="mb-16 text-center max-w-3xl mx-auto px-6">
-        <h1 className="text-[36px] md:text-[56px] font-extrabold text-cream mb-6 tracking-tight leading-tight">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-cream mb-6 tracking-tight leading-tight">
           Góc Tri Thức &amp; Cảm Hứng
         </h1>
-        <p className="text-[16px] md:text-[18px] text-muted-taupe mb-10 leading-relaxed">
+        <p className="text-base md:text-lg text-muted-taupe mb-10 leading-relaxed">
           Khám phá những chia sẻ chuyên sâu về giáo dục, phương pháp học tập
           hiện đại và hành trình phát triển bản thân cùng HH Education.
         </p>
@@ -90,7 +86,7 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
             <Search className="text-muted-taupe w-5 h-5" />
           </div>
           <input
-            className="w-full bg-transparent border-none text-[14px] text-cream placeholder-muted-taupe px-4 py-4 outline-none"
+            className="w-full bg-transparent border-none text-sm text-cream placeholder-muted-taupe px-4 py-4 outline-none"
             placeholder="Tìm kiếm bài viết..."
             type="text"
             value={searchInput}
@@ -102,7 +98,7 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
             }}
           />
           <button
-            className="px-6 py-2 bg-brand-pink text-white text-[13px] font-bold hover:opacity-90 transition-opacity rounded-r-lg cursor-pointer"
+            className="px-6 py-2 bg-brand-pink text-white text-sm font-bold hover:opacity-90 transition-opacity rounded-r-lg cursor-pointer"
             onClick={submitSearch}
             type="button"
           >
@@ -112,24 +108,26 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
       </section>
 
       {/* Category Tabs */}
-      <section className="mb-12 flex flex-wrap justify-center gap-3 px-6">
-        {categoriesList.map((category) => {
-          const isActive = selectedCategory === category;
-          return (
-            <button
-              key={category}
-              onClick={() => selectCategory(category)}
-              className={`px-6 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer transition-all duration-200 border ${
-                isActive
-                  ? "bg-brand-pink text-white border-brand-pink shadow-md"
-                  : "bg-deep-black border-border-dark text-muted-taupe hover:border-brand-pink hover:text-brand-pink"
-              }`}
-              type="button"
-            >
-              {category}
-            </button>
-          );
-        })}
+      <section className="mb-12 w-full px-6 max-w-[1200px] mx-auto">
+        <div className="flex flex-nowrap overflow-x-auto no-scrollbar justify-start md:justify-center gap-3 py-2 scroll-smooth">
+          {categoriesList.map((category) => {
+            const isActive = selectedCategory === category.slug;
+            return (
+              <button
+                key={category.slug}
+                onClick={() => selectCategory(category.slug)}
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 border shrink-0 ${
+                  isActive
+                    ? "bg-brand-pink text-white border-brand-pink shadow-md"
+                    : "bg-deep-black border-border-dark text-muted-taupe hover:border-brand-pink hover:text-brand-pink"
+                }`}
+                type="button"
+              >
+                {category.name}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <div className="max-w-[1200px] mx-auto px-6">
@@ -141,52 +139,46 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
               onMouseLeave={handleLargeMouseLeave}
               onFocus={handleLargeFocus}
               onTouchStart={handleLargeTouchStart}
-              className="md:col-span-8 group relative overflow-hidden rounded border border-border-dark cursor-pointer bg-deep-black shadow-2xl flex flex-col justify-end min-h-[450px]"
+              className="md:col-span-8 group relative overflow-hidden rounded border border-neutral-800 cursor-pointer bg-neutral-900 shadow-2xl flex flex-col justify-end min-h-[450px]"
             >
               <div className="absolute inset-0 w-full h-full">
-                <Image
+                <SafeImage
                   alt={featuredLarge.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 66vw"
                   className="object-cover transition-all duration-300"
-                  src={
-                    featuredLarge.thumbnailUrl ||
-                    "https://via.placeholder.com/600x400"
-                  }
+                  src={featuredLarge.thumbnailUrl}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-deep-black via-deep-black/50 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
               </div>
 
-              <div className="relative z-20 p-8 text-cream w-full space-y-4">
-                <span className="inline-block px-3 py-1 bg-brand-pink text-white text-[10px] font-bold rounded uppercase tracking-wider">
+              <div className="relative z-20 p-8 text-white w-full space-y-4">
+                <span className="inline-block px-3 py-1 bg-brand-pink text-white text-xs font-bold rounded uppercase tracking-wider">
                   Tiêu điểm
                 </span>
                 <Link href={`/blog/${featuredLarge.slug}`}>
-                  <h2 className="text-[24px] md:text-[32px] font-bold leading-tight group-hover:text-brand-pink transition-colors">
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight group-hover:text-brand-pink transition-colors text-white">
                     {featuredLarge.title}
                   </h2>
                 </Link>
-                <p className="text-muted-taupe text-[14px] leading-relaxed max-w-2xl line-clamp-2">
+                <p className="text-neutral-300 text-sm leading-relaxed max-w-2xl line-clamp-2">
                   {featuredLarge.excerpt}
                 </p>
                 <div className="flex items-center gap-4 pt-2">
                   <div className="relative w-10 h-10 rounded-full border-2 border-brand-pink/30 overflow-hidden bg-brand-dark flex-shrink-0">
-                    <Image
+                    <SafeImage
                       alt={featuredLarge.author.fullName}
                       fill
                       sizes="40px"
                       className="object-cover"
-                      src={
-                        featuredLarge.author.avatarUrl ||
-                        "https://via.placeholder.com/40"
-                      }
+                      src={featuredLarge.author.avatarUrl}
                     />
                   </div>
-                  <div className="text-[12px]">
-                    <p className="font-bold text-cream">
+                  <div className="text-xs">
+                    <p className="font-bold text-white">
                       {featuredLarge.author.fullName}
                     </p>
-                    <p className="text-muted-taupe">
+                    <p className="text-neutral-400">
                       {formatDate(featuredLarge.publishedAt)} •{" "}
                       {featuredLarge.readingMinutes} phút đọc
                     </p>
@@ -207,7 +199,7 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
         )}
 
         {/* Latest Posts Header */}
-        <h2 className="text-[20px] md:text-[24px] font-bold text-cream mb-8 flex items-center gap-3">
+        <h2 className="text-xl md:text-2xl font-bold text-cream mb-8 flex items-center gap-3">
           <span className="w-8 h-1 bg-brand-pink rounded-full" />
           {isFiltering ? "Kết quả tìm kiếm" : "Bài viết mới nhất"}
           {postsQuery.isFetching && (
@@ -250,7 +242,7 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
                   <button
                     key={index}
                     onClick={() => changePage(index + 1)}
-                    className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-[13px] cursor-pointer transition-all ${
+                    className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm cursor-pointer transition-all ${
                       currentPage === index + 1
                         ? "bg-brand-pink text-white"
                         : "border border-border-dark text-cream hover:bg-deep-black"
@@ -278,7 +270,7 @@ export default function BlogCatalog({ initialPosts = [] }: BlogCatalogProps) {
             action={
               <button
                 onClick={resetFilters}
-                className="bg-brand-pink text-white px-6 py-2.5 rounded-lg text-[13px] font-bold cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                className="bg-brand-pink text-white px-6 py-2.5 rounded-lg text-sm font-bold cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                 type="button"
               >
                 Đặt lại bộ lọc

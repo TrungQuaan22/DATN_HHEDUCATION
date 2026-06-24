@@ -1,9 +1,4 @@
-import { OrderStatus } from '@prisma/client'
-
 import { paymentConfig } from '~/modules/payments/config'
-import { getPaymentProvider } from '~/modules/payments/providers/provider.factory'
-import { AppError } from '~/common/error/app-error'
-import { ERROR_CODE } from '~/common/constant/error-code'
 
 import type {
   CancelOrderDto,
@@ -15,18 +10,28 @@ import type {
   OrderResponse
 } from '../dto'
 import {
-  ensureCoursesArePurchasable,
-  ensureNotAlreadyEnrolled,
   ensureOrderExists,
   ensureReloadedOrderExists
 } from '../ensures/order.ensure'
 import { mapOrder } from '../mappers/order.mapper'
-import { Order } from '../entities/order.entity'
+import {
+  calculateOrderExpiration,
+  calculateOrderTotal,
+  findPendingPayment,
+  isFreeOrder,
+  validateCoursesPurchasable,
+  validateNotEnrolled,
+  validateOrderCanBeCancelled,
+  validatePaymentAttempt
+} from '../policies/order.policy'
+import type { OrderPaymentProviderPort } from '../ports/order-payment-provider.port'
 import type { OrderTransactionPort } from '../ports/order-transaction.port'
-import { orderTransaction } from '../repositories/order-transaction'
 
 export class OrderService {
-  constructor(private readonly orderTransaction: OrderTransactionPort) {}
+  constructor(
+    private readonly orderTransaction: OrderTransactionPort,
+    private readonly paymentProvider: OrderPaymentProviderPort
+  ) {}
 
   async createOrder(data: CreateOrderDto): Promise<CreateOrderResponse> {
     const uniqueCourseIds = [...new Set(data.courseIds)]
@@ -48,17 +53,17 @@ export class OrderService {
       }
 
       const courses = await repository.findPublishedCourses(uniqueCourseIds)
-      ensureCoursesArePurchasable(uniqueCourseIds, courses)
+      validateCoursesPurchasable(uniqueCourseIds, courses)
 
       const existingEnrollments = await repository.findExistingEnrollments({
         userId: data.userId,
         courseIds: uniqueCourseIds
       })
-      ensureNotAlreadyEnrolled(existingEnrollments)
+      validateNotEnrolled(existingEnrollments)
 
-      const totalAmount = Order.calculateTotalAmount(courses)
-      const freeOrder = totalAmount === 0
-      const expiresAt = Order.calculateExpiration(now, paymentConfig.pendingTtlMinutes)
+      const totalAmount = calculateOrderTotal(courses)
+      const freeOrder = isFreeOrder(totalAmount)
+      const expiresAt = calculateOrderExpiration(now, paymentConfig.pendingTtlMinutes)
       const orderInvoiceNumber = await repository.createUniqueInvoiceNumber()
 
       const order = await repository.createOrder({
@@ -66,7 +71,7 @@ export class OrderService {
         orderInvoiceNumber,
         totalAmount,
         currency: 'VND',
-        status: freeOrder ? OrderStatus.completed : OrderStatus.pending,
+        status: 'pending',
         expiresAt,
         courses
       })
@@ -80,11 +85,11 @@ export class OrderService {
       }
 
       const createdOrderRecord = await repository.findOrderById(order.id)
-      const createdOrder = ensureReloadedOrderExists(createdOrderRecord)
+      ensureReloadedOrderExists(createdOrderRecord)
 
       return {
         code: freeOrder ? 'FREE_ORDER_COMPLETED' : 'ORDER_CREATED',
-        order: mapOrder(createdOrder)
+        order: mapOrder(createdOrderRecord)
       }
     })
   }
@@ -93,6 +98,11 @@ export class OrderService {
     const now = new Date()
 
     const order = await this.orderTransaction.run(async (repository) => {
+      await repository.lockOrderForUser({
+        userId: data.userId,
+        orderId: data.orderId
+      })
+
       await repository.expireStalePendingOrders({
         userId: data.userId,
         orderId: data.orderId,
@@ -103,59 +113,43 @@ export class OrderService {
         orderId: data.orderId,
         userId: data.userId
       })
-      const currentOrderRecordExists = ensureOrderExists(currentOrderRecord)
+      ensureOrderExists(currentOrderRecord)
 
-      // Instantiate the Order Domain Entity
-      const orderEntity = new Order(currentOrderRecordExists as any)
+      validatePaymentAttempt(currentOrderRecord, now)
 
-      if (!orderEntity.isPayable()) {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Order is not payable')
-      }
-      if (orderEntity.isExpired(now)) {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Order has expired')
-      }
-      if (!orderEntity.canPaymentBeRetried()) {
-        throw new AppError(
-          409,
-          ERROR_CODE.CONFLICT,
-          'Order already has a payment that cannot be retried automatically'
-        )
-      }
-
-      const existingPendingPayment = orderEntity.findPendingPayment()
+      const existingPendingPayment = findPendingPayment(currentOrderRecord.payments)
 
       if (existingPendingPayment?.provider === data.provider) {
-        const refreshedOrderRecord = await repository.findOrderById(orderEntity.id)
-        const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
+        const refreshedOrderRecord = await repository.findOrderById(currentOrderRecord.id)
+        ensureReloadedOrderExists(refreshedOrderRecord)
 
-        return refreshedOrder
+        return refreshedOrderRecord
       }
 
       if (existingPendingPayment) {
-        await repository.cancelPendingPayments(orderEntity.id)
+        await repository.cancelPendingPayments(currentOrderRecord.id)
       }
 
-      const providerInstance = getPaymentProvider(data.provider)
-      const providerPayment = providerInstance.createPayment({
-        orderInvoiceNumber: orderEntity.orderInvoiceNumber,
-        amount: orderEntity.totalAmount,
-        expiresAt: orderEntity.expiresAt
+      const providerPayment = this.paymentProvider.createPayment(data.provider, {
+        orderInvoiceNumber: currentOrderRecord.orderInvoiceNumber,
+        amount: currentOrderRecord.totalAmount,
+        expiresAt: currentOrderRecord.expiresAt
       })
 
       await repository.createPaymentForOrder({
-        orderId: orderEntity.id,
+        orderId: currentOrderRecord.id,
         provider: providerPayment.provider,
         providerPaymentId: providerPayment.providerPaymentId,
-        amount: orderEntity.totalAmount,
+        amount: currentOrderRecord.totalAmount,
         qrCodeUrl: providerPayment.qrCodeUrl,
         checkoutUrl: providerPayment.checkoutUrl,
-        expiresAt: providerPayment.expiresAt ?? orderEntity.expiresAt
+        expiresAt: providerPayment.expiresAt ?? currentOrderRecord.expiresAt
       })
 
-      const refreshedOrderRecord = await repository.findOrderById(orderEntity.id)
-      const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
+      const refreshedOrderRecord = await repository.findOrderById(currentOrderRecord.id)
+      ensureReloadedOrderExists(refreshedOrderRecord)
 
-      return refreshedOrder
+      return refreshedOrderRecord
     })
 
     return {
@@ -176,29 +170,40 @@ export class OrderService {
       return repository.findOrderForUser(data.orderId, data.userId)
     })
 
-    const existingOrder = ensureOrderExists(order)
+    ensureOrderExists(order)
 
-    return mapOrder(existingOrder)
+    return mapOrder(order)
   }
 
   async cancelOrder(data: CancelOrderDto): Promise<CancelOrderResponse> {
+    const now = new Date()
+
     const updatedOrder = await this.orderTransaction.run(async (repository) => {
+      await repository.lockOrderForUser({
+        userId: data.userId,
+        orderId: data.orderId
+      })
+
+      await repository.expireStalePendingOrders({
+        userId: data.userId,
+        orderId: data.orderId,
+        now
+      })
+
       const orderRecord = await repository.findOrderForCancel({
         orderId: data.orderId,
         userId: data.userId
       })
-      const orderRecordExists = ensureOrderExists(orderRecord)
+      ensureOrderExists(orderRecord)
 
-      if (orderRecordExists.status !== 'pending') {
-        throw new AppError(409, ERROR_CODE.CONFLICT, 'Only pending orders can be cancelled')
-      }
+      validateOrderCanBeCancelled(orderRecord)
 
       await repository.cancelOrderAndPendingPayments(data.orderId)
 
       const refreshedOrderRecord = await repository.findOrderById(data.orderId)
-      const refreshedOrder = ensureReloadedOrderExists(refreshedOrderRecord)
+      ensureReloadedOrderExists(refreshedOrderRecord)
 
-      return refreshedOrder
+      return refreshedOrderRecord
     })
 
     return {
@@ -206,5 +211,3 @@ export class OrderService {
     }
   }
 }
-
-export const orderService = new OrderService(orderTransaction)

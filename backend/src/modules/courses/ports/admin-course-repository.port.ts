@@ -1,4 +1,4 @@
-import type { CourseStatus, LessonType, MediaStatus, Prisma, Subject, VideoType } from '@prisma/client'
+import type { CourseStatus, LessonType, MediaStatus, Subject, VideoType } from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 
@@ -58,6 +58,7 @@ export type AdminCourseLessonRecord = {
     durationSec: number | null
   } | null
   assessmentId: string | null
+  hasRagError: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -77,15 +78,22 @@ export type AdminCourseDetailRecord = AdminCourseRecord & {
   chapters: AdminCourseChapterRecord[]
 }
 
+export type ListAdminCoursesFilters = {
+  status?: CourseStatus
+  teacherId?: string
+  isFeatured?: boolean
+  search?: string
+}
+
 export interface AdminCourseRepositoryPort {
   findActiveCourseBySlug(slug: string): Promise<{ id: string } | null>
   findActiveTeacherById(teacherId: string): Promise<{ id: string } | null>
   findCourseById(courseId: string): Promise<AdminCourseRecord | null>
   findCourseDetailById(courseId: string): Promise<AdminCourseDetailRecord | null>
   listAdminCourses(data: {
-    where: Prisma.CourseWhereInput
-    skip: number
-    take: number
+    filters: ListAdminCoursesFilters
+    page: number
+    limit: number
   }): Promise<[AdminCourseRecord[], number]>
   createCourse(data: {
     title: string

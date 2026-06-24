@@ -26,6 +26,7 @@ import { adminOrderRoutes } from './modules/orders/routes/admin-order.routes'
 import { orderRoutes } from './modules/orders/routes/order.routes'
 import { adminPaymentTransactionRoutes } from './modules/payments/routes/admin-payment-transaction.routes'
 import { paymentWebhookRoutes } from './modules/payments/routes/webhook.routes'
+import { tutorRoutes } from './modules/tutor/routes'
 import { adminUserRoutes } from './modules/users/routes/admin.routes'
 import { userRoutes } from './modules/users/routes/user.routes'
 
@@ -85,6 +86,7 @@ app.use('/catalog', publicCourseRoutes)
 app.use('/practice', publicAssessmentRoutes)
 app.use('/learning', learningCourseRoutes)
 app.use('/learning', learningAssessmentRoutes)
+app.use('/learning', tutorRoutes)
 app.use(publicBlogRoutes)
 app.use('/uploads', uploadRoutes)
 app.use('/orders', orderRoutes)

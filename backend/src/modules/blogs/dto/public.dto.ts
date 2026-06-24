@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client'
 import z from 'zod'
 
 import type { listPublicBlogPostsQuerySchema } from '../validators/public.validator'
-import type { BlogAuthorResponse } from './admin.dto'
+import type { BlogAuthorResponse, BlogCategoryResponse } from './admin.dto'
 
 export type ListPublicBlogPostsDto = z.infer<typeof listPublicBlogPostsQuerySchema>
 
@@ -19,7 +19,7 @@ export type BlogPostSummaryResponse = {
   title: string
   slug: string
   excerpt: string
-  category: string | null
+  category: BlogCategoryResponse | null
   thumbnailMediaId: string | null
   thumbnailUrl: string | null
   author: BlogAuthorResponse
@@ -54,7 +54,9 @@ export type ListPublicBlogTagsResponse = {
 }
 
 export type BlogCategorySummaryResponse = {
+  id: string
   name: string
+  slug: string
   count: number
 }
 

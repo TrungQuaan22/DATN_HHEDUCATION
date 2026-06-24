@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, AlertCircle, ArrowRight } from "lucide-react";
 import { createTeacherAccount } from "@/features/users/api";
@@ -14,6 +14,7 @@ import {
   TeacherCreateFormInput,
   TeacherCreateInput,
 } from "@/features/users/validation";
+import ImageUploadField from "@/components/media/image-upload-field";
 
 type TeacherCreateModalProps = {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export default function TeacherCreateModal({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<TeacherCreateFormInput, unknown, TeacherCreateInput>({
     resolver: zodResolver(teacherCreateSchema),
@@ -40,6 +42,7 @@ export default function TeacherCreateModal({
       email: "",
       password: "",
       confirmPassword: "",
+      avatarMediaId: null,
     },
   });
 
@@ -54,7 +57,7 @@ export default function TeacherCreateModal({
       console.error("Error creating teacher account:", err);
       const errMsg = getApiErrorMessage(
         err,
-        "Tạo tài khoản giảng viên thất bại."
+        "Tạo tài khoản giảng viên thất bại.",
       );
       setGeneralError(errMsg);
       toast.error(errMsg);
@@ -80,7 +83,7 @@ export default function TeacherCreateModal({
       email: data.email,
       password: data.password,
       confirmPassword: data.confirmPassword,
-      avatarMediaId: null, // Bypassed for creation, teacher can update profile later
+      avatarMediaId: data.avatarMediaId || null,
     };
 
     createMutation.mutate(payload);
@@ -105,7 +108,7 @@ export default function TeacherCreateModal({
         </button>
 
         <div className="px-8 pt-8 pb-6 text-center border-b border-admin-border/20 bg-admin-surface-low/30">
-          <h3 className="text-2xl font-bold font-serif text-admin-cream flex items-center justify-center gap-2">
+          <h3 className="text-lg font-bold text-admin-cream flex items-center justify-center gap-2">
             Tạo Giảng Viên Mới
           </h3>
           <p className="text-sm text-admin-muted mt-2 max-w-sm mx-auto">
@@ -127,14 +130,14 @@ export default function TeacherCreateModal({
 
           {/* Full Name */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Họ và tên giảng viên <span className="text-admin-pink">*</span>
             </label>
             <input
               type="text"
               {...register("fullName")}
               placeholder="Ví dụ: Nguyễn Văn Thầy"
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                 errors.fullName
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -149,14 +152,14 @@ export default function TeacherCreateModal({
 
           {/* Email */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Địa chỉ Email <span className="text-admin-pink">*</span>
             </label>
             <input
               type="email"
               {...register("email")}
               placeholder="email@example.com"
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                 errors.email
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -171,14 +174,14 @@ export default function TeacherCreateModal({
 
           {/* Password */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Mật khẩu <span className="text-admin-pink">*</span>
             </label>
             <input
               type="password"
               {...register("password")}
               placeholder="••••••••"
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                 errors.password
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -193,14 +196,14 @@ export default function TeacherCreateModal({
 
           {/* Confirm Password */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Xác nhận mật khẩu <span className="text-admin-pink">*</span>
             </label>
             <input
               type="password"
               {...register("confirmPassword")}
               placeholder="••••••••"
-              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] ${
+              className={`w-full bg-admin-surface-low border focus:outline-none focus:ring-1 rounded px-4 py-2.5 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm ${
                 errors.confirmPassword
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                   : "border-admin-border/30 focus:border-admin-pink focus:ring-admin-pink"
@@ -211,6 +214,25 @@ export default function TeacherCreateModal({
                 {errors.confirmPassword.message}
               </p>
             )}
+          </div>
+
+          {/* Avatar Upload */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
+              Ảnh đại diện giảng viên
+            </label>
+            <Controller
+              control={control}
+              name="avatarMediaId"
+              render={({ field }) => (
+                <ImageUploadField
+                  value={field.value}
+                  onChange={(val) => field.onChange(val)}
+                  error={errors.avatarMediaId?.message}
+                  aspectRatio="square"
+                />
+              )}
+            />
           </div>
         </form>
 

@@ -14,11 +14,25 @@ import {
   updateLessonController
 } from '../controllers/admin-lessons.controller'
 import {
+  createLessonMaterialController,
+  deleteLessonMaterialController,
+  ingestLessonMaterialController,
+  listLessonMaterialsController,
+  updateLessonMaterialController
+} from '../controllers/admin-lesson-materials.controller'
+import {
   createLessonSchema,
   deleteLessonSchema,
   reorderLessonsSchema,
   updateLessonSchema
 } from '../validators/admin-lessons.validator'
+import {
+  createLessonMaterialSchema,
+  deleteLessonMaterialSchema,
+  ingestLessonMaterialSchema,
+  listLessonMaterialsSchema,
+  updateLessonMaterialSchema
+} from '../validators/admin-lesson-materials.validator'
 
 export const adminLessonRoutes = Router()
 
@@ -47,6 +61,51 @@ adminLessonRoutes.delete(
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(deleteLessonSchema),
   asyncHandler(deleteLessonController)
+)
+
+adminLessonRoutes.post(
+  '/lessons/:lessonId/materials',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(createLessonMaterialSchema),
+  asyncHandler(createLessonMaterialController)
+)
+
+adminLessonRoutes.get(
+  '/lessons/:lessonId/materials',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(listLessonMaterialsSchema),
+  asyncHandler(listLessonMaterialsController)
+)
+
+adminLessonRoutes.patch(
+  '/lesson-materials/:materialId',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(updateLessonMaterialSchema),
+  asyncHandler(updateLessonMaterialController)
+)
+
+adminLessonRoutes.delete(
+  '/lesson-materials/:materialId',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(deleteLessonMaterialSchema),
+  asyncHandler(deleteLessonMaterialController)
+)
+
+adminLessonRoutes.post(
+  '/lesson-materials/:materialId/ingest',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(ingestLessonMaterialSchema),
+  asyncHandler(ingestLessonMaterialController)
 )
 
 adminLessonRoutes.patch(

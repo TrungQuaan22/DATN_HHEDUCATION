@@ -24,8 +24,8 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
   listPublicPlacements(data: {
     subject?: Subject
     grade?: number
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[Array<AssessmentPlacement & { assessment: Assessment }>, number]> {
     const where: Prisma.AssessmentPlacementWhereInput = {
       type: AssessmentPlacementType.public_practice,
@@ -40,8 +40,8 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     return prisma.$transaction([
       prisma.assessmentPlacement.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: [{ isFeatured: 'desc' }, { orderIndex: 'asc' }, { createdAt: 'desc' }],
         include: {
           assessment: true

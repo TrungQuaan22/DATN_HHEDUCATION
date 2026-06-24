@@ -15,8 +15,6 @@ export type AuthSessionWithUserRecord = {
   id: string
   userId: string
   refreshTokenHash: string
-  previousRefreshTokenHash: string | null
-  previousTokenRotatedAt: Date | null
   expiresAt: Date
   isRevoked: boolean
   user: AuthUserRecord
@@ -44,9 +42,9 @@ export type CreateSessionInput = {
 }
 
 export type RotateSessionRefreshTokenInput = {
-  id: string
-  refreshTokenHash: string
-  previousRefreshTokenHash: string
+  sessionId: string
+  expectedRefreshTokenHash: string
+  newRefreshTokenHash: string
   expiresAt: Date
 }
 
@@ -56,6 +54,6 @@ export interface AuthRepositoryPort {
   createTeacher(data: CreateTeacherInput): Promise<AuthUserRecord>
   createSession(data: CreateSessionInput): Promise<unknown>
   findSessionById(id: string): Promise<AuthSessionWithUserRecord | null>
-  rotateSessionRefreshToken(data: RotateSessionRefreshTokenInput): Promise<unknown>
+  rotateSessionRefreshToken(data: RotateSessionRefreshTokenInput): Promise<boolean>
   revokeSession(id: string): Promise<unknown>
 }

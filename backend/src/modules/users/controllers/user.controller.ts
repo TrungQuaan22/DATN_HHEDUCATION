@@ -3,7 +3,8 @@ import z from 'zod'
 
 import { sendSuccess } from '~/common/http/response'
 
-import { UserService, userService } from '../services/user.service'
+import type { UserService } from '../services/user.service'
+import { userService } from '../wiring'
 import { updateMeSchema } from '../validators/user.validator'
 
 type UpdateMeValidated = z.infer<typeof updateMeSchema>

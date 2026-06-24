@@ -1,7 +1,4 @@
-import {
-  PaymentTransactionDirection,
-  PaymentTransactionMatchStatus
-} from '@prisma/client'
+import { PaymentTransactionDirection, PaymentTransactionMatchStatus } from '@prisma/client'
 import z from 'zod'
 
 const transactionIdParamSchema = z

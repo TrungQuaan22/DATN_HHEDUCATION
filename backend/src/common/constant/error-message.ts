@@ -18,7 +18,6 @@ export const ERROR_MESSAGE = {
   [ERROR_CODE.INVALID_ACCESS_TOKEN]: 'Invalid access token. Please log in again.',
   [ERROR_CODE.ACCESS_TOKEN_EXPIRED]: 'Access token expired. Please refresh your session.',
   [ERROR_CODE.INVALID_REFRESH_TOKEN]: 'Invalid refresh token. Please log in again.',
-  [ERROR_CODE.REFRESH_TOKEN_REUSED]: 'Refresh token reuse detected. Please log in again.',
   [ERROR_CODE.USER_NOT_FOUND]: 'User not found. The specified user does not exist.',
   [ERROR_CODE.COURSE_TITLE_ALREADY_EXISTS]:
     'Course title already exists in a draft or published course. Please use a different title.',

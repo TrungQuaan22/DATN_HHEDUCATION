@@ -64,10 +64,10 @@ model Assessment {
   sections          AssessmentSection[]
   items             AssessmentItem[]
   submissions       Submission[]
-  placements         AssessmentPlacement[]
+  placements        AssessmentPlacement[]
   courseAssessments CourseAssessment[]
-  sourceMedia        Media?             @relation("AssessmentSourceMedia", fields: [sourceMediaId], references: [id], onDelete: SetNull)
-  createdBy          User?              @relation("AssessmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  sourceMedia       Media?                @relation("AssessmentSourceMedia", fields: [sourceMediaId], references: [id], onDelete: SetNull)
+  createdBy         User?                 @relation("AssessmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([sourceMediaId])
   @@index([createdById])
@@ -89,9 +89,9 @@ model AssessmentPlacement {
   createdAt    DateTime                @default(now()) @map("created_at")
   updatedAt    DateTime                @updatedAt @map("updated_at")
 
-  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  course     Course?    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lesson     Lesson?    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  assessment  Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  course      Course?      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson?      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   submissions Submission[]
 
   @@index([assessmentId])
@@ -136,23 +136,23 @@ model AssessmentSection {
 }
 
 model AssessmentItem {
-  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  assessmentId   String              @map("assessment_id") @db.Uuid
-  sectionId      String              @map("section_id") @db.Uuid
-  itemType       AssessmentItemType  @map("item_type")
-  questionId     String?             @map("question_id") @db.Uuid
-  topicId        String?             @map("topic_id") @db.Uuid
-  difficulty     QuestionDifficulty?
-  orderIndex     Int                 @map("order_index")
-  correctAnswer  Json?               @map("correct_answer")
-  explanation    Json?
-  scoringConfig  Json?               @map("scoring_config")
-  maxScore       Decimal             @default(1) @map("max_score") @db.Decimal(8, 2)
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assessmentId  String              @map("assessment_id") @db.Uuid
+  sectionId     String              @map("section_id") @db.Uuid
+  itemType      AssessmentItemType  @map("item_type")
+  questionId    String?             @map("question_id") @db.Uuid
+  topicId       String?             @map("topic_id") @db.Uuid
+  difficulty    QuestionDifficulty?
+  orderIndex    Int                 @map("order_index")
+  correctAnswer Json?               @map("correct_answer")
+  explanation   Json?
+  scoringConfig Json?               @map("scoring_config")
+  maxScore      Decimal             @default(1) @map("max_score") @db.Decimal(8, 2)
 
-  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessment Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   section    AssessmentSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  question   Question?  @relation(fields: [questionId], references: [id])
-  topic      Topic?     @relation(fields: [topicId], references: [id])
+  question   Question?         @relation(fields: [questionId], references: [id])
+  topic      Topic?            @relation(fields: [topicId], references: [id])
 
   mcqAnswers     SubmissionMcqAnswer[]
   tfAnswers      SubmissionTfAnswer[]

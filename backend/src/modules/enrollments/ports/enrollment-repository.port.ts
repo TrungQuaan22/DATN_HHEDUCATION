@@ -2,7 +2,13 @@ import type { CourseStatus, EnrollmentSource, UserRole, UserStatus } from '@pris
 
 export type ManualEnrollmentCourseRecord = {
   id: string
+  title: string
+  slug: string
   status: CourseStatus
+  price: number
+  salePrice: number | null
+  teacherId: string
+  deletedAt: Date | null
 }
 
 export type ManualEnrollmentUserRecord = {

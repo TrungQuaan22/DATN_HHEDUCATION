@@ -50,7 +50,7 @@ function SuccessPageContent() {
     return (
       <div className="min-h-screen bg-brand-dark pt-32 flex flex-col items-center justify-center gap-4">
         <RefreshCw size={40} className="text-brand-pink animate-spin" />
-        <p className="text-muted-taupe text-[14px]">Đang xác nhận đơn hàng...</p>
+        <p className="text-muted-taupe text-sm">Đang xác nhận đơn hàng...</p>
       </div>
     );
   }
@@ -69,24 +69,24 @@ function SuccessPageContent() {
           </div>
         </div>
 
-        <h1 className="text-[28px] md:text-[34px] font-extrabold text-cream leading-tight tracking-tight mb-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-cream leading-tight tracking-tight mb-3">
           Thanh toán thành công!
         </h1>
-        <p className="text-muted-taupe text-[14px] md:text-[15px] leading-relaxed max-w-[420px] mb-8">
+        <p className="text-muted-taupe text-sm md:text-base leading-relaxed max-w-[420px] mb-8">
           Khóa học đã được kích hoạt trong tài khoản của bạn. Hãy bắt đầu học ngay khi sẵn sàng.
         </p>
 
         <div className="w-full bg-brand-dark/50 border border-border-dark p-6 rounded-xl text-left space-y-4 mb-8">
-          <h3 className="text-[11px] font-bold text-brand-pink uppercase tracking-widest border-b border-border-dark/65 pb-2 mb-3">
+          <h3 className="text-xs font-bold text-brand-pink uppercase tracking-widest border-b border-border-dark/65 pb-2 mb-3">
             Chi tiết giao dịch
           </h3>
 
-          <div className="flex justify-between items-center text-[13px] md:text-[14px]">
+          <div className="flex justify-between items-center text-sm md:text-sm">
             <span className="text-muted-taupe">Mã đơn hàng</span>
             <span className="font-bold text-cream font-mono uppercase">{ref}</span>
           </div>
 
-          <div className="flex justify-between items-center text-[13px] md:text-[14px]">
+          <div className="flex justify-between items-center text-sm md:text-sm">
             <span className="text-muted-taupe">Phương thức thanh toán</span>
             <span className="font-bold text-cream">
               {amount > 0 ? "Chuyển khoản / SePay QR" : "Khóa học miễn phí"}
@@ -95,9 +95,9 @@ function SuccessPageContent() {
 
           <div className="h-px bg-border-dark/65 my-2"></div>
 
-          <div className="flex justify-between items-center text-[13px] md:text-[14px]">
+          <div className="flex justify-between items-center text-sm md:text-sm">
             <span className="font-bold text-cream">Tổng thanh toán</span>
-            <span className="font-extrabold text-[18px] text-brand-pink">
+            <span className="font-extrabold text-lg text-brand-pink">
               {amount > 0 ? formatVND(amount) : "Miễn phí"}
             </span>
           </div>
@@ -106,7 +106,7 @@ function SuccessPageContent() {
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <Link
             href="/student"
-            className="flex-1 bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-[13px] py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-brand-pink/20"
+            className="flex-1 bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-sm py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider shadow-lg shadow-brand-pink/20"
           >
             <GraduationCap size={16} />
             <span>Vào lớp học ngay</span>
@@ -114,7 +114,7 @@ function SuccessPageContent() {
           </Link>
           <Link
             href="/"
-            className="flex-1 bg-off-black border border-border-dark hover:bg-brand-dark hover:border-brand-pink/30 text-cream font-bold text-[13px] py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
+            className="flex-1 bg-off-black border border-border-dark hover:bg-brand-dark hover:border-brand-pink/30 text-cream font-bold text-sm py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
           >
             <Home size={16} />
             <span>Về trang chủ</span>

@@ -13,9 +13,6 @@ interface UserDropdownProps {
   className?: string;
 }
 
-const DEFAULT_AVATAR =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAGuA46dM9ofJOmtVCw4AMz8_whqj-2oCYdfE_v3mqHdlFmalFobUoD7sVror_gmNvr7HU2ruEqEghBfMiyTX9nRBNpBqhJX_GEx6KVLiEqu88W8TVbu1T2F03bshwyMWzPgOHMt9sh-5uOHlO_t2xK92c8WJHzkt_c0wwco1GuSUaWysUMin6PwpnDkru6nZT880_hkN7dKnKyA2IA0CgvZIepP9zEL6vFSovA_FwlsSqTJzFuhyBw2RHdY5ao61-Tgemu4OUWzY0";
-
 export function UserDropdown({
   isAdmin = false,
   sizeClassName = "w-10 h-10",
@@ -26,15 +23,11 @@ export function UserDropdown({
   const { data: user } = useMeQuery();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [avatarSrc, setAvatarSrc] = useState<string>(DEFAULT_AVATAR);
+  const [imageError, setImageError] = useState(false);
 
-  // Sync avatar URL from API user data
+  // Reset image error state when avatarUrl changes
   useEffect(() => {
-    if (user?.avatarUrl) {
-      setAvatarSrc(user.avatarUrl);
-    } else {
-      setAvatarSrc(DEFAULT_AVATAR);
-    }
+    setImageError(false);
   }, [user?.avatarUrl]);
 
   // Click outside detection
@@ -56,12 +49,6 @@ export function UserDropdown({
     clearSession();
     // Force direct redirect to ensure clean auth state reload
     window.location.href = "/login";
-  };
-
-  const handleAvatarError = () => {
-    if (avatarSrc !== DEFAULT_AVATAR) {
-      setAvatarSrc(DEFAULT_AVATAR);
-    }
   };
 
   // Define style mappings based on isAdmin status
@@ -88,12 +75,12 @@ export function UserDropdown({
     : "text-xs text-muted-text truncate mt-0.5";
 
   const linkItemClasses = isAdmin
-    ? "flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium hover:bg-admin-surface-low hover:text-admin-pink transition-colors cursor-pointer"
-    : "flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-cream hover:bg-surface-input hover:text-brand-pink transition-colors cursor-pointer";
+    ? "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-admin-surface-low hover:text-admin-pink transition-colors cursor-pointer"
+    : "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-cream hover:bg-surface-input hover:text-brand-pink transition-colors cursor-pointer";
 
   const logoutButtonClasses = isAdmin
-    ? "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
-    : "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left";
+    ? "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+    : "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left";
 
   return (
     <div
@@ -106,12 +93,18 @@ export function UserDropdown({
         title="Tài khoản"
         type="button"
       >
-        <img
-          alt="Profile Avatar"
-          className="w-full h-full object-cover bg-brand-dark"
-          src={avatarSrc}
-          onError={handleAvatarError}
-        />
+        {!user?.avatarUrl || imageError ? (
+          <div className={`w-full h-full flex items-center justify-center ${isAdmin ? "bg-admin-pink/15 text-admin-pink" : "bg-brand-pink/15 text-brand-pink"}`}>
+            <User size={18} />
+          </div>
+        ) : (
+          <img
+            alt="Profile Avatar"
+            className="w-full h-full object-cover bg-brand-dark"
+            src={user.avatarUrl}
+            onError={() => setImageError(true)}
+          />
+        )}
       </button>
 
       {isDropdownOpen && (

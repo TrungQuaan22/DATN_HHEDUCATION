@@ -1,17 +1,13 @@
-import { AssessmentPlacementType, Subject } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
+import type { SubjectValue } from '~/common/constant/taxonomy'
 
-import {
-  mapPlacementSummary,
-  mapRuntimePlacementPreview
-} from '../mappers/assessment.mapper'
+import { AssessmentPlacementType } from '@prisma/client'
+
+import { mapPlacementSummary, mapRuntimePlacementPreview } from '../mappers/assessment.mapper'
 import type { PublicAssessmentRepositoryPort } from '../ports/public-assessment-repository.port'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
-import {
-  ensurePlacementAccess
-} from '../ensures/assessment.ensure'
+import { validatePlacementAccess } from '../policies/assessment-placement.policy'
 import type { SubmissionSummary } from '../types'
 
 const mapSubmissionSummaryForRuntime = (submission: SubmissionSummary) => ({
@@ -33,7 +29,7 @@ export class PublicAssessmentService {
   ) {}
 
   async listPublicPlacements(data: {
-    subject?: Subject
+    subject?: SubjectValue
     grade?: number
     page: number
     limit: number
@@ -41,8 +37,8 @@ export class PublicAssessmentService {
     const [placements, totalItems] = await this.repository.listPublicPlacements({
       subject: data.subject,
       grade: data.grade,
-      skip: (data.page - 1) * data.limit,
-      take: data.limit
+      page: data.page,
+      limit: data.limit
     })
 
     return {
@@ -58,7 +54,10 @@ export class PublicAssessmentService {
 
   async getRuntimeAssessment(data: { userId?: string; placementId: string }) {
     const placement = data.userId
-      ? await this.repository.findRuntimePreviewPlacementByIdForStudent(data.placementId, data.userId)
+      ? await this.repository.findRuntimePreviewPlacementByIdForStudent(
+          data.placementId,
+          data.userId
+        )
       : await this.repository.findRuntimePreviewPlacementById(data.placementId)
 
     if (!placement) {
@@ -70,7 +69,7 @@ export class PublicAssessmentService {
         ? await this.studentRepository.findEnrollmentForPlacement(data.userId, placement.id)
         : await this.studentRepository.findEnrollmentForLessonPlacement(data.userId, placement.id)
       : null
-    ensurePlacementAccess(data.userId, placement, enrollment)
+    validatePlacementAccess(data.userId, placement, enrollment)
     const submissions =
       'submissions' in placement && Array.isArray(placement.submissions)
         ? placement.submissions.map(mapSubmissionSummaryForRuntime)
@@ -94,7 +93,7 @@ export class PublicAssessmentService {
         ? await this.studentRepository.findEnrollmentForPlacement(data.userId, placement.id)
         : await this.studentRepository.findEnrollmentForLessonPlacement(data.userId, placement.id)
       : null
-    ensurePlacementAccess(data.userId, placement, enrollment)
+    validatePlacementAccess(data.userId, placement, enrollment)
     return mapRuntimePlacementPreview(placement)
   }
 }

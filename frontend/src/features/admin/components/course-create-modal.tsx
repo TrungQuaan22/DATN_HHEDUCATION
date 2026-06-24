@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, CloudUpload, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { Subject, Grade, SUBJECT_LABELS, GRADE_LABELS } from '@/types/common';
-import { mockTeachersList } from '../data/mockCourses';
+import { useTeacherOptionsQuery } from '@/features/courses/hooks';
 import { createAdminCourse, CreateCourseRequest } from '../api/courses';
 
 type CourseCreateModalProps = {
@@ -16,7 +16,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState<Subject>('math');
   const [grade, setGrade] = useState<number>(12);
-  const [teacherId, setTeacherId] = useState(mockTeachersList[0]?.id || '');
+  const [teacherId, setTeacherId] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number>(0);
   const [salePrice, setSalePrice] = useState<number | null>(null);
@@ -29,6 +29,14 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const { data: teachers = [] } = useTeacherOptionsQuery();
+
+  useEffect(() => {
+    if (teachers.length > 0 && !teacherId) {
+      setTeacherId(teachers[0].id);
+    }
+  }, [teachers, teacherId]);
 
   if (!isOpen) return null;
 
@@ -147,7 +155,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
         {/* Header */}
         <div className="px-8 pt-8 pb-6 text-center border-b border-admin-border/20 bg-admin-surface-low/30">
-          <h3 className="text-2xl font-bold font-serif text-admin-cream flex items-center justify-center gap-2">
+          <h3 className="text-lg font-bold text-admin-cream flex items-center justify-center gap-2">
             <Sparkles className="text-admin-pink w-6 h-6 animate-pulse" />
             Tạo Khóa Học Mới
           </h3>
@@ -168,7 +176,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
           {/* Course Title */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Tên khóa học <span className="text-admin-pink">*</span>
             </label>
             <input
@@ -177,20 +185,20 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ví dụ: Toán giải tích 12 nâng cao"
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
             />
           </div>
 
           {/* Subject & Grade */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Môn học
               </label>
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value as Subject)}
-                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -207,13 +215,13 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Khối lớp
               </label>
               <select
                 value={grade}
                 onChange={(e) => setGrade(Number(e.target.value) as Grade)}
-                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -232,13 +240,13 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
           {/* Assigned Teacher */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Giảng viên phụ trách
             </label>
             <select
               value={teacherId}
               onChange={(e) => setTeacherId(e.target.value)}
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-[14px] appearance-none"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream transition-all font-medium text-base appearance-none"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23AF9DA6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
@@ -246,18 +254,24 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
                 backgroundSize: '1rem'
               }}
             >
-              {mockTeachersList.map((t) => (
-                <option key={t.id} value={t.id} className="bg-admin-deep text-admin-cream">
-                  {t.fullName} ({t.email})
+              {teachers.length === 0 ? (
+                <option value="" className="bg-admin-deep text-admin-cream">
+                  Đang tải danh sách giảng viên...
                 </option>
-              ))}
+              ) : (
+                teachers.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-admin-deep text-admin-cream">
+                    {t.fullName} ({t.email})
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
           {/* Price & Sale Price */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Giá gốc (VND) <span className="text-admin-pink">*</span>
               </label>
               <input
@@ -266,12 +280,12 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
                 required
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
               />
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+              <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
                 Giá khuyến mãi (VND)
               </label>
               <input
@@ -280,14 +294,14 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
                 value={salePrice !== null ? salePrice : ''}
                 onChange={(e) => setSalePrice(e.target.value === '' ? null : Number(e.target.value))}
                 placeholder="Để trống nếu không giảm giá"
-                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+                className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base"
               />
             </div>
           </div>
 
           {/* Short Description */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Mô tả ngắn
             </label>
             <textarea
@@ -295,13 +309,13 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Nhập tóm tắt nội dung chính của khóa học..."
               rows={3}
-              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px] resize-none"
+              className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded-xl px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-base resize-none"
             />
           </div>
 
           {/* Thumbnail Upload */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-admin-muted block uppercase tracking-wider">
+            <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
               Ảnh bìa khóa học
             </label>
             

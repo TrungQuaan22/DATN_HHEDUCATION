@@ -1,18 +1,15 @@
-import { BlogPostStatus, UserRole, type Prisma } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
-import { ensureActorCanUseImageMedia } from '~/common/ensures/media.ensure'
+import { ensureMediaExists } from '~/common/ensures/media.ensure'
+import { validateImageMedia } from '~/common/policies/media.policy'
 import { AppError } from '~/common/error/app-error'
-import { mediaRepository } from '~/modules/media/repository'
 import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
-import { applySearchCondition, normalizeText } from '~/common/utils/search'
-import { createSlugFromText } from '~/common/utils/slug'
 
 import type {
   AdminBlogPostResponse,
   AdminBlogPostSummaryResponse,
   BlogPostIdDto,
+  CreateBlogCategoryDto,
   CreateBlogPostDto,
   ListAdminBlogCategoriesDto,
   ListAdminBlogCategoriesResponse,
@@ -24,16 +21,18 @@ import type {
 } from '../dto/admin.dto'
 import { mapAdminBlogPostResponse, mapAdminBlogPostSummaryResponse } from '../mappers'
 import type { BlogRepositoryPort, BlogPostRecord } from '../ports/blog-repository.port'
-import { blogRepository } from '../repository'
-import { countCategories, countTags } from '../utils'
-import { BlogPost } from '../entities/blog-post.entity'
+import { countTags, getReadingMinutes } from '../utils'
+import { getRichContentMediaIds, normalizeRichContentHeadingIds, countRichContentWords } from '../utils/rich-content'
+import { validateCanManagePost } from '../policies/blog.policy'
+import { createSlugFromText } from '~/common/utils/slug'
+import { normalizeText } from '~/common/utils/search'
 
-const mapBlogPost = (post: BlogPost): AdminBlogPostResponse => {
-  return mapAdminBlogPostResponse(post, post.getReadingMinutes())
+const mapBlogPost = (post: BlogPostRecord): AdminBlogPostResponse => {
+  return mapAdminBlogPostResponse(post, getReadingMinutes(post.content))
 }
 
-const mapBlogPostSummary = (post: BlogPost): AdminBlogPostSummaryResponse => {
-  return mapAdminBlogPostSummaryResponse(post, post.getReadingMinutes())
+const mapBlogPostSummary = (post: BlogPostRecord): AdminBlogPostSummaryResponse => {
+  return mapAdminBlogPostSummaryResponse(post, getReadingMinutes(post.content))
 }
 
 const createBlogPostSlug = async (
@@ -41,7 +40,7 @@ const createBlogPostSlug = async (
   title: string,
   explicitSlug?: string
 ): Promise<string> => {
-  const slug = BlogPost.calculateSlug(title, explicitSlug)
+  const slug = explicitSlug ?? createSlugFromText(normalizeText(title))
   const existedPost = await repository.findActivePostBySlug(slug)
 
   if (existedPost) {
@@ -55,19 +54,19 @@ const createBlogPostSlug = async (
   return slug
 }
 
-const ensureActiveBlogPost = (post: BlogPostRecord | null): BlogPost => {
+const ensureActiveBlogPost = (post: BlogPostRecord | null): BlogPostRecord => {
   if (!post) {
     throw new AppError(404, ERROR_CODE.BLOG_POST_NOT_FOUND, ERROR_MESSAGE.BLOG_POST_NOT_FOUND)
   }
 
-  return new BlogPost(post)
+  return post
 }
 
 const resolveThumbnailObjectKey = async (
   mediaRepository: MediaRepositoryPort,
   data: {
     actorId: string
-    actorRole: UserRole
+    actorRole: 'admin' | 'teacher' | 'student'
     thumbnailMediaId?: string | null
   }
 ): Promise<string | null | undefined> => {
@@ -78,12 +77,26 @@ const resolveThumbnailObjectKey = async (
     return null
   }
   const media = await mediaRepository.findMediaById(data.thumbnailMediaId)
-  const thumbnailMedia = ensureActorCanUseImageMedia({
-    actor: { id: data.actorId, role: data.actorRole },
-    media,
-    label: 'Blog thumbnail media'
-  })
-  return thumbnailMedia?.objectKey ?? null
+  const thumbnailMedia = ensureMediaExists(media)
+  validateImageMedia(
+    { id: data.actorId, role: data.actorRole },
+    thumbnailMedia,
+    'Blog thumbnail media'
+  )
+  return thumbnailMedia.objectKey
+}
+
+const validateContentImages = async (
+  mediaRepository: MediaRepositoryPort,
+  content: unknown,
+  actor: { id: string; role: 'admin' | 'teacher' | 'student' }
+): Promise<string[]> => {
+  const mediaIds = getRichContentMediaIds(content)
+  for (const mediaId of mediaIds) {
+    const media = ensureMediaExists(await mediaRepository.findMediaById(mediaId))
+    validateImageMedia(actor, media, 'Blog content image')
+  }
+  return mediaIds
 }
 
 export class AdminBlogService {
@@ -93,54 +106,59 @@ export class AdminBlogService {
   ) {}
 
   async createPost(input: CreateBlogPostDto): Promise<AdminBlogPostResponse> {
-    const slug = await createBlogPostSlug(this.repository, input.title, input.slug)
+    const slug = await createBlogPostSlug(this.repository, input.title)
+    const rawContent = input.content ?? { type: 'doc', content: [] }
+    const normalizedContent = normalizeRichContentHeadingIds(rawContent)
+    if (input.categoryId) {
+      const category = await this.repository.findCategoryById(input.categoryId)
+      if (!category) {
+        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Blog category not found')
+      }
+    }
     const media = input.thumbnailMediaId
       ? await this.mediaRepository.findMediaById(input.thumbnailMediaId)
       : null
-    const thumbnailMedia = input.thumbnailMediaId
-      ? ensureActorCanUseImageMedia({
-          actor: { id: input.authorId, role: input.actorRole },
-          media,
-          label: 'Blog thumbnail media'
-        })
-      : null
+    const thumbnailMedia = input.thumbnailMediaId ? ensureMediaExists(media) : null
+    const contentMediaIds = await validateContentImages(this.mediaRepository, normalizedContent, {
+      id: input.authorId,
+      role: input.actorRole
+    })
+
+    if (thumbnailMedia) {
+      validateImageMedia(
+        { id: input.authorId, role: input.actorRole },
+        thumbnailMedia,
+        'Blog thumbnail media'
+      )
+    }
 
     const post = await this.repository.createPost({
       ...input,
       slug,
-      content: input.content as Prisma.InputJsonValue,
+      content: normalizedContent,
+      contentMediaIds,
       thumbnailObjectKey: thumbnailMedia?.objectKey ?? null
     })
 
-    return mapBlogPost(new BlogPost(post))
+    return mapBlogPost(post)
   }
 
   async listPosts(input: ListAdminBlogPostsDto): Promise<ListAdminBlogPostsResponse> {
-    let where: Prisma.BlogPostWhereInput = {
-      deletedAt: null,
-      status: input.status,
-      authorId: input.actorRole === UserRole.admin ? input.authorId : input.actorId,
-      category: input.category,
-      isFeatured: input.isFeatured,
-      tags: input.tag ? { has: input.tag } : undefined
-    }
-
-    where = applySearchCondition({
-      where,
-      search: input.search,
-      field: 'title',
-      tokenField: 'slug'
-    })
-
-    const skip = (input.page - 1) * input.limit
     const [items, totalItems] = await this.repository.listAdminPosts({
-      where,
-      skip,
-      take: input.limit
+      filters: {
+        status: input.status,
+        authorId: input.actorRole === 'admin' ? input.authorId : input.actorId,
+        categorySlug: input.categorySlug,
+        isFeatured: input.isFeatured,
+        tag: input.tag,
+        search: input.search
+      },
+      page: input.page,
+      limit: input.limit
     })
 
     return {
-      items: items.map((item) => mapBlogPostSummary(new BlogPost(item))),
+      items: items.map(mapBlogPostSummary),
       pagination: {
         page: input.page,
         limit: input.limit,
@@ -152,8 +170,8 @@ export class AdminBlogService {
 
   async listTags(input: ListAdminBlogTagsDto): Promise<ListAdminBlogTagsResponse> {
     const tagSources = await this.repository.listTagSources({
-      deletedAt: null,
-      authorId: input.actorRole === UserRole.admin ? undefined : input.actorId
+      publishedOnly: false,
+      authorId: input.actorRole === 'admin' ? undefined : input.actorId
     })
 
     return {
@@ -164,30 +182,48 @@ export class AdminBlogService {
   async listCategories(
     input: ListAdminBlogCategoriesDto
   ): Promise<ListAdminBlogCategoriesResponse> {
-    const categorySources = await this.repository.listCategorySources({
-      deletedAt: null,
-      authorId: input.actorRole === UserRole.admin ? undefined : input.actorId
+    const categories = await this.repository.listCategories({
+      publishedOnly: false,
+      limit: input.limit
     })
 
     return {
-      items: countCategories(categorySources, input.limit)
+      items: categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        count: category.postCount
+      }))
     }
+  }
+
+  async createCategory(input: CreateBlogCategoryDto) {
+    const slug = input.slug ?? createSlugFromText(normalizeText(input.name))
+    const existingCategory = await this.repository.findCategoryBySlug(slug)
+    if (existingCategory) {
+      throw new AppError(409, ERROR_CODE.CONFLICT, 'Blog category already exists')
+    }
+
+    return this.repository.createCategory({ name: input.name, slug })
   }
 
   async getPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
     const postRecord = await this.repository.findActivePostById(input.blogPostId)
     const post = ensureActiveBlogPost(postRecord)
-    post.ensureCanManage(input.actorId, input.actorRole)
+    validateCanManagePost(post, input.actorId, input.actorRole)
     return mapBlogPost(post)
   }
 
   async updatePost(input: UpdateBlogPostDto): Promise<AdminBlogPostResponse> {
     const postRecord = await this.repository.findActivePostById(input.blogPostId)
     const post = ensureActiveBlogPost(postRecord)
-    post.ensureCanManage(input.actorId, input.actorRole)
+    validateCanManagePost(post, input.actorId, input.actorRole)
 
-    if (input.slug && input.slug !== post.slug) {
-      await createBlogPostSlug(this.repository, input.title ?? post.title, input.slug)
+    if (input.categoryId) {
+      const category = await this.repository.findCategoryById(input.categoryId)
+      if (!category) {
+        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Blog category not found')
+      }
     }
 
     const thumbnailObjectKey = await resolveThumbnailObjectKey(this.mediaRepository, {
@@ -195,48 +231,77 @@ export class AdminBlogService {
       actorRole: input.actorRole,
       thumbnailMediaId: input.thumbnailMediaId
     })
+    const normalizedContent = input.content
+      ? normalizeRichContentHeadingIds(input.content)
+      : undefined
+    const contentMediaIds = normalizedContent
+      ? await validateContentImages(this.mediaRepository, normalizedContent, {
+          id: input.actorId,
+          role: input.actorRole
+        })
+      : undefined
 
     const updatedPost = await this.repository.updatePost({
       ...input,
-      content: input.content as Prisma.InputJsonValue | undefined,
+      content: normalizedContent,
+      contentMediaIds,
       thumbnailObjectKey
     })
 
-    return mapBlogPost(new BlogPost(updatedPost))
+    return mapBlogPost(updatedPost)
   }
 
   async publishPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
     const postRecord = await this.repository.findActivePostById(input.blogPostId)
     const post = ensureActiveBlogPost(postRecord)
-    post.ensureCanManage(input.actorId, input.actorRole)
+    validateCanManagePost(post, input.actorId, input.actorRole)
+
+    if (!post.title?.trim() || post.title.length < 2) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Invalid blog post title.')
+    }
+    if (!post.excerpt?.trim()) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Blog post excerpt is required for publishing.')
+    }
+    if (!post.categoryId) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Blog category is required for publishing.')
+    }
+    if (!post.thumbnailMediaId) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Blog post thumbnail is required for publishing.')
+    }
+    if (!post.tags || post.tags.length === 0) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'At least one blog tag is required for publishing.')
+    }
+    if (countRichContentWords(post.content) === 0) {
+      throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Blog post content cannot be empty for publishing.')
+    }
 
     const updatedPost = await this.repository.updateStatus({
       blogPostId: input.blogPostId,
-      status: BlogPostStatus.published,
+      status: 'published',
       publishedAt: post.publishedAt ?? new Date()
     })
 
-    return mapBlogPost(new BlogPost(updatedPost))
+    return mapBlogPost(updatedPost)
   }
 
   async unpublishPost(input: BlogPostIdDto): Promise<AdminBlogPostResponse> {
     const postRecord = await this.repository.findActivePostById(input.blogPostId)
     const post = ensureActiveBlogPost(postRecord)
-    post.ensureCanManage(input.actorId, input.actorRole)
+    validateCanManagePost(post, input.actorId, input.actorRole)
 
     const updatedPost = await this.repository.updateStatus({
       blogPostId: input.blogPostId,
-      status: BlogPostStatus.draft,
+      status: 'draft',
       publishedAt: null
     })
 
-    return mapBlogPost(new BlogPost(updatedPost))
+    return mapBlogPost(updatedPost)
   }
 
   async deletePost(input: BlogPostIdDto): Promise<{ id: string; deleted: true }> {
     const postRecord = await this.repository.findActivePostById(input.blogPostId)
     const post = ensureActiveBlogPost(postRecord)
-    post.ensureCanManage(input.actorId, input.actorRole)
+    validateCanManagePost(post, input.actorId, input.actorRole)
 
     const deletedPost = await this.repository.softDeletePost(input.blogPostId)
     return {
@@ -245,5 +310,3 @@ export class AdminBlogService {
     }
   }
 }
-
-export const adminBlogService = new AdminBlogService(blogRepository, mediaRepository)

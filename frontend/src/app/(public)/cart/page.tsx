@@ -8,10 +8,10 @@ import {
   GraduationCap,
   ShoppingBag,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { useCartState } from "@/features/courses/hooks/use-cart-state";
+import { SafeImage } from "@/components/media/safe-image";
 
 export default function CartPage() {
   const {
@@ -39,10 +39,10 @@ export default function CartPage() {
     <main className="min-h-screen pb-20 pt-28 bg-brand-dark transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex flex-col gap-2 mb-10">
-          <h1 className="text-[32px] md:text-[40px] font-extrabold text-cream leading-tight">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-cream leading-tight">
             Giỏ hàng của bạn
           </h1>
-          <p className="text-muted-taupe text-[15px]">
+          <p className="text-muted-taupe text-base">
             {items.length > 0
               ? `Bạn đang có ${items.length} khóa học trong giỏ hàng`
               : "Giỏ hàng đang trống"}
@@ -57,16 +57,16 @@ export default function CartPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-border-dark pb-4">
-                      <th className="pb-4 font-bold text-[12px] text-muted-taupe uppercase tracking-widest">
+                      <th className="pb-4 font-bold text-xs text-muted-taupe uppercase tracking-widest">
                         Khóa học
                       </th>
-                      <th className="pb-4 font-bold text-[12px] text-muted-taupe uppercase tracking-widest text-center">
+                      <th className="pb-4 font-bold text-xs text-muted-taupe uppercase tracking-widest text-center">
                         Giá gốc
                       </th>
-                      <th className="pb-4 font-bold text-[12px] text-muted-taupe uppercase tracking-widest text-center">
+                      <th className="pb-4 font-bold text-xs text-muted-taupe uppercase tracking-widest text-center">
                         Giảm
                       </th>
-                      <th className="pb-4 font-bold text-[12px] text-muted-taupe uppercase tracking-widest text-center">
+                      <th className="pb-4 font-bold text-xs text-muted-taupe uppercase tracking-widest text-center">
                         Giá thanh toán
                       </th>
                       <th className="pb-4 text-right"></th>
@@ -90,25 +90,22 @@ export default function CartPage() {
                           <td className="py-6 pr-4">
                             <div className="flex items-center gap-4">
                               <div className="relative w-28 aspect-video rounded-lg overflow-hidden shrink-0 shadow-md border border-border-dark/50">
-                                <Image
+                                <SafeImage
                                   alt={item.title}
                                   fill
                                   sizes="112px"
                                   className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                  src={
-                                    item.thumbnailUrl ||
-                                    "/placeholder-course.jpg"
-                                  }
+                                  src={item.thumbnailUrl}
                                 />
                               </div>
                               <div>
                                 <Link
                                   href={`/courses/${item.slug}`}
-                                  className="font-bold text-[15px] md:text-[16px] text-cream hover:text-brand-pink transition-colors line-clamp-1"
+                                  className="font-bold text-base md:text-base text-cream hover:text-brand-pink transition-colors line-clamp-1"
                                 >
                                   {item.title}
                                 </Link>
-                                <div className="flex items-center gap-1.5 text-muted-taupe text-[12px] mt-1.5 font-medium">
+                                <div className="flex items-center gap-1.5 text-muted-taupe text-xs mt-1.5 font-medium">
                                   <GraduationCap
                                     size={14}
                                     className="text-brand-pink"
@@ -121,23 +118,23 @@ export default function CartPage() {
                             </div>
                           </td>
                           <td className="py-6 px-4 text-center">
-                            <span className="text-muted-taupe line-through text-[13px]">
+                            <span className="text-muted-taupe line-through text-sm">
                               {formatVND(item.price)}
                             </span>
                           </td>
                           <td className="py-6 px-4 text-center">
                             {itemDiscount > 0 ? (
-                              <span className="bg-brand-pink/10 text-brand-pink border border-brand-pink/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
+                              <span className="bg-brand-pink/10 text-brand-pink border border-brand-pink/20 px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wider uppercase">
                                 -{itemDiscount}%
                               </span>
                             ) : (
-                              <span className="text-muted-taupe text-[13px]">
+                              <span className="text-muted-taupe text-sm">
                                 -
                               </span>
                             )}
                           </td>
                           <td className="py-6 px-4 text-center">
-                            <span className="font-bold text-cream text-[15px] md:text-[16px]">
+                            <span className="font-bold text-cream text-base md:text-base">
                               {formatVND(item.salePrice ?? item.price)}
                             </span>
                           </td>
@@ -162,7 +159,7 @@ export default function CartPage() {
               <div className="pt-6 border-t border-border-dark/60">
                 <Link
                   href="/courses"
-                  className="inline-flex items-center gap-2 text-[13px] font-bold text-brand-pink hover:underline uppercase tracking-wider"
+                  className="inline-flex items-center gap-2 text-sm font-bold text-brand-pink hover:underline uppercase tracking-wider"
                 >
                   <BookOpen size={16} /> Tiếp tục tìm khóa học
                 </Link>
@@ -172,11 +169,11 @@ export default function CartPage() {
             {/* Calculations Sidebar */}
             <div className="lg:col-span-4">
               <div className="bg-deep-black border border-border-dark p-6 rounded-xl shadow-2xl sticky top-28 space-y-6">
-                <h3 className="text-[18px] font-bold text-cream border-b border-border-dark pb-4">
+                <h3 className="text-lg font-bold text-cream border-b border-border-dark pb-4">
                   Tóm tắt đơn hàng
                 </h3>
 
-                <div className="space-y-4 text-[14px]">
+                <div className="space-y-4 text-sm">
                   <div className="flex justify-between items-center text-muted-taupe">
                     <span>Tạm tính</span>
                     <span className="text-cream font-medium">
@@ -202,12 +199,12 @@ export default function CartPage() {
                 </div>
 
                 <div className="pt-6 border-t border-border-dark space-y-2">
-                  <label className="block text-[11px] font-bold text-muted-taupe uppercase tracking-widest">
+                  <label className="block text-xs font-bold text-muted-taupe uppercase tracking-widest">
                     Mã giảm giá
                   </label>
                   <div className="flex gap-2">
                     <input
-                      className="flex-grow bg-brand-dark border border-border-dark focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all outline-none rounded px-3 py-2 text-cream text-[13px]"
+                      className="flex-grow bg-brand-dark border border-border-dark focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all outline-none rounded px-3 py-2 text-cream text-sm"
                       placeholder="Nhập mã giảm giá"
                       type="text"
                       value={promoCode}
@@ -215,25 +212,25 @@ export default function CartPage() {
                     />
                     <button
                       onClick={handleApplyPromo}
-                      className="bg-brand-pink/10 hover:bg-brand-pink border border-brand-pink/30 hover:border-brand-pink text-brand-pink hover:text-white px-4 py-2 rounded text-[12px] font-bold transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
+                      className="bg-brand-pink/10 hover:bg-brand-pink border border-brand-pink/30 hover:border-brand-pink text-brand-pink hover:text-white px-4 py-2 rounded text-xs font-bold transition-all active:scale-95 cursor-pointer uppercase tracking-wider"
                     >
                       Áp dụng
                     </button>
                   </div>
-                  <span className="text-[10px] text-muted-taupe block leading-normal pt-1">
+                  <span className="text-xs text-muted-taupe block leading-normal pt-1">
                     Nhập mã giảm giá của bạn nếu có.
                   </span>
                 </div>
 
                 <div className="pt-6 border-t border-border-dark flex justify-between items-end">
-                  <span className="text-[16px] font-bold text-cream">
+                  <span className="text-base font-bold text-cream">
                     Tổng cộng
                   </span>
                   <div className="text-right">
-                    <span className="text-[24px] md:text-[28px] font-extrabold text-brand-pink block leading-none">
+                    <span className="text-2xl md:text-3xl font-extrabold text-brand-pink block leading-none">
                       {formatVND(total)}
                     </span>
-                    <span className="text-[10px] text-muted-taupe block mt-1.5 italic">
+                    <span className="text-xs text-muted-taupe block mt-1.5 italic">
                       Đã bao gồm thuế & phí
                     </span>
                   </div>
@@ -241,7 +238,7 @@ export default function CartPage() {
 
                 <Link
                   href="/checkout"
-                  className="w-full bg-brand-pink text-white py-4 rounded-lg font-bold text-[14px] hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group uppercase tracking-wider shadow-lg shadow-brand-pink/20"
+                  className="w-full bg-brand-pink text-white py-4 rounded-lg font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group uppercase tracking-wider shadow-lg shadow-brand-pink/20"
                 >
                   <span>Tiến hành thanh toán</span>
                   <ArrowRight
@@ -258,16 +255,16 @@ export default function CartPage() {
             <div className="w-20 h-20 bg-deep-black flex items-center justify-center rounded-full mb-6 border border-border-dark text-muted-taupe animate-pulse">
               <ShoppingBag size={32} />
             </div>
-            <h2 className="text-[22px] font-bold text-cream mb-3">
+            <h2 className="text-2xl font-bold text-cream mb-3">
               Giỏ hàng của bạn đang trống!
             </h2>
-            <p className="text-muted-taupe text-[14px] leading-relaxed mb-8">
+            <p className="text-muted-taupe text-sm leading-relaxed mb-8">
               Có vẻ như bạn chưa chọn khóa học nào. Hãy khám phá kho tàng kiến
               thức của chúng tôi và tìm kiếm khóa học phù hợp nhất.
             </p>
             <Link
               href="/courses"
-              className="bg-brand-pink text-white px-8 py-3.5 rounded-lg text-[13px] font-bold shadow-md hover:opacity-90 active:scale-95 transition-all uppercase tracking-wider"
+              className="bg-brand-pink text-white px-8 py-3.5 rounded-lg text-sm font-bold shadow-md hover:opacity-90 active:scale-95 transition-all uppercase tracking-wider"
             >
               Khám phá khóa học ngay
             </Link>

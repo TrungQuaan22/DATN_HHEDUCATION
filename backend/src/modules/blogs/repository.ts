@@ -16,12 +16,69 @@ const blogAuthorSelect = {
   avatarObjectKey: true
 } satisfies Prisma.UserSelect
 
-function mapToBlogPostRecord(post: any): BlogPostRecord {
+const blogPostInclude = {
+  author: {
+    select: blogAuthorSelect
+  },
+  category: true
+} satisfies Prisma.BlogPostInclude
+
+type PrismaBlogPostRecord = Prisma.BlogPostGetPayload<{
+  include: typeof blogPostInclude
+}>
+
+type BlogListFilters = {
+  status?: 'draft' | 'published'
+  authorId?: string
+  categorySlug?: string
+  isFeatured?: boolean
+  tag?: string
+  search?: string
+}
+
+function buildBlogWhere(filters: BlogListFilters): Prisma.BlogPostWhereInput {
+  const where: Prisma.BlogPostWhereInput = {
+    deletedAt: null,
+    status: filters.status,
+    authorId: filters.authorId,
+    category: filters.categorySlug ? { slug: filters.categorySlug } : undefined,
+    isFeatured: filters.isFeatured,
+    tags: filters.tag ? { has: filters.tag } : undefined
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { slug: { contains: filters.search, mode: 'insensitive' } }
+    ]
+  }
+
+  return where
+}
+
+function buildSourceWhere(data: {
+  publishedOnly: boolean
+  authorId?: string
+}): Prisma.BlogPostWhereInput {
+  return {
+    deletedAt: null,
+    authorId: data.authorId,
+    status: data.publishedOnly ? BlogPostStatus.published : undefined,
+    publishedAt: data.publishedOnly ? { not: null } : undefined
+  }
+}
+
+function toInputJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
+}
+
+function mapToBlogPostRecord(post: PrismaBlogPostRecord): BlogPostRecord {
   return {
     id: post.id,
     title: post.title,
     slug: post.slug,
     excerpt: post.excerpt ?? '',
+    categoryId: post.categoryId,
     category: post.category,
     tags: post.tags,
     content: post.content,
@@ -61,11 +118,7 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         id: blogPostId,
         deletedAt: null
       },
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
     if (!post) return null
@@ -82,11 +135,7 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
           not: null
         }
       },
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
     if (!post) return null
@@ -94,42 +143,52 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
   }
 
   async listPublishedPostSummaries(data: {
-    where: Prisma.BlogPostWhereInput
-    take: number
+    excludedPostId: string
+    tags: string[]
+    limit: number
   }): Promise<BlogPostRecord[]> {
+    if (data.tags.length === 0) return []
+
     const posts = await prisma.blogPost.findMany({
-      where: data.where,
-      take: data.take,
+      where: {
+        id: { not: data.excludedPostId },
+        status: BlogPostStatus.published,
+        deletedAt: null,
+        publishedAt: { not: null },
+        tags: data.tags.length > 0 ? { hasSome: data.tags } : undefined
+      },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
-    return posts.map(mapToBlogPostRecord)
+    return posts
+      .map(mapToBlogPostRecord)
+      .sort((left, right) => {
+        const leftMatches = left.tags.filter((tag) => data.tags.includes(tag)).length
+        const rightMatches = right.tags.filter((tag) => data.tags.includes(tag)).length
+        return rightMatches - leftMatches
+      })
+      .slice(0, data.limit)
   }
 
   async listAdminPosts(data: {
-    where: Prisma.BlogPostWhereInput
-    skip: number
-    take: number
+    filters: BlogListFilters
+    page: number
+    limit: number
   }): Promise<[BlogPostRecord[], number]> {
+    const where = buildBlogWhere(data.filters)
+    const skip = (data.page - 1) * data.limit
+
     const [posts, total] = await prisma.$transaction([
       prisma.blogPost.findMany({
-        where: data.where,
-        skip: data.skip,
-        take: data.take,
+        where,
+        skip,
+        take: data.limit,
         orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-        include: {
-          author: {
-            select: blogAuthorSelect
-          }
-        }
+        include: blogPostInclude
       }),
       prisma.blogPost.count({
-        where: data.where
+        where
       })
     ])
 
@@ -137,46 +196,73 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
   }
 
   async listPublishedPosts(data: {
-    where: Prisma.BlogPostWhereInput
-    skip: number
-    take: number
+    filters: Omit<BlogListFilters, 'status' | 'authorId'>
+    page: number
+    limit: number
   }): Promise<[BlogPostRecord[], number]> {
+    const where = buildBlogWhere({
+      ...data.filters,
+      status: 'published'
+    })
+    where.publishedAt = { not: null }
+    const skip = (data.page - 1) * data.limit
+
     const [posts, total] = await prisma.$transaction([
       prisma.blogPost.findMany({
-        where: data.where,
-        skip: data.skip,
-        take: data.take,
+        where,
+        skip,
+        take: data.limit,
         orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
-        include: {
-          author: {
-            select: blogAuthorSelect
-          }
-        }
+        include: blogPostInclude
       }),
       prisma.blogPost.count({
-        where: data.where
+        where
       })
     ])
 
     return [posts.map(mapToBlogPostRecord), total]
   }
 
-  async listTagSources(where: Prisma.BlogPostWhereInput) {
+  async listTagSources(data: { publishedOnly: boolean; authorId?: string }) {
     return prisma.blogPost.findMany({
-      where,
+      where: buildSourceWhere(data),
       select: {
         tags: true
       }
     })
   }
 
-  async listCategorySources(where: Prisma.BlogPostWhereInput) {
-    return prisma.blogPost.findMany({
-      where,
-      select: {
-        category: true
+  findCategoryById(categoryId: string) {
+    return prisma.blogCategory.findUnique({ where: { id: categoryId } })
+  }
+
+  findCategoryBySlug(slug: string) {
+    return prisma.blogCategory.findUnique({ where: { slug } })
+  }
+
+  async listCategories(data: { publishedOnly: boolean; limit: number }) {
+    const categories = await prisma.blogCategory.findMany({
+      take: data.limit,
+      orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: {
+            posts: data.publishedOnly
+              ? { where: { status: BlogPostStatus.published, deletedAt: null } }
+              : { where: { deletedAt: null } }
+          }
+        }
       }
     })
+
+    return categories.map(({ _count, ...category }) => ({
+      ...category,
+      postCount: _count.posts
+    }))
+  }
+
+  createCategory(data: { name: string; slug: string }) {
+    return prisma.blogCategory.create({ data })
   }
 
   async createPost(data: CreateBlogPostRecordInput): Promise<BlogPostRecord> {
@@ -185,19 +271,18 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         title: data.title,
         slug: data.slug,
         excerpt: data.excerpt,
-        category: data.category,
+        categoryId: data.categoryId,
         tags: data.tags ?? [],
-        content: data.content,
+        content: toInputJson(data.content),
+        contentMedia: data.contentMediaIds?.length
+          ? { create: data.contentMediaIds.map((mediaId) => ({ mediaId })) }
+          : undefined,
         authorId: data.authorId,
         thumbnailMediaId: data.thumbnailMediaId,
         thumbnailObjectKey: data.thumbnailObjectKey,
         isFeatured: data.isFeatured
       },
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
     return mapToBlogPostRecord(post)
@@ -212,18 +297,21 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         title: data.title,
         slug: data.slug,
         excerpt: data.excerpt,
-        category: data.category,
+        categoryId: data.categoryId,
         tags: data.tags,
-        content: data.content,
+        content: data.content === undefined ? undefined : toInputJson(data.content),
+        contentMedia:
+          data.contentMediaIds === undefined
+            ? undefined
+            : {
+                deleteMany: {},
+                create: data.contentMediaIds.map((mediaId) => ({ mediaId }))
+              },
         thumbnailMediaId: data.thumbnailMediaId,
         thumbnailObjectKey: data.thumbnailObjectKey,
         isFeatured: data.isFeatured
       },
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
     return mapToBlogPostRecord(post)
@@ -242,11 +330,7 @@ export class PrismaBlogRepository implements BlogRepositoryPort {
         status: data.status,
         publishedAt: data.publishedAt
       },
-      include: {
-        author: {
-          select: blogAuthorSelect
-        }
-      }
+      include: blogPostInclude
     })
 
     return mapToBlogPostRecord(post)

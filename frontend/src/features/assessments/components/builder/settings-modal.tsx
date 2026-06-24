@@ -87,7 +87,7 @@ export function SettingsModal({
 
           {/* Title input field */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-admin-muted block">
+            <label className="text-xs font-bold uppercase text-admin-muted block">
               TiĂªu Ä‘á» bĂ i kiá»ƒm tra
             </label>
             <input
@@ -101,10 +101,10 @@ export function SettingsModal({
 
           {/* Placement type tabs */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-admin-muted block">
+            <label className="text-xs font-bold uppercase text-admin-muted block">
               Pháº¡m vi phĂ¢n bá»•
             </label>
-            <div className="grid grid-cols-4 rounded-lg bg-admin-bg p-1 border border-admin-border/80 text-[11px] font-bold">
+            <div className="grid grid-cols-4 rounded-lg bg-admin-bg p-1 border border-admin-border/80 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setPlacementType("unplaced")}
@@ -155,7 +155,7 @@ export function SettingsModal({
           {/* Course placement details */}
           {placementType === "course" && (
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted block">
+              <label className="text-xs font-bold text-admin-muted block">
                 KhĂ³a há»c Ă¡p dá»¥ng
               </label>
               <select
@@ -176,7 +176,7 @@ export function SettingsModal({
           {placementType === "lesson" && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted block">KhĂ³a há»c</label>
+                <label className="text-xs font-bold text-admin-muted block">KhĂ³a há»c</label>
                 <select
                   value={selectedCourseId}
                   onChange={(e) => setSelectedCourseId(e.target.value)}
@@ -190,7 +190,7 @@ export function SettingsModal({
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-admin-muted block">
+                <label className="text-xs font-bold text-admin-muted block">
                   BĂ i há»c (Dáº¡ng Quiz)
                 </label>
                 {quizLessons.length === 0 ? (
@@ -218,7 +218,7 @@ export function SettingsModal({
           {/* Subject & Grade selection */}
           <div className="grid grid-cols-2 gap-3 border-t border-admin-border/40 pt-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 MĂ´n há»c
               </label>
               <select
@@ -234,7 +234,7 @@ export function SettingsModal({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 Khá»‘i lá»›p
               </label>
               <input
@@ -251,7 +251,7 @@ export function SettingsModal({
           {/* Time limit & Attempts */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 Thá»i gian lĂ m bĂ i (phĂºt)
               </label>
               <input
@@ -263,7 +263,7 @@ export function SettingsModal({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 Sá»‘ lÆ°á»£t lĂ m bĂ i tá»‘i Ä‘a
               </label>
               <input
@@ -279,7 +279,7 @@ export function SettingsModal({
           {/* Open & Close times */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 Thá»i gian má»Ÿ Ä‘á»
               </label>
               <input
@@ -290,7 +290,7 @@ export function SettingsModal({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-admin-muted uppercase block">
+              <label className="text-xs font-bold text-admin-muted uppercase block">
                 Thá»i gian Ä‘Ă³ng Ä‘á»
               </label>
               <input

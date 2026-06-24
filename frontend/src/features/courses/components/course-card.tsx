@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +16,7 @@ import {
   PREFETCH_STALE_TIME_MS,
   useIntentPrefetch,
 } from "@/lib/utils/prefetch";
+import { SafeImage } from "@/components/media/safe-image";
 
 const prefetchedCatalogCourseSlugs = new Set<string>();
 
@@ -95,22 +95,22 @@ export default function CourseCard({
       <div
         className={`relative overflow-hidden ${aspectClass} bg-brand-dark/50`}
       >
-        <Image
+        <SafeImage
           alt={course.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-all duration-300 group-hover:scale-105"
-          src={course.thumbnailUrl || "https://via.placeholder.com/300x200"}
+          src={course.thumbnailUrl}
         />
 
         {/* Subject Tag */}
-        <div className="absolute top-3 left-3 bg-brand-pink text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
+        <div className="absolute top-3 left-3 bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
           {subjectLabel}
         </div>
 
         {/* Sale Discount Tag */}
         {discountPercent > 0 && (
-          <div className="absolute top-3 right-3 bg-accent-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm border border-brand-dark/20 flex items-center gap-1 z-10">
+          <div className="absolute top-3 right-3 bg-accent-orange text-white text-xs font-bold px-2 py-1 rounded shadow-sm border border-brand-dark/20 flex items-center gap-1 z-10">
             -{discountPercent}%
           </div>
         )}
@@ -121,7 +121,7 @@ export default function CourseCard({
         <div>
           {/* Grade & Rating Row */}
           <div className="flex justify-between items-center mb-2.5">
-            <span className="text-[12px] font-bold text-muted-taupe uppercase">
+            <span className="text-xs font-bold text-muted-taupe uppercase">
               Khối {course.grade} • {course.totalLessons || 0} bài học
             </span>
             <div className="flex items-center gap-1 text-accent-orange">
@@ -129,13 +129,13 @@ export default function CourseCard({
                 size={13}
                 className="fill-accent-orange stroke-accent-orange"
               />
-              <span className="text-[12px] font-bold">{rating}</span>
+              <span className="text-xs font-bold">{rating}</span>
             </div>
           </div>
 
           {/* Title */}
           <Link href={courseHref}>
-            <h3 className="text-[16px] md:text-[18px] font-bold text-cream mb-4 leading-tight group-hover:text-brand-pink transition-colors line-clamp-2 min-h-[44px]">
+            <h3 className="text-base md:text-lg font-bold text-cream mb-4 leading-tight group-hover:text-brand-pink transition-colors line-clamp-2 min-h-[44px]">
               {course.title}
             </h3>
           </Link>
@@ -145,22 +145,19 @@ export default function CourseCard({
           {/* Teacher Info */}
           <div className="flex items-center gap-3 mb-6">
             <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border-dark flex-shrink-0">
-              <Image
+              <SafeImage
                 alt={course.teacher.fullName}
                 fill
                 sizes="40px"
                 className="object-cover"
-                src={
-                  course.teacher.avatarUrl ||
-                  "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY"
-                }
+                src={course.teacher.avatarUrl}
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-[12px] font-bold text-cream">
+              <span className="text-xs font-bold text-cream">
                 {course.teacher.fullName}
               </span>
-              <span className="text-[10px] text-muted-taupe">
+              <span className="text-xs text-muted-taupe">
                 Giảng viên chuyên môn
               </span>
             </div>
@@ -171,15 +168,15 @@ export default function CourseCard({
             <div className="flex flex-col">
               {course.salePrice ? (
                 <>
-                  <span className="text-[12px] text-muted-taupe line-through font-medium leading-none mb-1">
+                  <span className="text-xs text-muted-taupe line-through font-medium leading-none mb-1">
                     {formatVND(course.price)}
                   </span>
-                  <span className="text-[18px] font-extrabold text-brand-pink leading-none">
+                  <span className="text-lg font-extrabold text-brand-pink leading-none">
                     {formatVND(course.salePrice)}
                   </span>
                 </>
               ) : (
-                <span className="text-[18px] font-extrabold text-brand-pink leading-none">
+                <span className="text-lg font-extrabold text-brand-pink leading-none">
                   {formatVND(course.price)}
                 </span>
               )}

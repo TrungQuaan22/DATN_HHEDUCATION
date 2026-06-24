@@ -26,7 +26,7 @@ export default function LessonYoutubeField({
         type="url"
         {...register("youtubeUrl")}
         placeholder="https://www.youtube.com/watch?v=..."
-        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-[14px]"
+        className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm"
       />
       {errors.youtubeUrl && (
         <p className="text-red-400 text-xs mt-1">

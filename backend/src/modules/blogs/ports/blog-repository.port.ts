@@ -1,5 +1,7 @@
 import type { BlogPostStatus, Prisma } from '@prisma/client'
 
+export type { BlogPostStatus }
+
 export type BlogAuthorRecord = {
   id: string
   fullName: string
@@ -7,12 +9,21 @@ export type BlogAuthorRecord = {
   avatarObjectKey: string | null
 }
 
+export type BlogCategoryRecord = {
+  id: string
+  name: string
+  slug: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type BlogPostRecord = {
   id: string
   title: string
   slug: string
   excerpt: string
-  category: string | null
+  categoryId: string | null
+  category: BlogCategoryRecord | null
   tags: string[]
   content: Prisma.JsonValue
   thumbnailMediaId: string | null
@@ -30,9 +41,10 @@ export type CreateBlogPostRecordInput = {
   title: string
   slug: string
   excerpt?: string | null
-  category?: string | null
+  categoryId?: string | null
   tags?: string[]
-  content: Prisma.InputJsonValue
+  content: unknown
+  contentMediaIds?: string[]
   authorId: string
   thumbnailMediaId?: string | null
   thumbnailObjectKey?: string | null
@@ -44,9 +56,10 @@ export type UpdateBlogPostRecordInput = {
   title?: string
   slug?: string
   excerpt?: string | null
-  category?: string | null
+  categoryId?: string | null
   tags?: string[]
-  content?: Prisma.InputJsonValue
+  content?: unknown
+  contentMediaIds?: string[]
   thumbnailMediaId?: string | null
   thumbnailObjectKey?: string | null
   isFeatured?: boolean
@@ -57,21 +70,43 @@ export interface BlogRepositoryPort {
   findActivePostById(blogPostId: string): Promise<BlogPostRecord | null>
   findPublishedPostBySlug(slug: string): Promise<BlogPostRecord | null>
   listPublishedPostSummaries(data: {
-    where: Prisma.BlogPostWhereInput
-    take: number
+    excludedPostId: string
+    tags: string[]
+    limit: number
   }): Promise<BlogPostRecord[]>
   listAdminPosts(data: {
-    where: Prisma.BlogPostWhereInput
-    skip: number
-    take: number
+    filters: {
+      status?: BlogPostStatus
+      authorId?: string
+      categorySlug?: string
+      isFeatured?: boolean
+      tag?: string
+      search?: string
+    }
+    page: number
+    limit: number
   }): Promise<[BlogPostRecord[], number]>
   listPublishedPosts(data: {
-    where: Prisma.BlogPostWhereInput
-    skip: number
-    take: number
+    filters: {
+      categorySlug?: string
+      isFeatured?: boolean
+      tag?: string
+      search?: string
+    }
+    page: number
+    limit: number
   }): Promise<[BlogPostRecord[], number]>
-  listTagSources(where: Prisma.BlogPostWhereInput): Promise<Array<{ tags: string[] }>>
-  listCategorySources(where: Prisma.BlogPostWhereInput): Promise<Array<{ category: string | null }>>
+  listTagSources(data: {
+    publishedOnly: boolean
+    authorId?: string
+  }): Promise<Array<{ tags: string[] }>>
+  findCategoryById(categoryId: string): Promise<BlogCategoryRecord | null>
+  findCategoryBySlug(slug: string): Promise<BlogCategoryRecord | null>
+  listCategories(data: {
+    publishedOnly: boolean
+    limit: number
+  }): Promise<Array<BlogCategoryRecord & { postCount: number }>>
+  createCategory(data: { name: string; slug: string }): Promise<BlogCategoryRecord>
   createPost(data: CreateBlogPostRecordInput): Promise<BlogPostRecord>
   updatePost(data: UpdateBlogPostRecordInput): Promise<BlogPostRecord>
   updateStatus(data: {

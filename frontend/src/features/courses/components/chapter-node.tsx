@@ -68,11 +68,11 @@ export default function ChapterNode({
                 <GripVertical size={16} />
               </div>
 
-              <h2 className="font-bold text-[15px] text-admin-cream truncate">
+              <h2 className="font-bold text-base text-admin-cream truncate">
                 {chapter.title}
               </h2>
 
-              <span className="text-[11px] text-admin-muted bg-admin-deep px-2 py-0.5 rounded-md border border-admin-border/10">
+              <span className="text-xs text-admin-muted bg-admin-deep px-2 py-0.5 rounded-md border border-admin-border/10">
                 {chapter.lessons.length} bài học
               </span>
             </div>
@@ -85,7 +85,7 @@ export default function ChapterNode({
               <button
                 onClick={() => onAddLesson(chapter.id)}
                 disabled={isPending}
-                className="text-admin-pink border border-admin-pink/20 hover:bg-admin-pink hover:text-white px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                className="text-admin-pink border border-admin-pink/20 hover:bg-admin-pink hover:text-white px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
               >
                 <Plus size={12} />
                 Thêm bài học

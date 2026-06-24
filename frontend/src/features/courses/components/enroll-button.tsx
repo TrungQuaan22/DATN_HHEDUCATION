@@ -71,7 +71,7 @@ export default function EnrollButton({ course }: EnrollButtonProps) {
   return (
     <button
       onClick={handleEnroll}
-      className="w-full bg-brand-pink text-white font-bold text-[14px] py-4 rounded hover:opacity-90 active:scale-95 transition-all shadow-lg cursor-pointer uppercase text-center"
+      className="w-full bg-brand-pink text-white font-bold text-sm py-4 rounded hover:opacity-90 active:scale-95 transition-all shadow-lg cursor-pointer uppercase text-center"
     >
       {buttonText}
     </button>

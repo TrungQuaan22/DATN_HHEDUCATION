@@ -77,7 +77,7 @@ export function LessonRenderer({
           assessmentPlacementId ? (
             <Link
               href={`/student/assessments/${assessmentPlacementId}`}
-              className="inline-flex items-center gap-1.5 rounded bg-accent-orange px-6 py-2 text-[12px] font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded bg-accent-orange px-6 py-2 text-xs font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
             >
               Làm bài ngay
               <ArrowRight size={14} />

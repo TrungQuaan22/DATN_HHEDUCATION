@@ -93,7 +93,7 @@ export default function AdminSidebar({
             <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
               isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
             }`}>
-              <h1 className="text-[20px] font-black text-admin-pink tracking-tighter font-serif select-none animate-pulse">
+              <h1 className="text-xl font-black text-admin-pink tracking-tighter font-serif select-none animate-pulse">
                 HH
               </h1>
             </div>
@@ -101,10 +101,10 @@ export default function AdminSidebar({
             <div className={`transition-all duration-300 transform origin-left ${
               isCollapsed ? "opacity-0 scale-75 translate-x-4 pointer-events-none" : "opacity-100 scale-100 translate-x-0"
             }`}>
-              <h1 className="text-[20px] font-bold text-admin-cream tracking-tight font-serif whitespace-nowrap">
+              <h1 className="text-xl font-bold text-admin-cream tracking-tight font-serif whitespace-nowrap">
                  HH <span className="text-admin-pink">Education</span>
               </h1>
-              <p className="text-[10px] text-admin-muted font-semibold uppercase tracking-widest mt-0.5 whitespace-nowrap">
+              <p className="text-xs text-admin-muted font-semibold uppercase tracking-widest mt-0.5 whitespace-nowrap">
                 Admin Terminal
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function AdminSidebar({
                     />
                   </div>
                   <span
-                    className={`text-[14px] whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
+                    className={`text-sm whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
                       isCollapsed
                         ? "opacity-0 -translate-x-4 pointer-events-none"
                         : "opacity-100 translate-x-0"
@@ -168,7 +168,7 @@ export default function AdminSidebar({
 
                 {/* Tooltip on hover (only when collapsed) */}
                 {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-[11px] font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-xs font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
                     {item.label}
                     <div className="absolute right-full top-1/2 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-admin-deep mr-[-1px]"></div>
                   </div>
@@ -193,7 +193,7 @@ export default function AdminSidebar({
                 <ChevronLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`} />
               </div>
               <span
-                className={`text-[14px] whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
+                className={`text-sm whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
                   isCollapsed
                     ? "opacity-0 -translate-x-4 pointer-events-none"
                     : "opacity-100 translate-x-0"
@@ -205,7 +205,7 @@ export default function AdminSidebar({
 
             {/* Tooltip on hover (only when collapsed) */}
             {isCollapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-[11px] font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-xs font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
                 Mở rộng
                 <div className="absolute right-full top-1/2 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-admin-deep mr-[-1px]"></div>
               </div>
@@ -234,7 +234,7 @@ export default function AdminSidebar({
                     />
                   </div>
                   <span
-                    className={`text-[14px] whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
+                    className={`text-sm whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
                       isCollapsed
                         ? "opacity-0 -translate-x-4 pointer-events-none"
                         : "opacity-100 translate-x-0"
@@ -246,7 +246,7 @@ export default function AdminSidebar({
 
                 {/* Tooltip on hover (only when collapsed) */}
                 {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-[11px] font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-admin-deep border border-admin-border/40 text-admin-cream text-xs font-black rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[100] pointer-events-none select-none">
                     {item.label}
                     <div className="absolute right-full top-1/2 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-admin-deep mr-[-1px]"></div>
                   </div>

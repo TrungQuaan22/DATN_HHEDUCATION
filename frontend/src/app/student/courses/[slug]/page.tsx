@@ -62,7 +62,7 @@ function StudentLearningContent() {
           action={
             <Link
                href="/student/courses"
-               className="inline-flex items-center gap-1.5 bg-brand-pink text-brand-dark px-5 py-2 rounded font-bold text-[12px] hover:scale-105 transition-all"
+               className="inline-flex items-center gap-1.5 bg-brand-pink text-brand-dark px-5 py-2 rounded font-bold text-xs hover:scale-105 transition-all"
             >
               <ChevronLeft size={14} />
               Quay lại danh sách khóa học
@@ -110,7 +110,7 @@ function StudentLearningContent() {
           }`}
         >
           <div className="p-4 border-b border-border-dark bg-off-black shrink-0">
-            <h3 className="text-[12px] font-extrabold text-cream uppercase tracking-wider">
+            <h3 className="text-xs font-extrabold text-cream uppercase tracking-wider">
               Nội dung khóa học
             </h3>
           </div>
@@ -133,7 +133,7 @@ function StudentLearningContent() {
               action={
                 <button
                   onClick={() => router.push(`/student/courses/${slug}`)}
-                  className="rounded bg-brand-pink px-4 py-2 text-[12px] font-bold text-brand-dark hover:scale-[1.02] active:scale-95 transition-all"
+                  className="rounded bg-brand-pink px-4 py-2 text-xs font-bold text-brand-dark hover:scale-[1.02] active:scale-95 transition-all"
                 >
                   Xem tổng quan khóa học
                 </button>
@@ -145,10 +145,10 @@ function StudentLearningContent() {
           ) : activeLesson ? (
             <div className="space-y-4 max-w-[900px] mx-auto w-full">
               <div className="flex flex-col gap-1 border-b border-border-dark/60 pb-4">
-                <h1 className="text-[20px] font-extrabold leading-tight text-cream sm:text-[22px]">
+                <h1 className="text-xl font-extrabold leading-tight text-cream sm:text-2xl">
                   {course.title}
                 </h1>
-                <p className="text-[13px] font-semibold text-muted-text">
+                <p className="text-sm font-semibold text-muted-text">
                   Giảng viên: {course.teacher.fullName}
                 </p>
               </div>
@@ -157,17 +157,17 @@ function StudentLearningContent() {
                 <div className="rounded border border-accent-orange/30 bg-accent-orange/10 px-4 py-3">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-wider text-accent-orange">
+                      <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-accent-orange">
                         <FileText size={14} />
                         Assessment khóa học
                       </div>
-                      <p className="mt-1 truncate text-[14px] font-bold text-cream">
+                      <p className="mt-1 truncate text-sm font-bold text-cream">
                         {course.assessmentPlacements[0].title}
                       </p>
                     </div>
                     <Link
                       href={`/student/assessments/${course.assessmentPlacements[0].id}`}
-                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded bg-accent-orange px-4 py-2 text-[12px] font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded bg-accent-orange px-4 py-2 text-xs font-bold text-brand-dark transition-all hover:scale-[1.02] active:scale-95"
                     >
                       Làm bài
                       <ArrowRight size={14} />
@@ -187,7 +187,7 @@ function StudentLearningContent() {
                 <button
                   onClick={goToPreviousLesson}
                   disabled={!hasPreviousLesson}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded font-bold text-[12px] border border-border-dark bg-surface-input text-cream hover:text-brand-pink disabled:opacity-40 disabled:hover:text-cream disabled:hover:border-border-dark hover:scale-[1.02] active:scale-95 disabled:scale-100 transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded font-bold text-xs border border-border-dark bg-surface-input text-cream hover:text-brand-pink disabled:opacity-40 disabled:hover:text-cream disabled:hover:border-border-dark hover:scale-[1.02] active:scale-95 disabled:scale-100 transition-all cursor-pointer disabled:cursor-not-allowed"
                 >
                   <ChevronLeft size={16} />
                   Bài trước
@@ -195,7 +195,7 @@ function StudentLearningContent() {
                 <button
                   onClick={goToNextLesson}
                   disabled={!hasNextLesson}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded font-bold text-[12px] bg-brand-pink text-brand-dark hover:bg-brand-pink/90 disabled:opacity-40 disabled:bg-brand-pink disabled:hover:bg-brand-pink hover:scale-[1.02] active:scale-95 disabled:scale-100 transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded font-bold text-xs bg-brand-pink text-brand-dark hover:bg-brand-pink/90 disabled:opacity-40 disabled:bg-brand-pink disabled:hover:bg-brand-pink hover:scale-[1.02] active:scale-95 disabled:scale-100 transition-all cursor-pointer disabled:cursor-not-allowed"
                 >
                   Bài tiếp theo
                   <ChevronRight size={16} />
@@ -205,11 +205,11 @@ function StudentLearningContent() {
               {/* Title and Info */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
                 <div className="flex flex-col gap-1 min-w-0">
-                  <h2 className="text-[18px] font-extrabold text-cream leading-tight truncate">
+                  <h2 className="text-lg font-extrabold text-cream leading-tight truncate">
                     Bài {activeLesson.orderIndex} - {activeLesson.title}
                   </h2>
                   {activeChapter && (
-                    <p className="text-[12px] text-muted-text font-semibold truncate">
+                    <p className="text-xs text-muted-text font-semibold truncate">
                       Chương {activeChapter.orderIndex} - {activeChapter.title}
                     </p>
                   )}
@@ -218,7 +218,7 @@ function StudentLearningContent() {
                 {/* Progress status or Timer */}
                 {activeLesson.type === "video" && isLessonCompleted && (
                   <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1.5 bg-deep-black/80 backdrop-blur-md border border-brand-pink/30 px-3 py-1.5 rounded-full text-brand-pink text-[11px] font-bold shadow-md">
+                      <div className="flex items-center gap-1.5 bg-deep-black/80 backdrop-blur-md border border-brand-pink/30 px-3 py-1.5 rounded-full text-brand-pink text-xs font-bold shadow-md">
                         <CheckCircle2
                           size={13}
                           className="text-brand-pink"
@@ -234,6 +234,7 @@ function StudentLearningContent() {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 description={activeLesson.description}
+                materials={activeLesson.materials}
               />
             </div>
           ) : (
@@ -252,6 +253,8 @@ function StudentLearningContent() {
             activeLesson?.type === "quiz" ||
             activeLessonSummary?.type === "quiz"
           }
+          courseId={course.id}
+          lessonId={activeLessonId}
         />
       </div>
     </div>
@@ -297,10 +300,10 @@ function LearningLessonSkeleton({
   return (
     <div className="mx-auto w-full max-w-[900px] space-y-4">
       <div className="flex flex-col gap-1 border-b border-border-dark/60 pb-4">
-        <h1 className="text-[20px] font-extrabold leading-tight text-cream sm:text-[22px]">
+        <h1 className="text-xl font-extrabold leading-tight text-cream sm:text-2xl">
           {course.title}
         </h1>
-        <p className="text-[13px] font-semibold text-muted-text">
+        <p className="text-sm font-semibold text-muted-text">
           Giảng viên: {course.teacher.fullName}
         </p>
       </div>

@@ -81,7 +81,7 @@ export function QuestionEditor({
         {/* General Configs row */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-admin-muted uppercase">Độ khó</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">Độ khó</label>
             <select
               value={item.difficulty}
               onChange={(e) =>
@@ -98,7 +98,7 @@ export function QuestionEditor({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-admin-muted uppercase">Điểm số</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">Điểm số</label>
             <input
               type="number"
               step={0.25}
@@ -114,7 +114,7 @@ export function QuestionEditor({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-admin-muted uppercase">Dạng câu hỏi</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">Dạng câu hỏi</label>
             <select
               value={item.itemType}
               disabled
@@ -141,7 +141,7 @@ export function QuestionEditor({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-admin-muted uppercase">Chuyên đề</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">Chuyên đề</label>
             <input
               type="text"
               list="assessment-builder-topic-options"
@@ -166,7 +166,7 @@ export function QuestionEditor({
 
         {assessmentType === "quiz" ? (
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-admin-muted uppercase">
+            <label className="text-xs font-bold text-admin-muted uppercase">
               Nội dung câu hỏi (Markdown / Rich-text)
             </label>
             <textarea
@@ -190,7 +190,7 @@ export function QuestionEditor({
 
         {/* Answers config according to type */}
         <div className="space-y-2 pt-2 border-t border-admin-border/40">
-          <span className="text-[11px] font-bold text-admin-muted block">Đáp án chính xác</span>
+          <span className="text-xs font-bold text-admin-muted block">Đáp án chính xác</span>
 
           {/* Sub Editors Dispatch */}
           {item.itemType === "mcq" && (
@@ -208,7 +208,7 @@ export function QuestionEditor({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-admin-muted uppercase">
+          <label className="text-xs font-bold text-admin-muted uppercase">
             Giải thích đáp án
           </label>
           <textarea
@@ -225,7 +225,7 @@ export function QuestionEditor({
         </div>
       </div>
 
-      <div className="text-[10px] text-admin-muted text-center italic mt-4 shrink-0">
+      <div className="text-xs text-admin-muted text-center italic mt-4 shrink-0">
         Đề thi tự lưu trên giao diện. Bấm nút &quot;Lưu &amp; Xuất bản&quot; ở trên đầu để lưu vĩnh viễn vào CSDL.
       </div>
     </div>

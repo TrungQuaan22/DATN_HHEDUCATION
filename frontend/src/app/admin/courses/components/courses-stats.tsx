@@ -21,7 +21,7 @@ export default function CoursesStats({ kpis }: CoursesStatsProps) {
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-[11px] font-bold text-admin-muted uppercase tracking-wider">
+          <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
             Khóa học hoạt động
           </p>
           <p className="text-3xl font-bold text-admin-cream mt-1">
@@ -38,7 +38,7 @@ export default function CoursesStats({ kpis }: CoursesStatsProps) {
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-[11px] font-bold text-admin-muted uppercase tracking-wider">
+          <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
             Bản nháp (Draft)
           </p>
           <p className="text-3xl font-bold text-admin-cream mt-1">
@@ -55,7 +55,7 @@ export default function CoursesStats({ kpis }: CoursesStatsProps) {
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-[11px] font-bold text-admin-muted uppercase tracking-wider">
+          <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
             Giảng viên phụ trách
           </p>
           <p className="text-3xl font-bold text-admin-cream mt-1">
@@ -70,12 +70,12 @@ export default function CoursesStats({ kpis }: CoursesStatsProps) {
           <span className="p-2 bg-amber-500/10 text-amber-500 rounded-full">
             <CreditCard className="w-5 h-5" />
           </span>
-          <span className="text-[11px] font-bold text-emerald-400">
+          <span className="text-xs font-bold text-emerald-400">
             +8.2% ↑
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-[11px] font-bold text-admin-muted uppercase tracking-wider">
+          <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
             Doanh thu tháng (ước tính)
           </p>
           <p className="text-3xl font-bold text-admin-cream mt-1">1.2B đ</p>

@@ -27,6 +27,7 @@ model User {
   taughtCourses            Course[]                  @relation("CourseTeacher")
   authoredPosts            BlogPost[]                @relation("BlogAuthor")
   enrollments              Enrollment[]
+  tutorChatSessions        TutorChatSession[]
   lessonProgress           LessonProgress[]
   courseProgress           CourseProgress[]
   submissions              Submission[]              @relation("SubmissionStudent")
@@ -38,6 +39,7 @@ model User {
   orders                   Order[]
   idempotencyKeys          IdempotencyKey[]
   uploadedMedia            Media[]                   @relation("UploadedMedia")
+  createdLessonMaterials   LessonMaterial[]          @relation("CreatedLessonMaterials")
   createdAssessments       Assessment[]              @relation("AssessmentCreator")
   avatarMedia              Media?                    @relation("UserAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
 

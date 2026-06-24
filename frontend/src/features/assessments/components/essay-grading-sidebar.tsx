@@ -42,20 +42,20 @@ export function EssayGradingSidebar({
                   <h4 className="text-xs font-bold text-admin-cream line-clamp-2">
                     {submission.assessment.title}
                   </h4>
-                  <p className="mt-1 text-[11px] text-admin-muted">
+                  <p className="mt-1 text-xs text-admin-muted">
                     Học sinh: {submission.student.fullName}
                   </p>
-                  <p className="text-[10px] text-admin-muted">
+                  <p className="text-xs text-admin-muted">
                     Lượt làm: #{submission.attemptNumber}
                   </p>
                 </div>
                 <Eye size={14} className="shrink-0 text-admin-pink mt-0.5" />
               </div>
               <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="rounded bg-admin-bg px-2 py-0.5 text-[9px] font-bold text-admin-muted">
+                <span className="rounded bg-admin-bg px-2 py-0.5 text-xs font-bold text-admin-muted">
                   Đoạn trắc nghiệm: {submission.autoScore ?? "0"}đ
                 </span>
-                <span className="rounded bg-admin-bg px-2 py-0.5 text-[9px] font-bold text-admin-pink">
+                <span className="rounded bg-admin-bg px-2 py-0.5 text-xs font-bold text-admin-pink">
                   Tự luận: {submission.gradedEssayCount}/{submission.essayCount} câu
                 </span>
               </div>

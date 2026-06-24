@@ -100,8 +100,38 @@ body {
     border-color 0.2s ease;
 }
 
-h1,
-h2,
+.landing-pattern-page {
+  background-color: var(--brand-dark);
+}
+
+html.light .landing-pattern-page {
+  background-color: var(--brand-dark);
+  background-image:
+    radial-gradient(circle at 18% 8%, rgba(52, 211, 153, 0.14), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(245, 158, 11, 0.10), transparent 22%),
+    radial-gradient(circle at 70% 78%, rgba(14, 165, 233, 0.08), transparent 24%),
+    url("/education-hero-pattern.svg");
+  background-position:
+    center top,
+    center top,
+    center bottom,
+    0 0;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat;
+  background-size:
+    100% 900px,
+    100% 820px,
+    100% 900px,
+    180px 180px;
+}
+
+html.light .landing-pattern-page section {
+  background-color: transparent !important;
+}
+
 .font-serif {
   font-family: var(--font-quicksand) !important;
   font-weight: 700;

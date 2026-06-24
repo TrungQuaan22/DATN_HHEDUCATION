@@ -47,11 +47,11 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
 
   return (
     <div className="bg-deep-black p-6 rounded border border-border-dark transition-colors duration-200">
-      <h3 className="text-brand-pink font-bold text-[14px] mb-4 uppercase tracking-wider flex items-center gap-2">
+      <h3 className="text-brand-pink font-bold text-sm mb-4 uppercase tracking-wider flex items-center gap-2">
         <AlignLeft size={16} />
         <span>Mục lục bài viết</span>
       </h3>
-      <nav className="space-y-3 text-[13px] font-medium max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+      <nav className="space-y-3 text-sm font-medium max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
         {headings.map((heading) => {
           const isActive = activeId === heading.id;
           const indent = heading.level === 3 ? "pl-6" : "pl-3";

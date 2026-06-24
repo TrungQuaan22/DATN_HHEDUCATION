@@ -43,15 +43,15 @@ export interface ListAdminAssessmentsFilters {
 export interface AdminAssessmentRepositoryPort {
   listAdminAssessments(data: {
     filters: ListAdminAssessmentsFilters
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[AdminAssessmentListItem[], number]>
 
   listGradingSubmissions(data: {
     actor: { id: string; role: UserRole }
     assessmentId?: string
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[GradingSubmissionListItem[], number]>
 
   createAssessment(data: CreateAssessmentDto): Promise<Assessment>

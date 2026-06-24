@@ -1,5 +1,3 @@
-import { CourseStatus, type Prisma } from '@prisma/client'
-
 import { ERROR_CODE } from '~/common/constant/error-code'
 import { ERROR_MESSAGE } from '~/common/constant/error-message'
 import { AppError } from '~/common/error/app-error'
@@ -11,54 +9,22 @@ import type {
 } from '../dto'
 import { publicCourseRepository as courseRepository } from '../repositories'
 import type { PublicCourseRepositoryPort } from '../ports/public-course-repository.port'
-import { applySearchCondition } from '~/common/utils/search'
 import { mapCatalogCourseResponse } from '../mappers'
-
-const buildCatalogCourseOrderBy = (
-  sort: ListCatalogCoursesDto['sort']
-): Prisma.CourseOrderByWithRelationInput[] => {
-  switch (sort) {
-    case 'hotest':
-      return [{ isFeatured: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
-    case 'priceAsc':
-      return [{ salePrice: 'asc' }, { price: 'asc' }, { createdAt: 'desc' }, { id: 'desc' }]
-    case 'priceDesc':
-      return [{ salePrice: 'desc' }, { price: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
-    case 'newest':
-    default:
-      return [{ createdAt: 'desc' }, { id: 'desc' }]
-  }
-}
 
 export class PublicCourseService {
   constructor(private readonly courseRepository: PublicCourseRepositoryPort) {}
 
   async listCatalogCourses(input: ListCatalogCoursesDto): Promise<ListCatalogCoursesResponse> {
-    let where: Prisma.CourseWhereInput = {
-      status: CourseStatus.published,
-      deletedAt: null,
-      subject: input.subjects
-        ? {
-            in: input.subjects
-          }
-        : undefined,
-      isFeatured: input.featured,
-      grade: input.grade
-    }
-
-    where = applySearchCondition({
-      where,
-      search: input.search,
-      field: 'title',
-      tokenField: 'slug'
-    })
-
-    const skip = (input.page - 1) * input.limit
     const [items, totalItems] = await this.courseRepository.listCatalogCourses({
-      where,
-      skip,
-      take: input.limit,
-      orderBy: buildCatalogCourseOrderBy(input.sort)
+      filters: {
+        subjects: input.subjects,
+        featured: input.featured,
+        grade: input.grade,
+        search: input.search
+      },
+      sort: input.sort,
+      page: input.page,
+      limit: input.limit
     })
 
     return {
@@ -88,7 +54,7 @@ export class PublicCourseService {
     const relatedCourses = await this.courseRepository.listRelatedCatalogCourses({
       courseId: course.id,
       grade: course.grade,
-      take: 3
+      limit: 3
     })
 
     return {

@@ -21,6 +21,7 @@ export const teacherCreateSchema = z
         "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt (@$!%*?&)"
       ),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+    avatarMediaId: z.string().nullable().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Xác nhận mật khẩu không khớp",

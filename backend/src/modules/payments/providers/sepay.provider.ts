@@ -44,11 +44,7 @@ const parseVietnamDate = (value: string | undefined): Date | null => {
 
 const verifyApiKey = (req: Request) => {
   if (!sepayConfig.apiKey) {
-    throw new AppError(
-      500,
-      ERROR_CODE.INTERNAL_SERVER_ERROR,
-      'SePay API key is missing'
-    )
+    throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'SePay API key is missing')
   }
 
   const expected = `Apikey ${sepayConfig.apiKey}`
@@ -65,11 +61,7 @@ const verifyApiKey = (req: Request) => {
 
 const verifyHmac = (req: Request) => {
   if (!sepayConfig.webhookSecret) {
-    throw new AppError(
-      500,
-      ERROR_CODE.INTERNAL_SERVER_ERROR,
-      'SePay webhook secret is missing'
-    )
+    throw new AppError(500, ERROR_CODE.INTERNAL_SERVER_ERROR, 'SePay webhook secret is missing')
   }
 
   const rawBody = req.rawBody

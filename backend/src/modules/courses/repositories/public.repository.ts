@@ -3,21 +3,62 @@ import { CourseStatus, type Prisma } from '@prisma/client'
 import { prisma } from '~/config/db'
 
 import { publicTeacherSelect } from './shared'
-import type { PublicCourseRepositoryPort } from '../ports/public-course-repository.port'
+import type {
+  CatalogCourseSort,
+  ListCatalogCoursesFilters,
+  PublicCourseRepositoryPort
+} from '../ports/public-course-repository.port'
+
+function buildCatalogCourseWhere(filters: ListCatalogCoursesFilters): Prisma.CourseWhereInput {
+  const where: Prisma.CourseWhereInput = {
+    status: CourseStatus.published,
+    deletedAt: null,
+    subject: filters.subjects ? { in: filters.subjects } : undefined,
+    isFeatured: filters.featured,
+    grade: filters.grade
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: 'insensitive' } },
+      { slug: { contains: filters.search, mode: 'insensitive' } }
+    ]
+  }
+
+  return where
+}
+
+function buildCatalogCourseOrderBy(
+  sort: CatalogCourseSort
+): Prisma.CourseOrderByWithRelationInput[] {
+  switch (sort) {
+    case 'hotest':
+      return [{ isFeatured: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
+    case 'priceAsc':
+      return [{ salePrice: 'asc' }, { price: 'asc' }, { createdAt: 'desc' }, { id: 'desc' }]
+    case 'priceDesc':
+      return [{ salePrice: 'desc' }, { price: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
+    default:
+      return [{ createdAt: 'desc' }, { id: 'desc' }]
+  }
+}
 
 export class PrismaPublicCourseRepository implements PublicCourseRepositoryPort {
   listCatalogCourses(data: {
-    where: Prisma.CourseWhereInput
-    skip: number
-    take: number
-    orderBy: Prisma.CourseOrderByWithRelationInput[]
+    filters: ListCatalogCoursesFilters
+    sort: CatalogCourseSort
+    page: number
+    limit: number
   }) {
+    const where = buildCatalogCourseWhere(data.filters)
+    const skip = (data.page - 1) * data.limit
+
     return prisma.$transaction([
       prisma.course.findMany({
-        where: data.where,
-        skip: data.skip,
-        take: data.take,
-        orderBy: data.orderBy,
+        where,
+        skip,
+        take: data.limit,
+        orderBy: buildCatalogCourseOrderBy(data.sort),
         select: {
           id: true,
           title: true,
@@ -39,7 +80,7 @@ export class PrismaPublicCourseRepository implements PublicCourseRepositoryPort 
         }
       }),
       prisma.course.count({
-        where: data.where
+        where
       })
     ])
   }
@@ -103,7 +144,7 @@ export class PrismaPublicCourseRepository implements PublicCourseRepositoryPort 
     })
   }
 
-  listRelatedCatalogCourses(data: { courseId: string; grade: number; take: number }) {
+  listRelatedCatalogCourses(data: { courseId: string; grade: number; limit: number }) {
     return prisma.course.findMany({
       where: {
         id: {
@@ -114,7 +155,7 @@ export class PrismaPublicCourseRepository implements PublicCourseRepositoryPort 
         grade: data.grade,
         isFeatured: true
       },
-      take: data.take,
+      take: data.limit,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       select: {
         id: true,

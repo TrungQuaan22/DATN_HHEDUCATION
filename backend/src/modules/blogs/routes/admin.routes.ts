@@ -9,6 +9,7 @@ import { validateRequest } from '~/common/middlewares/validate-request'
 
 import {
   createBlogPostController,
+  createBlogCategoryController,
   deleteBlogPostController,
   getAdminBlogPostController,
   listAdminBlogCategoriesController,
@@ -20,6 +21,7 @@ import {
 } from '../controllers/admin.controller'
 import {
   changeBlogPostStatusSchema,
+  createBlogCategorySchema,
   createBlogPostSchema,
   deleteBlogPostSchema,
   getAdminBlogPostSchema,
@@ -30,6 +32,15 @@ import {
 } from '../validators/admin.validator'
 
 export const adminBlogRoutes = Router()
+
+adminBlogRoutes.post(
+  '/blog-posts/categories',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(createBlogCategorySchema),
+  asyncHandler(createBlogCategoryController)
+)
 
 adminBlogRoutes.post(
   '/blog-posts',

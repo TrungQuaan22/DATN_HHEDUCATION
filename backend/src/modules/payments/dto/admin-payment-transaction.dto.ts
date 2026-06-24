@@ -1,6 +1,9 @@
-import type { OrderStatus, PaymentStatus, PaymentTransactionDirection } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import z from 'zod'
 
+import type { OrderStatus, PaymentStatus } from '~/modules/orders/ports/order-repository.port'
+
+import type { PaymentTransactionDirection } from '../ports/admin-payment-transaction-repository.port'
 import type { listAdminPaymentTransactionsQuerySchema } from '../validators/admin-payment-transaction.validator'
 
 export type ListAdminPaymentTransactionsDto = z.infer<
@@ -18,7 +21,7 @@ export type AdminPaymentTransactionListItemResponse = {
   direction: PaymentTransactionDirection
   transactionDate: Date | null
   matchStatus: string
-  metadata: any
+  metadata: Prisma.JsonValue
   createdAt: Date
   orderId: string | null
   paymentId: string | null
@@ -44,7 +47,7 @@ export type AdminPaymentTransactionListItemResponse = {
 }
 
 export type AdminPaymentTransactionDetailResponse = AdminPaymentTransactionListItemResponse & {
-  rawPayload: any
+  rawPayload: Prisma.JsonValue
 }
 
 export type ListAdminPaymentTransactionsResponse = {

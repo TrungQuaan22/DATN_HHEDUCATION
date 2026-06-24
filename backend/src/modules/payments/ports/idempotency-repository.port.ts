@@ -19,7 +19,11 @@ export interface IdempotencyRepositoryPort {
     processingAt: Date
     expiresAt: Date
   }): Promise<boolean>
-  findByScopeKeyAndUser(data: { scope: string; key: string; userId: string }): Promise<IdempotencyRecord | null>
+  findByScopeKeyAndUser(data: {
+    scope: string
+    key: string
+    userId: string
+  }): Promise<IdempotencyRecord | null>
   markProcessing(data: {
     scope: string
     key: string

@@ -12,11 +12,11 @@ import type {
 } from '../dto/admin-chapters.dto'
 import {
   type CourseActor,
-  ensureCanManageCourse,
-  ensureCourseCanBeEdited,
-  ensureCourseCanBeReordered,
-  ensureExactReorderIds
-} from '../ensures/courses.ensure'
+  validateCourseCanBeEdited,
+  validateCourseCanBeReordered,
+  validateCourseCanManage,
+  validateReorderIds
+} from '../policies/course.policy'
 import type {
   AdminChapterRepositoryPort,
   AdminChapterWithCourseRecord
@@ -41,7 +41,9 @@ export class AdminChapterService {
     return course
   }
 
-  private ensureChapterExists(chapter: AdminChapterWithCourseRecord | null): AdminChapterWithCourseRecord {
+  private ensureChapterExists(
+    chapter: AdminChapterWithCourseRecord | null
+  ): AdminChapterWithCourseRecord {
     if (!chapter) {
       throw new AppError(404, ERROR_CODE.CHAPTER_NOT_FOUND, ERROR_MESSAGE.CHAPTER_NOT_FOUND)
     }
@@ -52,8 +54,9 @@ export class AdminChapterService {
   async createChapter(actor: CourseActor, input: CreateChapterDto): Promise<AdminChapterResponse> {
     const courseRecord = await this.courseRepository.findCourseById(input.courseId)
     const course = this.ensureCourseExists(courseRecord)
-    ensureCanManageCourse({ actor, course })
-    ensureCourseCanBeEdited(course.status)
+
+    validateCourseCanManage(course, actor)
+    validateCourseCanBeEdited(course)
 
     return this.chapterRepository.createChapter(input)
   }
@@ -61,8 +64,9 @@ export class AdminChapterService {
   async updateChapter(actor: CourseActor, input: UpdateChapterDto): Promise<AdminChapterResponse> {
     const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
     const chapter = this.ensureChapterExists(chapterRecord)
-    ensureCanManageCourse({ actor, course: chapter.course })
-    ensureCourseCanBeEdited(chapter.course.status)
+
+    validateCourseCanManage(chapter.course, actor)
+    validateCourseCanBeEdited(chapter.course)
 
     return this.chapterRepository.updateChapter(input)
   }
@@ -73,8 +77,9 @@ export class AdminChapterService {
   ): Promise<{ id: string; deleted: true }> {
     const chapterRecord = await this.chapterRepository.findChapterById(input.chapterId)
     const chapter = this.ensureChapterExists(chapterRecord)
-    ensureCanManageCourse({ actor, course: chapter.course })
-    ensureCourseCanBeEdited(chapter.course.status)
+
+    validateCourseCanManage(chapter.course, actor)
+    validateCourseCanBeEdited(chapter.course)
 
     const activeLessonsCount = await this.chapterRepository.countActiveLessonsByChapter(
       input.chapterId
@@ -102,11 +107,12 @@ export class AdminChapterService {
   ): Promise<ReorderChaptersResponse> {
     const courseRecord = await this.courseRepository.findCourseById(input.courseId)
     const course = this.ensureCourseExists(courseRecord)
-    ensureCanManageCourse({ actor, course })
-    ensureCourseCanBeReordered(course.status)
+
+    validateCourseCanManage(course, actor)
+    validateCourseCanBeReordered(course)
 
     const currentChapters = await this.chapterRepository.listCourseChapterIds(input.courseId)
-    ensureExactReorderIds(
+    validateReorderIds(
       currentChapters.map((chapter) => chapter.id),
       input.chapterIds
     )

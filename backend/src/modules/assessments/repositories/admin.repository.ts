@@ -7,6 +7,7 @@ import {
   MediaStatus,
   MediaType,
   Prisma,
+  QuestionDifficulty,
   QuestionSource,
   QuestionStatus,
   SubmissionStatus,
@@ -100,8 +101,8 @@ const buildTeacherFilters = (teacherId: string): Prisma.AssessmentWhereInput => 
 export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositoryPort {
   listAdminAssessments(data: {
     filters: ListAdminAssessmentsFilters
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[AdminAssessmentListItem[], number]> {
     const where: Prisma.AssessmentWhereInput = {
       deletedAt: null,
@@ -118,8 +119,8 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     return prisma.$transaction([
       prisma.assessment.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: {
           createdAt: 'desc'
         },
@@ -145,8 +146,8 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
   listGradingSubmissions(data: {
     actor: { id: string; role: UserRole }
     assessmentId?: string
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[GradingSubmissionListItem[], number]> {
     const teacherAccessWhere: Prisma.SubmissionWhereInput | undefined =
       data.actor.role === UserRole.teacher
@@ -194,8 +195,8 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     return prisma.$transaction([
       prisma.submission.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: {
           submitTime: 'asc'
         },
@@ -596,7 +597,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
         const question = await tx.question.create({
           data: {
             topicId,
-            difficulty: item.difficulty,
+            difficulty: item.difficulty || QuestionDifficulty.recognition,
             type: toQuestionType(section.itemType),
             source: QuestionSource.generated_exam,
             sourceRef: buildSourceRef(data.assessmentId, data.sectionId, section.itemType),
@@ -607,29 +608,29 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
               section.itemType === AssessmentItemType.mcq
                 ? {
                     create: 'optionCount' in item
-                      ? Array.from({ length: item.optionCount }, (_, index) => {
+                      ? Array.from({ length: item.optionCount || 0 }, (_, index) => {
                           const label = toExamOptionLabel(index)
 
                           return {
                             content: { label, generated: true },
-                            isCorrect: item.correctOptions.includes(label),
+                            isCorrect: (item.correctOptions || []).includes(label),
                             orderIndex: index
                           }
                         })
-                      : (item as AssessmentItemUnion).options!.map((option: { content: string; isCorrect: boolean }, index: number) => ({
-                          content: { label: option.content },
-                          isCorrect: option.isCorrect,
+                      : ((item as AssessmentItemUnion).options || []).map((option: { content?: string | null; isCorrect?: boolean }, index: number) => ({
+                          content: { label: option.content ?? '' },
+                          isCorrect: option.isCorrect ?? false,
                           orderIndex: index
                         }))
                   }
                 : section.itemType === AssessmentItemType.true_false
                   ? {
-                      create: (item as AssessmentItemUnion).statements!.map((statement: { label?: string; correctValue: boolean }, index: number) => ({
+                      create: ((item as AssessmentItemUnion).statements || []).map((statement: { label?: string | null; correctValue?: boolean }, index: number) => ({
                         content: {
                           label: 'label' in statement && statement.label ? statement.label : `Mệnh đề ${index + 1}`,
-                          generated: !('label' in statement)
+                          generated: !('label' in statement && statement.label)
                         },
-                        isCorrect: statement.correctValue,
+                        isCorrect: statement.correctValue ?? false,
                         orderIndex: index
                       }))
                     }
@@ -644,13 +645,13 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
               sectionId: data.sectionId,
               questionId: question.id,
               topicId,
-              difficulty: item.difficulty,
+              difficulty: item.difficulty || QuestionDifficulty.recognition,
               orderIndex: nextOrderIndex,
               itemType: section.itemType,
               correctAnswer: buildCorrectAnswer(item, section.itemType),
               explanation: buildExplanation(item),
               scoringConfig: buildScoringConfig(item, section.itemType),
-              maxScore: toDecimal(item.maxScore)
+              maxScore: toDecimal(item.maxScore !== undefined ? item.maxScore : 1)
             },
             include: {
               question: {
@@ -785,12 +786,12 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
           if (existing.assessment.type === AssessmentType.exam) {
             const examItem = mergedItem as AssessmentItemUnion
             await tx.questionOption.createMany({
-              data: Array.from({ length: examItem.optionCount! }, (_, index) => {
+              data: Array.from({ length: examItem.optionCount || 0 }, (_, index) => {
                 const label = toExamOptionLabel(index)
                 return {
                   questionId: existing.questionId!,
                   content: { label, generated: true },
-                  isCorrect: examItem.correctOptions!.includes(label),
+                  isCorrect: (examItem.correctOptions || []).includes(label),
                   orderIndex: index
                 }
               })
@@ -798,10 +799,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
           } else {
             const quizItem = mergedItem as AssessmentItemUnion
             await tx.questionOption.createMany({
-              data: quizItem.options!.map((option: { content: string; isCorrect: boolean }, index: number) => ({
+              data: (quizItem.options || []).map((option: { content?: string | null; isCorrect?: boolean }, index: number) => ({
                 questionId: existing.questionId!,
-                content: { label: option.content },
-                isCorrect: option.isCorrect,
+                content: { label: option.content ?? '' },
+                isCorrect: option.isCorrect ?? false,
                 orderIndex: index
               }))
             })
@@ -811,13 +812,13 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
         if (itemType === AssessmentItemType.true_false && 'statements' in data.item) {
           const tfItem = mergedItem as AssessmentItemUnion
           await tx.questionOption.createMany({
-            data: tfItem.statements!.map((statement: { label?: string; correctValue: boolean }, index: number) => ({
+            data: (tfItem.statements || []).map((statement: { label?: string | null; correctValue?: boolean }, index: number) => ({
               questionId: existing.questionId!,
               content: {
                 label: 'label' in statement && statement.label ? statement.label : `Mệnh đề ${index + 1}`,
                 generated: !('label' in statement && statement.label)
               },
-              isCorrect: statement.correctValue,
+              isCorrect: statement.correctValue ?? false,
               orderIndex: index
             }))
           })

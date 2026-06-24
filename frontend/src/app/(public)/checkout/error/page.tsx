@@ -55,10 +55,10 @@ function ErrorPageContent() {
         </div>
 
         {/* Headlines */}
-        <h1 className="text-[28px] md:text-[34px] font-extrabold text-cream leading-tight tracking-tight mb-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-cream leading-tight tracking-tight mb-3">
           Thanh toán chưa hoàn tất
         </h1>
-        <p className="text-muted-taupe text-[14px] md:text-[15px] leading-relaxed max-w-[420px] mb-8">
+        <p className="text-muted-taupe text-sm md:text-base leading-relaxed max-w-[420px] mb-8">
           Rất tiếc, đã có lỗi xảy ra trong quá trình xử lý giao dịch. Vui lòng kiểm tra lại thông tin thanh toán hoặc thử phương thức khác.
         </p>
 
@@ -67,10 +67,10 @@ function ErrorPageContent() {
           <div className="flex items-start gap-3">
             <AlertCircle size={18} className="text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <span className="text-[11px] font-bold text-muted-taupe uppercase tracking-widest block">
+              <span className="text-xs font-bold text-muted-taupe uppercase tracking-widest block">
                 Lý do từ chối:
               </span>
-              <p className="font-bold text-cream text-[13px] md:text-[14px] mt-1 leading-relaxed">
+              <p className="font-bold text-cream text-sm md:text-sm mt-1 leading-relaxed">
                 {getErrorMessage(code)}
               </p>
             </div>
@@ -81,14 +81,14 @@ function ErrorPageContent() {
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Link
             href="/checkout"
-            className="flex-1 bg-brand-pink/15 border border-brand-pink/30 hover:bg-brand-pink text-brand-pink hover:text-white font-bold text-[13px] py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
+            className="flex-1 bg-brand-pink/15 border border-brand-pink/30 hover:bg-brand-pink text-brand-pink hover:text-white font-bold text-sm py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
           >
             <ArrowLeft size={16} />
             <span>Thanh toán lại</span>
           </Link>
           <a
             href="tel:19006789"
-            className="flex-1 bg-off-black border border-border-dark hover:bg-brand-dark hover:border-brand-pink/30 text-cream font-bold text-[13px] py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
+            className="flex-1 bg-off-black border border-border-dark hover:bg-brand-dark hover:border-brand-pink/30 text-cream font-bold text-sm py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wider"
           >
             <PhoneCall size={16} className="text-brand-pink" />
             <span>Hotline hỗ trợ</span>
@@ -96,7 +96,7 @@ function ErrorPageContent() {
         </div>
 
         {/* Footer info decoration */}
-        <div className="mt-8 pt-6 border-t border-border-dark/65 w-full flex justify-between items-center text-[10px] text-muted-taupe">
+        <div className="mt-8 pt-6 border-t border-border-dark/65 w-full flex justify-between items-center text-xs text-muted-taupe">
           <span>Đơn hàng: #{ref}</span>
           <span>Hệ thống: HH SecurePay</span>
         </div>

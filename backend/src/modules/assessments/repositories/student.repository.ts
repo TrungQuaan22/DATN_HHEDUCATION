@@ -32,8 +32,8 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     subject?: Subject
     grade?: number
     status?: SubmissionStatus | 'not_started'
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[StudentPlacementListItem[], number]> {
     const enrolledPlacementWhere: Prisma.AssessmentPlacementWhereInput = {
       OR: [
@@ -97,8 +97,8 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     return prisma.$transaction([
       prisma.assessmentPlacement.findMany({
         where,
-        skip: data.skip,
-        take: data.take,
+        skip: (data.page - 1) * data.limit,
+        take: data.limit,
         orderBy: [{ closeTime: 'asc' }, { createdAt: 'desc' }],
         include: {
           assessment: true,

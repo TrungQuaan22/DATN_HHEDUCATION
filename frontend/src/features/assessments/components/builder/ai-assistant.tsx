@@ -22,7 +22,7 @@ export function AiAssistant({
         <Sparkles size={13} className="animate-pulse" />
         AI Assistant Soạn đề
       </h3>
-      <p className="text-[11px] text-admin-muted leading-relaxed">
+      <p className="text-xs text-admin-muted leading-relaxed">
         Nhập mô tả đề thi (ví dụ: &quot;Tạo 3 câu trắc nghiệm Toán lớp 12 khảo sát hàm số&quot;), AI sẽ sinh
         câu hỏi tương thích lắp trực tiếp vào bảng bên trái.
       </p>

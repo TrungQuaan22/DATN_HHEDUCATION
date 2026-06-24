@@ -9,8 +9,8 @@ export interface PublicAssessmentRepositoryPort {
   listPublicPlacements(data: {
     subject?: Subject
     grade?: number
-    skip: number
-    take: number
+    page: number
+    limit: number
   }): Promise<[Array<AssessmentPlacement & { assessment: Assessment }>, number]>
 
   findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null>

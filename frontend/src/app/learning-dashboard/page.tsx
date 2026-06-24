@@ -109,14 +109,14 @@ export default function OverviewPage() {
       {/* Welcome Banner */}
       <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-brand-pink/15 via-brand-pink/5 to-transparent border border-border-dark p-6 md:p-8 flex items-center justify-between">
         <div className="relative z-10 max-w-2xl flex flex-col gap-2 md:gap-3">
-          <h1 className="text-[24px] md:text-[32px] font-extrabold text-cream leading-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-cream leading-tight">
             Chào mừng trở lại, {user?.fullName || "Trung Quân"}! 👋
           </h1>
-          <p className="text-[13px] md:text-[15px] text-muted-text font-medium leading-relaxed max-w-lg">
+          <p className="text-sm md:text-base text-muted-text font-medium leading-relaxed max-w-lg">
             Cố gắng lên nhé bạn ơi — mình tin bạn sẽ ngày càng tiến bộ!
           </p>
           <div className="mt-2 flex gap-3">
-            <button className="bg-brand-pink text-brand-dark font-extrabold text-[12px] py-2.5 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-brand-pink/10 cursor-pointer">
+            <button className="bg-brand-pink text-brand-dark font-extrabold text-xs py-2.5 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-brand-pink/10 cursor-pointer">
               Tiếp tục học
             </button>
           </div>
@@ -132,8 +132,8 @@ export default function OverviewPage() {
             <Calendar size={22} />
           </div>
           <div>
-            <div className="text-[12px] font-bold text-muted-text uppercase tracking-wider">Điểm danh tháng này</div>
-            <div className="text-[24px] font-extrabold text-cream group-hover:text-brand-pink transition-colors mt-0.5">12 ngày</div>
+            <div className="text-xs font-bold text-muted-text uppercase tracking-wider">Điểm danh tháng này</div>
+            <div className="text-2xl font-extrabold text-cream group-hover:text-brand-pink transition-colors mt-0.5">12 ngày</div>
           </div>
         </div>
 
@@ -143,8 +143,8 @@ export default function OverviewPage() {
             <Clock size={22} />
           </div>
           <div>
-            <div className="text-[12px] font-bold text-muted-text uppercase tracking-wider">Thời gian học</div>
-            <div className="text-[24px] font-extrabold text-cream group-hover:text-emerald-400 transition-colors mt-0.5">40h 25m</div>
+            <div className="text-xs font-bold text-muted-text uppercase tracking-wider">Thời gian học</div>
+            <div className="text-2xl font-extrabold text-cream group-hover:text-emerald-400 transition-colors mt-0.5">40h 25m</div>
           </div>
         </div>
 
@@ -154,8 +154,8 @@ export default function OverviewPage() {
             <Trophy size={22} />
           </div>
           <div>
-            <div className="text-[12px] font-bold text-muted-text uppercase tracking-wider">GPA Trung bình</div>
-            <div className="text-[24px] font-extrabold text-cream group-hover:text-amber-400 transition-colors mt-0.5">8.7 / 10</div>
+            <div className="text-xs font-bold text-muted-text uppercase tracking-wider">GPA Trung bình</div>
+            <div className="text-2xl font-extrabold text-cream group-hover:text-amber-400 transition-colors mt-0.5">8.7 / 10</div>
           </div>
         </div>
       </section>
@@ -170,8 +170,8 @@ export default function OverviewPage() {
           <div className="bg-[#121215] rounded-2xl p-6 border border-[#202024] space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-[16px] font-extrabold text-cream">Thời gian học mỗi ngày</h3>
-                <p className="text-[11px] text-muted-text font-medium mt-0.5">Thống kê hoạt động học tập 7 ngày gần đây</p>
+                <h3 className="text-base font-extrabold text-cream">Thời gian học mỗi ngày</h3>
+                <p className="text-xs text-muted-text font-medium mt-0.5">Thống kê hoạt động học tập 7 ngày gần đây</p>
               </div>
               
               {/* Tab Filters */}
@@ -180,7 +180,7 @@ export default function OverviewPage() {
                   <button
                     key={tab}
                     onClick={() => setStudyTab(tab)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                       studyTab === tab
                         ? "bg-brand-pink text-brand-dark shadow-sm"
                         : "text-cream hover:text-brand-pink"
@@ -200,7 +200,7 @@ export default function OverviewPage() {
                 const heightPercent = (data.minutes / maxMinutes) * 100;
                 return (
                   <div key={idx} className="flex flex-col items-center gap-3 w-[10%] group cursor-pointer">
-                    <div className="text-[10px] font-bold text-brand-pink opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-brand-dark border border-border-dark px-1.5 py-0.5 rounded -mt-6 absolute">
+                    <div className="text-xs font-bold text-brand-pink opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-brand-dark border border-border-dark px-1.5 py-0.5 rounded -mt-6 absolute">
                       {data.minutes}m
                     </div>
                     <div className="w-full bg-[#1e1e24] rounded-t-lg h-44 flex items-end overflow-hidden relative border border-border-dark/20">
@@ -209,7 +209,7 @@ export default function OverviewPage() {
                         style={{ height: `${heightPercent}%` }}
                       />
                     </div>
-                    <span className="text-[11px] font-semibold text-muted-text group-hover:text-cream transition-colors">
+                    <span className="text-xs font-semibold text-muted-text group-hover:text-cream transition-colors">
                       {data.date}
                     </span>
                   </div>
@@ -222,8 +222,8 @@ export default function OverviewPage() {
           <div className="bg-[#121215] rounded-2xl p-6 border border-[#202024] space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-[16px] font-extrabold text-cream">Thăng tiến điểm số</h3>
-                <p className="text-[11px] text-muted-text font-medium mt-0.5">Biểu đồ kết quả bài kiểm tra chính thức</p>
+                <h3 className="text-base font-extrabold text-cream">Thăng tiến điểm số</h3>
+                <p className="text-xs text-muted-text font-medium mt-0.5">Biểu đồ kết quả bài kiểm tra chính thức</p>
               </div>
 
               {/* Subject Selector Dropdown */}
@@ -231,13 +231,13 @@ export default function OverviewPage() {
                 <select
                   value={scoreSubject}
                   onChange={(e) => setScoreSubject(e.target.value as SubjectKey)}
-                  className="bg-brand-dark text-cream border border-border-dark rounded-xl px-4 py-2 text-[12px] font-bold outline-none cursor-pointer hover:border-brand-pink/50 transition-colors appearance-none pr-8"
+                  className="bg-brand-dark text-cream border border-border-dark rounded-xl px-4 py-2 text-xs font-bold outline-none cursor-pointer hover:border-brand-pink/50 transition-colors appearance-none pr-8"
                 >
                   <option value="literature">Ngữ Văn</option>
                   <option value="math">Toán học</option>
                   <option value="english">Anh Văn</option>
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-text text-[10px]">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-text text-xs">
                   ▼
                 </div>
               </div>
@@ -251,19 +251,19 @@ export default function OverviewPage() {
                   <div key={idx} className="flex flex-col items-center gap-3 h-full justify-end group">
                     <div className="w-full bg-[#1e1e24] rounded-xl border border-border-dark/40 overflow-hidden h-36 flex items-end relative">
                       <div
-                        className="w-full bg-emerald-500 rounded-t-xl transition-all duration-500 flex items-center justify-center text-[13px] font-extrabold text-brand-dark group-hover:brightness-110 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+                        className="w-full bg-emerald-500 rounded-t-xl transition-all duration-500 flex items-center justify-center text-sm font-extrabold text-brand-dark group-hover:brightness-110 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
                         style={{ height: `${heightPercent}%` }}
                       >
                         {scoreItem.score.toFixed(1)}
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-cream">{scoreItem.label}</span>
+                    <span className="text-xs font-bold text-cream">{scoreItem.label}</span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex items-center gap-2 text-emerald-400 text-[12px] font-bold pt-1">
+            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold pt-1">
               <TrendingUp size={15} />
               <span>↑ Tăng 12% so với tháng trước ở môn {getSubjectLabel(scoreSubject)}</span>
             </div>
@@ -272,8 +272,8 @@ export default function OverviewPage() {
           {/* Enrolled Courses Progress */}
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[18px] font-bold text-cream">Khóa học đang học</h2>
-              <Link href="/learning-dashboard/courses" className="text-[12px] font-bold text-brand-pink hover:underline flex items-center gap-0.5">
+              <h2 className="text-lg font-bold text-cream">Khóa học đang học</h2>
+              <Link href="/learning-dashboard/courses" className="text-xs font-bold text-brand-pink hover:underline flex items-center gap-0.5">
                 Xem tất cả
                 <ChevronRight size={14} />
               </Link>
@@ -283,16 +283,16 @@ export default function OverviewPage() {
             <div className="bg-[#121215] rounded-2xl p-5 border border-[#202024] flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between group hover:border-brand-pink/20 transition-all">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-pink/20 to-brand-dark border border-border-dark flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-black text-brand-pink uppercase tracking-widest">VĂN</span>
+                  <span className="text-xs font-black text-brand-pink uppercase tracking-widest">VĂN</span>
                 </div>
                 <div className="space-y-2 flex-1 min-w-0">
-                  <span className="text-[9px] font-bold text-brand-pink bg-brand-pink/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit block">
+                  <span className="text-xs font-bold text-brand-pink bg-brand-pink/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit block">
                     Ngữ Văn
                   </span>
-                  <h3 className="text-[15px] font-bold text-cream group-hover:text-brand-pink transition-colors truncate">
+                  <h3 className="text-base font-bold text-cream group-hover:text-brand-pink transition-colors truncate">
                     Tích chữ thành văn - Module 1
                   </h3>
-                  <div className="flex items-center gap-3 text-[11px] font-semibold text-muted-text">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-muted-text">
                     <span className="text-cream">Tiến độ: 13/20 bài học</span>
                     <span>•</span>
                     <span>65%</span>
@@ -302,7 +302,7 @@ export default function OverviewPage() {
                   </div>
                 </div>
               </div>
-              <button className="w-full sm:w-auto text-center bg-brand-pink text-brand-dark hover:scale-105 active:scale-95 font-bold text-[12px] px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+              <button className="w-full sm:w-auto text-center bg-brand-pink text-brand-dark hover:scale-105 active:scale-95 font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
                 <Play size={12} className="fill-current" />
                 Vào học ngay
               </button>
@@ -312,16 +312,16 @@ export default function OverviewPage() {
             <div className="bg-[#121215] rounded-2xl p-5 border border-[#202024] flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between group hover:border-brand-pink/20 transition-all">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/10 to-brand-dark border border-border-dark flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">TOÁN</span>
+                  <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">TOÁN</span>
                 </div>
                 <div className="space-y-2 flex-1 min-w-0">
-                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit block">
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit block">
                     Toán Học
                   </span>
-                  <h3 className="text-[15px] font-bold text-cream group-hover:text-brand-pink transition-colors truncate">
+                  <h3 className="text-base font-bold text-cream group-hover:text-brand-pink transition-colors truncate">
                     Giải tích 12 nâng cao
                   </h3>
-                  <div className="flex items-center gap-3 text-[11px] font-semibold text-muted-text">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-muted-text">
                     <span className="text-cream">Tiến độ: 9/30 bài học</span>
                     <span>•</span>
                     <span>30%</span>
@@ -331,7 +331,7 @@ export default function OverviewPage() {
                   </div>
                 </div>
               </div>
-              <button className="w-full sm:w-auto text-center border border-border-dark text-cream hover:border-brand-pink hover:text-brand-pink font-bold text-[12px] px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+              <button className="w-full sm:w-auto text-center border border-border-dark text-cream hover:border-brand-pink hover:text-brand-pink font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
                 <Play size={12} className="fill-current" />
                 Vào học ngay
               </button>
@@ -345,8 +345,8 @@ export default function OverviewPage() {
           {/* Weekly Active Check-in */}
           <div className="bg-[#121215] rounded-2xl p-5 border border-[#202024] space-y-5 text-center flex flex-col items-center">
             <div className="flex justify-between items-center w-full pb-2 border-b border-border-dark/40">
-              <h3 className="text-[13px] font-extrabold text-cream">Điểm danh tuần này</h3>
-              <span className="text-[10px] font-bold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <h3 className="text-sm font-extrabold text-cream">Điểm danh tuần này</h3>
+              <span className="text-xs font-bold text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded-md flex items-center gap-1">
                 🔥 Chuỗi 5 ngày!
               </span>
             </div>
@@ -356,9 +356,9 @@ export default function OverviewPage() {
                 const isActive = idx < 3; // Mock active for Mon, Tue, Wed
                 return (
                   <div key={idx} className="flex flex-col items-center gap-2">
-                    <span className="text-[10px] font-bold text-muted-text">{day}</span>
+                    <span className="text-xs font-bold text-muted-text">{day}</span>
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                         isActive
                           ? "bg-emerald-500 text-brand-dark shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                           : "bg-brand-dark border border-border-dark text-muted-text"
@@ -372,7 +372,7 @@ export default function OverviewPage() {
             </div>
 
             <div className="w-full pt-1">
-              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold text-[12px] py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5">
                 <Check size={14} className="stroke-[3]" />
                 Đã điểm danh hôm nay!
               </div>
@@ -382,7 +382,7 @@ export default function OverviewPage() {
           {/* Assessment News/Bulletins */}
           <div className="bg-[#121215] rounded-2xl p-5 border border-[#202024] space-y-4">
             <div className="flex items-center justify-between border-b border-border-dark/40 pb-3">
-              <h3 className="text-[13px] font-extrabold text-cream flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-cream flex items-center gap-2">
                 <Award size={16} className="text-brand-pink" />
                 Tin tức về bài kiểm tra
               </h3>
@@ -396,17 +396,17 @@ export default function OverviewPage() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-bold text-brand-dark bg-amber-400 px-1.5 py-0.2 rounded uppercase">
+                    <span className="text-xs font-bold text-brand-dark bg-amber-400 px-1.5 py-0.2 rounded uppercase">
                       Quan trọng
                     </span>
-                    <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded uppercase">
+                    <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded uppercase">
                       Còn 2 ngày
                     </span>
                   </div>
-                  <span className="text-[13px] font-bold text-cream mt-1.5 hover:text-brand-pink transition-colors cursor-pointer truncate">
+                  <span className="text-sm font-bold text-cream mt-1.5 hover:text-brand-pink transition-colors cursor-pointer truncate">
                     Kiểm tra giữa kỳ Ngữ Văn
                   </span>
-                  <span className="text-[10px] text-muted-text mt-0.5">Hạn chót: 29/05/2026 08:00</span>
+                  <span className="text-xs text-muted-text mt-0.5">Hạn chót: 29/05/2026 08:00</span>
                 </div>
               </div>
 
@@ -417,17 +417,17 @@ export default function OverviewPage() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-bold text-muted-text bg-[#202024] px-1.5 py-0.2 rounded uppercase">
+                    <span className="text-xs font-bold text-muted-text bg-[#202024] px-1.5 py-0.2 rounded uppercase">
                       Luyện tập
                     </span>
-                    <span className="text-[9px] font-bold text-muted-text bg-[#202024] px-1.5 py-0.2 rounded uppercase">
+                    <span className="text-xs font-bold text-muted-text bg-[#202024] px-1.5 py-0.2 rounded uppercase">
                       Còn 5 ngày
                     </span>
                   </div>
-                  <span className="text-[13px] font-bold text-cream mt-1.5 hover:text-brand-pink transition-colors cursor-pointer truncate">
+                  <span className="text-sm font-bold text-cream mt-1.5 hover:text-brand-pink transition-colors cursor-pointer truncate">
                     Bài tập phân tích thơ
                   </span>
-                  <span className="text-[10px] text-muted-text mt-0.5">Hạn chót: 01/06/2026</span>
+                  <span className="text-xs text-muted-text mt-0.5">Hạn chót: 01/06/2026</span>
                 </div>
               </div>
             </div>
@@ -436,7 +436,7 @@ export default function OverviewPage() {
           {/* Leaderboard (Bảng xếp hạng) */}
           <div className="bg-[#121215] rounded-2xl p-5 border border-[#202024] space-y-5">
             <div className="flex items-center justify-between border-b border-border-dark/40 pb-3">
-              <h3 className="text-[13px] font-extrabold text-cream flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-cream flex items-center gap-2">
                 <Trophy size={16} className="text-brand-pink" />
                 Bảng xếp hạng
               </h3>
@@ -447,7 +447,7 @@ export default function OverviewPage() {
                   <button
                     key={tab}
                     onClick={() => setLeaderboardTab(tab)}
-                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                    className={`px-2 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                       leaderboardTab === tab
                         ? "bg-brand-pink text-brand-dark"
                         : "text-cream hover:text-brand-pink"
@@ -464,8 +464,8 @@ export default function OverviewPage() {
               {mockLeaderboard[leaderboardTab].map((student, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-3 p-1.5 rounded-xl hover:bg-brand-dark/20 transition-colors">
                   <div className="flex items-center gap-3">
-                    <span className={`text-[12px] font-extrabold w-5 text-center ${
-                      student.rank === 1 ? "text-amber-400 text-[14px]" :
+                    <span className={`text-xs font-extrabold w-5 text-center ${
+                      student.rank === 1 ? "text-amber-400 text-sm" :
                       student.rank === 2 ? "text-slate-300" :
                       "text-amber-700"
                     }`}>
@@ -479,11 +479,11 @@ export default function OverviewPage() {
                       />
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[13px] font-bold text-cream truncate">{student.name}</span>
-                      <span className="text-[10px] text-muted-text">{student.lessonsCompleted} bài học completed</span>
+                      <span className="text-sm font-bold text-cream truncate">{student.name}</span>
+                      <span className="text-xs text-muted-text">{student.lessonsCompleted} bài học completed</span>
                     </div>
                   </div>
-                  <span className="text-[12px] font-bold text-emerald-400">{student.time}</span>
+                  <span className="text-xs font-bold text-emerald-400">{student.time}</span>
                 </div>
               ))}
             </div>
@@ -492,7 +492,7 @@ export default function OverviewPage() {
             <div className="border-t border-border-dark/40 pt-4 mt-2">
               <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-brand-pink/5 border border-brand-pink/20">
                 <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-black text-brand-pink w-6 text-center">
+                  <span className="text-xs font-black text-brand-pink w-6 text-center">
                     #8257
                   </span>
                   <div className="w-8 h-8 rounded-full border border-brand-pink/30 overflow-hidden bg-brand-dark shrink-0">
@@ -503,11 +503,11 @@ export default function OverviewPage() {
                     />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[12px] font-extrabold text-cream truncate">Bạn (Trung Quân)</span>
-                    <span className="text-[10px] text-muted-text">92 bài học completed</span>
+                    <span className="text-xs font-extrabold text-cream truncate">Bạn (Trung Quân)</span>
+                    <span className="text-xs text-muted-text">92 bài học completed</span>
                   </div>
                 </div>
-                <span className="text-[12px] font-extrabold text-brand-pink">40h 25m</span>
+                <span className="text-xs font-extrabold text-brand-pink">40h 25m</span>
               </div>
             </div>
           </div>

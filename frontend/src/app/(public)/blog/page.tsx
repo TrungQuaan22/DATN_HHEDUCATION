@@ -1,5 +1,4 @@
 import BlogCatalog from "@/features/blog/components/blog-catalog";
-import { mockBlogPosts } from "@/features/blog/mock";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -37,7 +36,7 @@ export default function BlogPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="w-full">
-        <BlogCatalog initialPosts={mockBlogPosts} />
+        <BlogCatalog />
       </div>
     </>
   );

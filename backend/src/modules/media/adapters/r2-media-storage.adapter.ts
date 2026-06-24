@@ -26,6 +26,20 @@ export class R2MediaStorageAdapter implements MediaStoragePort {
     })
   }
 
+  async createPresignedGetUrl(data: {
+    objectKey: string
+    expiresInSeconds?: number
+  }): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: r2Config.bucketName,
+      Key: data.objectKey
+    })
+
+    return getSignedUrl(r2Client, command, {
+      expiresIn: data.expiresInSeconds ?? r2Config.presignedUrlExpiresInSeconds
+    })
+  }
+
   async headObject(objectKey: string): Promise<StoredObjectMetadata | null> {
     try {
       const metadata = await r2Client.send(

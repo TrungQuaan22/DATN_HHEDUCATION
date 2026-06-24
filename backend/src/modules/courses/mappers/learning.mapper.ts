@@ -123,7 +123,22 @@ export const mapLearningLessonDetail = (
           durationSec: lesson.videoMedia.durationSec
         }
       : null,
-    materials: [],
+    materials: lesson.materials.map((material) => ({
+      id: material.id,
+      title: material.title,
+      type: material.type,
+      contentText: material.contentText,
+      downloadUrl: mapMediaUrl(material.media?.objectKey),
+      media: material.media
+        ? {
+            id: material.media.id,
+            originalName: material.media.originalName,
+            mimeType: material.media.mimeType,
+            sizeBytes: material.media.sizeBytes,
+            status: material.media.status
+          }
+        : null
+    })),
     progress: {
       watchedSeconds: progress?.watchedSeconds ?? 0,
       lastPositionSec: progress?.lastPositionSec ?? 0,

@@ -3,7 +3,8 @@ import { loginSchema, refreshTokenSchema, registerSchema } from './validator'
 import { LoginDto, RefreshTokenDto, RegisterDto } from './dto'
 import z from 'zod'
 import { sendSuccess } from '~/common/http/response'
-import { AuthService, authService } from './service'
+import type { AuthService } from './service'
+import { authService } from './wiring'
 
 type LoginValidated = z.infer<typeof loginSchema>
 type RegisterValidated = z.infer<typeof registerSchema>
