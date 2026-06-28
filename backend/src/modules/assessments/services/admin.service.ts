@@ -53,6 +53,7 @@ import {
   validatePlacementTarget,
   validateTeacherOwnsCourse
 } from '../policies/assessment-placement.policy'
+import type { NotificationEventService } from '~/modules/notifications/service'
 
 const ensureNonOwnerKeepsPlacementTarget = (
   actor: AssessmentActorDto,
@@ -90,7 +91,10 @@ const flattenSections = <TItem>(sections: Array<{ items: TItem[] }>): TItem[] =>
   sections.flatMap((section) => section.items)
 
 export class AdminAssessmentService {
-  constructor(private readonly repository: AdminAssessmentRepositoryPort) {}
+  constructor(
+    private readonly repository: AdminAssessmentRepositoryPort,
+    private readonly notifications: NotificationEventService
+  ) {}
 
   async listAdminAssessments(data: ListAdminAssessmentsDto & { actor: AssessmentActorDto }) {
     if (data.actor.role === UserRole.teacher && data.scope === 'course' && data.courseId) {
@@ -265,7 +269,9 @@ export class AdminAssessmentService {
       placementId: submission.placementId,
       attemptNumber: submission.attemptNumber,
       status: submission.status,
+      startTime: submission.startTime,
       submitTime: submission.submitTime,
+      violationCount: submission.violationCount,
       autoScore: submission.autoScore?.toString() ?? null,
       finalScore: submission.finalScore?.toString() ?? null,
       student: submission.student,
@@ -289,10 +295,13 @@ export class AdminAssessmentService {
           questionNumber: index + 1,
           maxScore: item.maxScore.toString(),
           scoringConfig: item.scoringConfig,
+          correctAnswer: item.correctAnswer,
+          explanation: item.explanation,
           question: item.question
             ? {
                 id: item.question.id,
                 content: item.question.content,
+                explanation: item.question.explanation,
                 options: item.question.options.map((option) => ({
                   id: option.id,
                   content: option.content,
@@ -310,7 +319,28 @@ export class AdminAssessmentService {
         teacherScore: answer.teacherScore?.toString() ?? null,
         teacherNote: answer.teacherNote,
         gradedAt: answer.gradedAt
-      }))
+      })),
+      answers: {
+        mcq: submission.mcqAnswers.map((answer) => ({
+          itemId: answer.itemId,
+          selectedOptionIds: answer.selectedOptions.map((selected) => selected.optionId),
+          isCorrect: answer.isCorrect,
+          pointEarned: answer.pointEarned.toString()
+        })),
+        trueFalse: submission.tfAnswers.map((answer) => ({
+          itemId: answer.itemId,
+          optionId: answer.optionId,
+          selectedValue: answer.selectedValue,
+          isCorrect: answer.isCorrect,
+          pointEarned: answer.pointEarned.toString()
+        })),
+        numeric: submission.numericAnswers.map((answer) => ({
+          itemId: answer.itemId,
+          answerValue: answer.answerValue.toString(),
+          isCorrect: answer.isCorrect,
+          pointEarned: answer.pointEarned.toString()
+        }))
+      }
     }
   }
 
@@ -584,9 +614,7 @@ export class AdminAssessmentService {
 
     if (assessment.visibility === AssessmentVisibility.published) {
       validateItemsForMode(assessment.type, section.itemType, data.items)
-      validateImportedItems(
-        data.items.map((item) => ({ ...item, itemType: section.itemType }))
-      )
+      validateImportedItems(data.items.map((item) => ({ ...item, itemType: section.itemType })))
 
       if (data.courseId) {
         const course = await this.repository.findCourseForPlacement(data.courseId)
@@ -824,6 +852,14 @@ export class AdminAssessmentService {
     const finalScore = addScores(submission.autoScore, essayScore)
 
     const updatedSubmission = await this.repository.finalizeSubmission(submission.id, finalScore)
+
+    await this.notifications.notifyStudentAboutGradedSubmission({
+      studentId: submission.studentId,
+      assessmentTitle: submission.assessment.title,
+      placementId: submission.placementId,
+      submissionId: submission.id,
+      finalScore
+    })
 
     // return mapped submission
     return {

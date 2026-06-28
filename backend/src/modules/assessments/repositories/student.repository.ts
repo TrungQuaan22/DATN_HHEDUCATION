@@ -12,11 +12,7 @@ import { prisma } from '~/config/db'
 
 import type { SaveAnswerDto } from '../dto'
 import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
-import {
-  runtimeAssessmentInclude,
-  runtimeAssessmentPreviewInclude,
-  answerInclude
-} from './shared'
+import { runtimeAssessmentInclude, runtimeAssessmentPreviewInclude, answerInclude } from './shared'
 import type {
   StudentPlacementListItem,
   RuntimePlacement,
@@ -230,7 +226,10 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findEnrollmentForLessonPlacement(userId: string, placementId: string): Promise<Enrollment | null> {
+  findEnrollmentForLessonPlacement(
+    userId: string,
+    placementId: string
+  ): Promise<Enrollment | null> {
     return prisma.enrollment.findFirst({
       where: {
         userId,
@@ -262,7 +261,10 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findDoingSubmissionForPlacement(userId: string, placementId: string): Promise<SubmissionDetail | null> {
+  findDoingSubmissionForPlacement(
+    userId: string,
+    placementId: string
+  ): Promise<SubmissionDetail | null> {
     return prisma.submission.findFirst({
       where: {
         studentId: userId,
@@ -311,11 +313,47 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  findSubmissionForStudent(submissionId: string, userId: string): Promise<StudentSubmissionComplete | null> {
+  findSubmissionForStudent(
+    submissionId: string,
+    userId: string
+  ): Promise<StudentSubmissionComplete | null> {
     return prisma.submission.findFirst({
       where: {
         id: submissionId,
         studentId: userId
+      },
+      include: answerInclude
+    })
+  }
+
+  async listExpiredDoingSubmissions(data: {
+    now: Date
+    limit: number
+  }): Promise<StudentSubmissionComplete[]> {
+    const expiredIds = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+      SELECT submission.id
+      FROM submissions AS submission
+      INNER JOIN assessments AS assessment ON assessment.id = submission.assessment_id
+      LEFT JOIN assessment_placements AS placement ON placement.id = submission.placement_id
+      WHERE submission.status = 'doing'
+        AND (
+          placement.close_time <= ${data.now}
+          OR (
+            assessment.time_limit_minutes IS NOT NULL
+            AND submission.start_time
+              + assessment.time_limit_minutes * INTERVAL '1 minute' <= ${data.now}
+          )
+        )
+      ORDER BY submission.start_time ASC, submission.id ASC
+      LIMIT ${data.limit}
+    `)
+
+    if (expiredIds.length === 0) return []
+
+    return prisma.submission.findMany({
+      where: {
+        id: { in: expiredIds.map((record) => record.id) },
+        status: SubmissionStatus.doing
       },
       include: answerInclude
     })
@@ -429,7 +467,29 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
-  async updateAutoGrading(data: {
+  recordViolation(submissionId: string): Promise<StudentSubmissionComplete | null> {
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.submission.updateMany({
+        where: {
+          id: submissionId,
+          status: SubmissionStatus.doing,
+          violationCount: { lt: 5 }
+        },
+        data: {
+          violationCount: { increment: 1 }
+        }
+      })
+
+      if (updated.count === 0) return null
+
+      return tx.submission.findUnique({
+        where: { id: submissionId },
+        include: answerInclude
+      })
+    })
+  }
+
+  async finalizeSubmission(data: {
     submissionId: string
     mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
     tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
@@ -437,8 +497,30 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     autoScore: string
     status: SubmissionStatus
     finalScore: string | null
-  }): Promise<StudentSubmissionComplete> {
+    essayItemIds: string[]
+  }): Promise<{ submission: StudentSubmissionComplete; didFinalize: boolean }> {
     return prisma.$transaction(async (tx) => {
+      const claimed = await tx.submission.updateMany({
+        where: {
+          id: data.submissionId,
+          status: SubmissionStatus.doing
+        },
+        data: {
+          submitTime: new Date(),
+          status: data.status,
+          autoScore: new Prisma.Decimal(data.autoScore),
+          finalScore: data.finalScore === null ? null : new Prisma.Decimal(data.finalScore)
+        }
+      })
+
+      if (claimed.count === 0) {
+        const submission = await tx.submission.findUniqueOrThrow({
+          where: { id: data.submissionId },
+          include: answerInclude
+        })
+        return { submission, didFinalize: false }
+      }
+
       for (const result of data.mcqResults) {
         await tx.submissionMcqAnswer.update({
           where: { id: result.answerId },
@@ -469,18 +551,23 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
         })
       }
 
-      return tx.submission.update({
-        where: {
-          id: data.submissionId
-        },
-        data: {
-          submitTime: new Date(),
-          status: data.status,
-          autoScore: new Prisma.Decimal(data.autoScore),
-          finalScore: data.finalScore === null ? null : new Prisma.Decimal(data.finalScore)
-        },
+      if (data.essayItemIds.length > 0) {
+        await tx.submissionEssayAnswer.createMany({
+          data: data.essayItemIds.map((itemId) => ({
+            submissionId: data.submissionId,
+            itemId,
+            answer: ''
+          })),
+          skipDuplicates: true
+        })
+      }
+
+      const submission = await tx.submission.findUniqueOrThrow({
+        where: { id: data.submissionId },
         include: answerInclude
       })
+
+      return { submission, didFinalize: true }
     })
   }
 }

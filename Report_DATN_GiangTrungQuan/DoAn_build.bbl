@@ -1,0 +1,668 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\datalist[entry]{none/global//global/global/global}
+  \entry{classroom_web}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=G}{%
+         family={{Google}},
+         familyi={G\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{G1}
+    \strng{fullhash}{G1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://support.google.com/edu/classroom}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Google Classroom Help Center}
+    \field{year}{2026}
+  \endentry
+
+  \entry{moodle_web}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=M}{%
+         family={{Moodle Association}},
+         familyi={M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{M3}
+    \strng{fullhash}{M3}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://docs.moodle.org}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Moodle Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{udemy_web}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=U}{%
+         family={{Udemy, Inc.}},
+         familyi={U\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{U1}
+    \strng{fullhash}{U1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://teach.udemy.com}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Udemy Teaching Center}
+    \field{year}{2026}
+  \endentry
+
+  \entry{nodejs_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=O}{%
+         family={{OpenJS Foundation}},
+         familyi={O\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{O1}
+    \strng{fullhash}{O1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://nodejs.org/docs/latest/api/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Node.js Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{express_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=O}{%
+         family={{OpenJS Foundation}},
+         familyi={O\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{O1}
+    \strng{fullhash}{O1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://expressjs.com/en/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Express - Node.js web application framework}
+    \field{year}{2026}
+  \endentry
+
+  \entry{typescript_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=M}{%
+         family={{Microsoft}},
+         familyi={M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{M2}
+    \strng{fullhash}{M2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://www.typescriptlang.org/docs/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{TypeScript Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{postgresql_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=P}{%
+         family={{PostgreSQL Global Development Group}},
+         familyi={P\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{P1}
+    \strng{fullhash}{P1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://www.postgresql.org/docs/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{PostgreSQL Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{prisma_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=P}{%
+         family={{Prisma Data, Inc.}},
+         familyi={P\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{P2}
+    \strng{fullhash}{P2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://www.prisma.io/docs}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Prisma Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{zod_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=Z}{%
+         family={{Zod}},
+         familyi={Z\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{Z1}
+    \strng{fullhash}{Z1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://zod.dev/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Zod Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{jones2015jwt}{report}{}{}
+    \name{author}{3}{}{%
+      {{hash=JM}{%
+         family={Jones},
+         familyi={J\bibinitperiod},
+         given={Michael},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=BJ}{%
+         family={Bradley},
+         familyi={B\bibinitperiod},
+         given={John},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=SN}{%
+         family={Sakimura},
+         familyi={S\bibinitperiod},
+         given={Nat},
+         giveni={N\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{JM+1}
+    \strng{fullhash}{JMBJSN1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{number}{RFC 7519}
+    \field{title}{JSON Web Token ({JWT})}
+    \verb{url}
+    \verb https://datatracker.ietf.org/doc/html/rfc7519
+    \endverb
+    \list{institution}{1}{%
+      {Internet Engineering Task Force}%
+    }
+    \field{type}{techreport}
+    \field{year}{2015}
+  \endentry
+
+  \entry{cloudflare_r2_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=C}{%
+         family={{Cloudflare}},
+         familyi={C\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{C1}
+    \strng{fullhash}{C1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+  \field{howpublished}{\url{https://developers.cloudflare.com/r2/api/s3/api/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Cloudflare R2 S3 API compatibility}
+    \field{year}{2026}
+  \endentry
+
+  \entry{aws_s3_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=A}{%
+         family={{Amazon Web Services}},
+         familyi={A\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{A1}
+    \strng{fullhash}{A1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+  \field{howpublished}{\url{https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Amazon S3 Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{ffprobe_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=F}{%
+         family={{FFmpeg}},
+         familyi={F\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{F1}
+    \strng{fullhash}{F1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://ffmpeg.org/ffprobe.html}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{FFprobe Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{ffmpeg_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=F}{%
+         family={{FFmpeg}},
+         familyi={F\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{F1}
+    \strng{fullhash}{F1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://ffmpeg.org/ffmpeg.html}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{FFmpeg Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{pantos2017hls}{report}{}{}
+    \name{author}{2}{}{%
+      {{hash=PR}{%
+         family={Pantos},
+         familyi={P\bibinitperiod},
+         given={Roger},
+         giveni={R\bibinitperiod},
+      }}%
+      {{hash=MW}{%
+         family={May},
+         familyi={M\bibinitperiod},
+         given={William},
+         giveni={W\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{PRMW1}
+    \strng{fullhash}{PRMW1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{number}{RFC 8216}
+    \field{title}{HTTP Live Streaming}
+    \verb{url}
+    \verb https://datatracker.ietf.org/doc/html/rfc8216
+    \endverb
+    \list{institution}{1}{%
+      {Internet Engineering Task Force}%
+    }
+    \field{type}{techreport}
+    \field{year}{2017}
+  \endentry
+
+  \entry{react_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=M}{%
+         family={{Meta Platforms, Inc.}},
+         familyi={M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{M1}
+    \strng{fullhash}{M1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://react.dev/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{React Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{nextjs_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=V}{%
+         family={{Vercel, Inc.}},
+         familyi={V\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{V1}
+    \strng{fullhash}{V1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://nextjs.org/docs}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Next.js Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{tanstack_query_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=T}{%
+         family={{TanStack}},
+         familyi={T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{T2}
+    \strng{fullhash}{T2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+  \field{howpublished}{\url{https://tanstack.com/query/latest/docs/framework/react/overview}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{TanStack Query Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{axios_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=A}{%
+         family={{Axios}},
+         familyi={A\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{A2}
+    \strng{fullhash}{A2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+  \field{howpublished}{\url{https://axios.rest/pages/getting-started/first-steps}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Axios Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{zustand_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=p}{%
+         family={{pmndrs}},
+         familyi={p\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{p1}
+    \strng{fullhash}{p1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://zustand.docs.pmnd.rs/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Zustand Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{react_hook_form_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=R}{%
+         family={{React Hook Form}},
+         familyi={R\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{R1}
+    \strng{fullhash}{R1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://react-hook-form.com/docs}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{React Hook Form Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{tailwind_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=T}{%
+         family={{Tailwind Labs}},
+         familyi={T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{T1}
+    \strng{fullhash}{T1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://tailwindcss.com/docs}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Tailwind CSS Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{videojs_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=V}{%
+         family={{Video.js}},
+         familyi={V\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{V2}
+    \strng{fullhash}{V2}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{howpublished}{\url{https://videojs.org/guides/react/}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Video.js Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{tiptap_docs}{misc}{}{}
+    \name{author}{1}{}{%
+      {{hash=T}{%
+         family={{Tiptap}},
+         familyi={T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{T3}
+    \strng{fullhash}{T3}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+  \field{howpublished}{\url{https://tiptap.dev/docs/editor/getting-started/install/react}}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Tiptap Documentation}
+    \field{year}{2026}
+  \endentry
+
+  \entry{vaswani2017attention}{inproceedings}{}{}
+    \name{author}{8}{}{%
+      {{hash=VA}{%
+         family={Vaswani},
+         familyi={V\bibinitperiod},
+         given={Ashish},
+         giveni={A\bibinitperiod},
+      }}%
+      {{hash=SN}{%
+         family={Shazeer},
+         familyi={S\bibinitperiod},
+         given={Noam},
+         giveni={N\bibinitperiod},
+      }}%
+      {{hash=PN}{%
+         family={Parmar},
+         familyi={P\bibinitperiod},
+         given={Niki},
+         giveni={N\bibinitperiod},
+      }}%
+      {{hash=UJ}{%
+         family={Uszkoreit},
+         familyi={U\bibinitperiod},
+         given={Jakob},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=JL}{%
+         family={Jones},
+         familyi={J\bibinitperiod},
+         given={Llion},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=GAN}{%
+         family={Gomez},
+         familyi={G\bibinitperiod},
+         given={Aidan\bibnamedelima N.},
+         giveni={A\bibinitperiod\bibinitdelim N\bibinitperiod},
+      }}%
+      {{hash=KL}{%
+         family={Kaiser},
+         familyi={K\bibinitperiod},
+         given={Lukasz},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=PI}{%
+         family={Polosukhin},
+         familyi={P\bibinitperiod},
+         given={Illia},
+         giveni={I\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{VA+1}
+    \strng{fullhash}{VASNPNUJJLGANKLPI1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{Advances in Neural Information Processing Systems}
+    \field{title}{Attention Is All You Need}
+    \verb{url}
+    \verb https://papers.nips.cc/paper/7181-attention-is-all-you-need
+    \endverb
+    \field{volume}{30}
+    \field{year}{2017}
+  \endentry
+
+  \entry{lewis2020rag}{inproceedings}{}{}
+    \name{author}{12}{}{%
+      {{hash=LP}{%
+         family={Lewis},
+         familyi={L\bibinitperiod},
+         given={Patrick},
+         giveni={P\bibinitperiod},
+      }}%
+      {{hash=PE}{%
+         family={Perez},
+         familyi={P\bibinitperiod},
+         given={Ethan},
+         giveni={E\bibinitperiod},
+      }}%
+      {{hash=PA}{%
+         family={Piktus},
+         familyi={P\bibinitperiod},
+         given={Aleksandra},
+         giveni={A\bibinitperiod},
+      }}%
+      {{hash=PF}{%
+         family={Petroni},
+         familyi={P\bibinitperiod},
+         given={Fabio},
+         giveni={F\bibinitperiod},
+      }}%
+      {{hash=KV}{%
+         family={Karpukhin},
+         familyi={K\bibinitperiod},
+         given={Vladimir},
+         giveni={V\bibinitperiod},
+      }}%
+      {{hash=GN}{%
+         family={Goyal},
+         familyi={G\bibinitperiod},
+         given={Naman},
+         giveni={N\bibinitperiod},
+      }}%
+      {{hash=KH}{%
+         family={K{\"u}ttler},
+         familyi={K\bibinitperiod},
+         given={Heinrich},
+         giveni={H\bibinitperiod},
+      }}%
+      {{hash=LM}{%
+         family={Lewis},
+         familyi={L\bibinitperiod},
+         given={Mike},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=YWt}{%
+         family={Yih},
+         familyi={Y\bibinitperiod},
+         given={Wen-tau},
+         giveni={W\bibinithyphendelim t\bibinitperiod},
+      }}%
+      {{hash=RT}{%
+         family={Rockt{\"a}schel},
+         familyi={R\bibinitperiod},
+         given={Tim},
+         giveni={T\bibinitperiod},
+      }}%
+      {{hash=RS}{%
+         family={Riedel},
+         familyi={R\bibinitperiod},
+         given={Sebastian},
+         giveni={S\bibinitperiod},
+      }}%
+      {{hash=KD}{%
+         family={Kiela},
+         familyi={K\bibinitperiod},
+         given={Douwe},
+         giveni={D\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{LP+1}
+    \strng{fullhash}{LPPEPAPFKVGNKHLMYWtRTRSKD1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{booktitle}{Advances in Neural Information Processing Systems}
+    \field{pages}{9459\bibrangedash 9474}
+    \field{title}{Retrieval-Augmented Generation for Knowledge-Intensive NLP
+  Tasks}
+    \verb{url}
+    \verb https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc269
+    \verb 45df7481e5-Abstract.html
+    \endverb
+    \field{volume}{33}
+    \field{year}{2020}
+  \endentry
+
+  \entry{richards2015softwareArchitecturePatterns}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=RM}{%
+         family={Richards},
+         familyi={R\bibinitperiod},
+         given={Mark},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {O'Reilly Media}%
+    }
+    \strng{namehash}{RM1}
+    \strng{fullhash}{RM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Software Architecture Patterns}
+    \verb{url}
+    \verb https://www.oreilly.com/library/view/software-architecture-patterns/9
+    \verb 781491971437/
+    \endverb
+    \field{year}{2015}
+  \endentry
+
+  \entry{fowler2002poeaa}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=FM}{%
+         family={Fowler},
+         familyi={F\bibinitperiod},
+         given={Martin},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Addison-Wesley Professional}%
+    }
+    \strng{namehash}{FM1}
+    \strng{fullhash}{FM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{note}{Truy cập ngày 06/06/2026}
+    \field{title}{Patterns of Enterprise Application Architecture}
+    \verb{url}
+    \verb https://martinfowler.com/books/eaa.html
+    \endverb
+    \field{year}{2002}
+  \endentry
+\enddatalist
+\endinput

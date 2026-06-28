@@ -117,7 +117,13 @@ export type AdminCourseLesson = CourseLessonPublic & {
     id: string;
     url: string | null;
     originalName: string | null;
-    status: 'pending_upload' | 'uploaded' | 'processing' | 'ready' | 'failed' | 'deleted';
+    status:
+      | "pending_upload"
+      | "uploaded"
+      | "processing"
+      | "ready"
+      | "failed"
+      | "deleted";
     durationSec: number | null;
   } | null;
 };
@@ -140,6 +146,111 @@ export type AdminCourseTopic = {
 export type AdminCourseDetail = AdminCourseSummary & {
   topics: AdminCourseTopic[];
   chapters: AdminCourseChapter[];
+};
+
+export type CourseStudentProgressStatus =
+  | "not_started"
+  | "in_progress"
+  | "completed";
+
+export type AdminCourseStudent = {
+  student: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarMediaId: string | null;
+    avatarUrl: string | null;
+    status: "pending_verification" | "active" | "banned";
+  };
+  source: "payment" | "manual" | "free";
+  enrolledAt: string;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercentage: number;
+  lastLearnedAt: string | null;
+  progressStatus: CourseStudentProgressStatus;
+  assessmentProgress: {
+    completedAssessments: number;
+    totalAssessments: number;
+    notStartedAssessments: number;
+    doingAssessments: number;
+    pendingGradingAssessments: number;
+    bestScore: string | null;
+    latestScore: string | null;
+  };
+  latestActivityAt: string | null;
+};
+
+export type ListAdminCourseStudentsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  progressStatus?: CourseStudentProgressStatus;
+};
+
+export type ListAdminCourseStudentsResponse =
+  PaginatedResponseShape<AdminCourseStudent> & {
+    stats: {
+      total: number;
+      notStarted: number;
+      inProgress: number;
+      completed: number;
+    };
+  };
+
+export type AdminCourseStudentLessonProgress = {
+  id: string;
+  title: string;
+  type: "video" | "quiz" | "document";
+  orderIndex: number;
+  status: CourseStudentProgressStatus;
+  progressPercentage: number;
+  watchedSeconds: number;
+  durationSec: number | null;
+  completedAt: string | null;
+  lastLearnedAt: string | null;
+};
+
+export type AdminCourseStudentProgress = {
+  student: AdminCourseStudent["student"];
+  enrollment: {
+    source: AdminCourseStudent["source"];
+    enrolledAt: string;
+  };
+  course: {
+    id: string;
+    title: string;
+    totalLessons: number;
+  };
+  summary: {
+    completedLessons: number;
+    progressPercentage: number;
+    lastLearnedAt: string | null;
+    progressStatus: CourseStudentProgressStatus;
+  };
+  chapters: Array<{
+    id: string;
+    title: string;
+    orderIndex: number;
+    completedLessons: number;
+    totalLessons: number;
+    lessons: AdminCourseStudentLessonProgress[];
+  }>;
+  assessments: Array<{
+    id: string;
+    title: string;
+    status: "not_started" | "doing" | "pending_grading" | "completed";
+    attemptCount: number;
+    maxAttempts: number | null;
+    maxScore: string;
+    bestScore: string | null;
+    latestScore: string | null;
+    latestSubmissionId: string | null;
+    latestSubmitTime: string | null;
+    latestActivityAt: string | null;
+    openTime: string | null;
+    closeTime: string | null;
+  }>;
 };
 export type CatalogCourseDetailResponse = CourseDetail;
 
@@ -197,9 +308,18 @@ export type LearningCourseOverviewMedia = {
   status: MediaStatus;
 };
 
-export type AdminLessonMaterialType = "text" | "markdown" | "pdf" | "docx" | "pptx";
+export type AdminLessonMaterialType =
+  | "text"
+  | "markdown"
+  | "pdf"
+  | "docx"
+  | "pptx";
 
-export type AdminLessonMaterialProcessingStatus = "pending" | "processing" | "ready" | "failed";
+export type AdminLessonMaterialProcessingStatus =
+  | "pending"
+  | "processing"
+  | "ready"
+  | "failed";
 
 export type LessonMaterialMedia = {
   id: string;

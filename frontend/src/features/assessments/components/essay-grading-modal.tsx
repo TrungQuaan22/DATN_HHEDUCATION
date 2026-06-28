@@ -13,25 +13,30 @@ interface EssayGradingModalProps {
   onClose: () => void;
 }
 
-export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalProps) {
-  const { data: selectedSubmission, isLoading } = useAdminGradingSubmissionQuery(submissionId);
+export function EssayGradingModal({
+  submissionId,
+  onClose,
+}: EssayGradingModalProps) {
+  const { data: selectedSubmission, isLoading } =
+    useAdminGradingSubmissionQuery(submissionId);
   const gradeEssayMutation = useGradeEssayMutation();
   const finalizeMutation = useFinalizeSubmissionMutation();
 
-  const [gradeDraft, setGradeDraft] = useState<Record<string, { score: string; note: string }>>({});
+  const [gradeDraft, setGradeDraft] = useState<
+    Record<string, { score: string; note: string }>
+  >({});
 
   useEffect(() => {
     if (selectedSubmission) {
-      const draftByItem = selectedSubmission.essayAnswers.reduce<Record<string, { score: string; note: string }>>(
-        (acc, answer) => {
-          acc[answer.itemId] = {
-            score: answer.teacherScore ?? "",
-            note: answer.teacherNote ?? "",
-          };
-          return acc;
-        },
-        {}
-      );
+      const draftByItem = selectedSubmission.essayAnswers.reduce<
+        Record<string, { score: string; note: string }>
+      >((acc, answer) => {
+        acc[answer.itemId] = {
+          score: answer.teacherScore ?? "",
+          note: answer.teacherNote ?? "",
+        };
+        return acc;
+      }, {});
       setGradeDraft(draftByItem);
     }
   }, [selectedSubmission]);
@@ -58,7 +63,8 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
       });
       toast.success("Lưu điểm tự luận thành công.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Không thể lưu điểm.";
+      const message =
+        error instanceof Error ? error.message : "Không thể lưu điểm.";
       toast.error(message);
     }
   };
@@ -71,12 +77,24 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
       toast.success("Hoàn thành chấm điểm bài làm.");
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Không thể hoàn tất bài chấm.";
+      const message =
+        error instanceof Error ? error.message : "Không thể hoàn tất bài chấm.";
       toast.error(message);
     }
   };
 
   const isMutating = gradeEssayMutation.isPending || finalizeMutation.isPending;
+  const isReadOnly =
+    selectedSubmission?.status !== "submitted" &&
+    selectedSubmission?.status !== "auto_submitted";
+
+  const getContentLabel = (content: unknown, fallback: string) => {
+    if (typeof content === "string") return content;
+    if (content && typeof content === "object" && "label" in content) {
+      return String((content as { label?: unknown }).label ?? fallback);
+    }
+    return fallback;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
@@ -84,12 +102,17 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-20 space-y-4">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-admin-pink border-t-transparent"></div>
-            <p className="text-sm font-bold text-admin-muted">Đang tải chi tiết bài làm...</p>
+            <p className="text-sm font-bold text-admin-muted">
+              Đang tải chi tiết bài làm...
+            </p>
           </div>
         ) : !selectedSubmission ? (
           <div className="p-8 text-center text-sm text-admin-muted">
             Không tìm thấy bài làm.
-            <button onClick={onClose} className="mt-4 block mx-auto text-admin-pink underline">
+            <button
+              onClick={onClose}
+              className="mt-4 block mx-auto text-admin-pink underline"
+            >
               Đóng
             </button>
           </div>
@@ -98,11 +121,14 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
             <div className="flex items-start justify-between gap-4 border-b border-admin-border/60 px-6 py-4 bg-admin-bg/30">
               <div>
                 <h3 className="text-base font-bold text-admin-cream">
-                  Chấm điểm tự luận: {selectedSubmission.assessment.title}
+                  {isReadOnly ? "Chi tiết bài làm" : "Chấm điểm tự luận"}:{" "}
+                  {selectedSubmission.assessment.title}
                 </h3>
                 <p className="mt-1 text-xs text-admin-muted">
                   Học sinh:{" "}
-                  <span className="text-admin-cream">{selectedSubmission.student.fullName}</span>{" "}
+                  <span className="text-admin-cream">
+                    {selectedSubmission.student.fullName}
+                  </span>{" "}
                   ({selectedSubmission.student.email}) | Điểm trắc nghiệm:{" "}
                   <span className="text-admin-pink font-bold">
                     {selectedSubmission.autoScore ?? "0"}đ
@@ -119,10 +145,93 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {selectedSubmission.sections
+                .flatMap((section) => section.items)
+                .filter((item) => item.itemType !== "essay")
+                .map((item) => {
+                  const mcq = selectedSubmission.answers.mcq.find(
+                    (answer) => answer.itemId === item.id,
+                  );
+                  const numeric = selectedSubmission.answers.numeric.find(
+                    (answer) => answer.itemId === item.id,
+                  );
+                  const trueFalse = selectedSubmission.answers.trueFalse.filter(
+                    (answer) => answer.itemId === item.id,
+                  );
+                  const answerText = mcq
+                    ? mcq.selectedOptionIds
+                        .map((id) =>
+                          getContentLabel(
+                            item.question?.options.find(
+                              (option) => option.id === id,
+                            )?.content,
+                            id,
+                          ),
+                        )
+                        .join(", ") || "Chưa trả lời"
+                    : numeric
+                      ? numeric.answerValue
+                      : trueFalse.length
+                        ? trueFalse
+                            .map(
+                              (answer) =>
+                                `${getContentLabel(item.question?.options.find((option) => option.id === answer.optionId)?.content, "Mệnh đề")}: ${answer.selectedValue ? "Đúng" : "Sai"}`,
+                            )
+                            .join("; ")
+                        : "Chưa trả lời";
+                  const point =
+                    mcq?.pointEarned ??
+                    numeric?.pointEarned ??
+                    trueFalse
+                      .reduce(
+                        (sum, answer) => sum + Number(answer.pointEarned),
+                        0,
+                      )
+                      .toString();
+                  const isCorrect =
+                    mcq?.isCorrect ??
+                    numeric?.isCorrect ??
+                    (trueFalse.length
+                      ? trueFalse.every((answer) => answer.isCorrect)
+                      : null);
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-admin-border bg-admin-bg p-5 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase text-admin-pink">
+                            Câu {item.questionNumber} · {item.maxScore} điểm
+                          </p>
+                          <h4 className="mt-1 text-sm font-bold text-admin-cream">
+                            {getContentLabel(item.question?.content, "Câu hỏi")}
+                          </h4>
+                        </div>
+                        <span
+                          className={`rounded-md border px-2 py-1 text-xs font-semibold ${isCorrect ? "border-emerald-400/30 text-emerald-300" : "border-red-400/30 text-red-300"}`}
+                        >
+                          {point}/{item.maxScore} điểm
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-admin-border/40 bg-admin-deep p-3 text-sm text-admin-cream">
+                        {answerText}
+                      </div>
+                    </div>
+                  );
+                })}
               {selectedSubmission.essayAnswers.map((answer) => {
-                const gradingItems = selectedSubmission.sections.flatMap((section) => section.items);
-                const item = gradingItems.find((entry) => entry.id === answer.itemId);
-                const draftValue = gradeDraft[answer.itemId] ?? { score: "", note: "" };
+                const gradingItems = selectedSubmission.sections.flatMap(
+                  (section) => section.items,
+                );
+                const item = gradingItems.find(
+                  (entry) => entry.id === answer.itemId,
+                );
+                const draftValue = gradeDraft[answer.itemId] ?? {
+                  score: "",
+                  note: "",
+                };
 
                 // Extract query/question label
                 let contentLabel = "Câu hỏi tự luận";
@@ -147,9 +256,12 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-admin-border/30 pb-3">
                       <div>
                         <div className="text-xs font-bold uppercase tracking-wider text-admin-pink">
-                          Câu {item?.questionNumber || "-"} | Điểm tối đa: {maxScore}đ
+                          Câu {item?.questionNumber || "-"} | Điểm tối đa:{" "}
+                          {maxScore}đ
                         </div>
-                        <h4 className="mt-1 text-sm font-bold text-admin-cream">{contentLabel}</h4>
+                        <h4 className="mt-1 text-sm font-bold text-admin-cream">
+                          {contentLabel}
+                        </h4>
                       </div>
                       {answer.teacherScore !== null && (
                         <span className="rounded-full bg-admin-pink/10 px-3 py-1 text-xs font-bold text-admin-pink border border-admin-pink/20">
@@ -170,13 +282,16 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                     {/* Grading Form */}
                     <div className="grid gap-3 sm:grid-cols-[140px_1fr_120px] items-end pt-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-admin-muted">Nhập điểm:</label>
+                        <label className="text-xs font-bold text-admin-muted">
+                          Nhập điểm:
+                        </label>
                         <input
                           type="number"
                           min={0}
                           max={maxScore}
                           step={0.1}
                           value={draftValue.score}
+                          disabled={isReadOnly}
                           onChange={(e) =>
                             setGradeDraft((prev) => ({
                               ...prev,
@@ -197,6 +312,7 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                         <input
                           type="text"
                           value={draftValue.note}
+                          disabled={isReadOnly}
                           onChange={(e) =>
                             setGradeDraft((prev) => ({
                               ...prev,
@@ -210,17 +326,22 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
                           className="w-full rounded-lg border border-admin-border bg-admin-surface-low px-3 py-2 text-sm text-admin-cream outline-none focus:border-admin-pink"
                         />
                       </div>
-                      <button
-                        type="button"
-                        disabled={isMutating}
-                        onClick={() => handleSaveGrade(answer.itemId, maxScore)}
-                        className="w-full rounded-lg bg-admin-pink px-4 py-2 text-xs font-bold text-admin-bg transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-                      >
-                        {gradeEssayMutation.isPending &&
-                        gradeEssayMutation.variables?.payload.itemId === answer.itemId
-                          ? "Đang lưu..."
-                          : "Lưu điểm câu này"}
-                      </button>
+                      {!isReadOnly && (
+                        <button
+                          type="button"
+                          disabled={isMutating}
+                          onClick={() =>
+                            handleSaveGrade(answer.itemId, maxScore)
+                          }
+                          className="w-full rounded-lg bg-admin-pink px-4 py-2 text-xs font-bold text-admin-bg transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                        >
+                          {gradeEssayMutation.isPending &&
+                          gradeEssayMutation.variables?.payload.itemId ===
+                            answer.itemId
+                            ? "Đang lưu..."
+                            : "Lưu điểm câu này"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -228,20 +349,24 @@ export function EssayGradingModal({ submissionId, onClose }: EssayGradingModalPr
             </div>
 
             <div className="flex justify-end gap-3 border-t border-admin-border/60 px-6 py-4 bg-admin-bg/30">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg border border-admin-border px-4 py-2 text-xs font-bold text-admin-cream hover:border-admin-pink transition active:scale-95"
-              >
-                Hủy
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-lg border border-admin-border px-4 py-2 text-xs font-bold text-admin-cream hover:border-admin-pink transition active:scale-95"
+                >
+                  Hủy
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleFinalizeSubmission}
                 disabled={isMutating}
                 className="rounded-lg bg-admin-pink px-5 py-2 text-xs font-bold text-admin-bg transition hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
-                {finalizeMutation.isPending ? "Đang khóa..." : "Hoàn tất & Khóa điểm"}
+                {finalizeMutation.isPending
+                  ? "Đang khóa..."
+                  : "Hoàn tất & Khóa điểm"}
               </button>
             </div>
           </>

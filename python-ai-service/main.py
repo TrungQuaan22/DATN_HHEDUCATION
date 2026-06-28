@@ -25,6 +25,7 @@ class IngestRequest(BaseModel):
     course_id: str
     lesson_id: str
     type: str
+    title: Optional[str] = None
     file_url: Optional[str] = None
     content_text: Optional[str] = None
 
@@ -55,6 +56,7 @@ def ingest_material(request: IngestRequest) -> dict:
             course_id=request.course_id,
             lesson_id=request.lesson_id,
             material_type=request.type,
+            title=request.title,
             file_url=request.file_url,
             content_text=request.content_text,
         )

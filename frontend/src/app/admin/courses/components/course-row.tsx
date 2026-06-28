@@ -153,12 +153,12 @@ export default function CourseRow({
       <td className="pr-6 py-4 text-right sticky right-0 bg-admin-deep group-hover:bg-admin-surface-low/20 transition-colors z-10 border-l border-admin-border/10">
         <div className="flex items-center justify-end gap-2">
           <Link
-            href={`/admin/courses/${course.id}/builder`}
+            href={`/admin/courses/${course.id}/students`}
             className={`bg-admin-surface-low hover:border-admin-pink border border-admin-border/30 text-admin-cream px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer min-w-fit ${
               isActionPending ? "pointer-events-none opacity-40" : ""
             }`}
           >
-            Content
+            Quản lý
           </Link>
 
           {/* Publish/Archive quickly */}

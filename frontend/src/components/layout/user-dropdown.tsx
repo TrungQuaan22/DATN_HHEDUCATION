@@ -52,8 +52,8 @@ export function UserDropdown({
   };
 
   // Define style mappings based on isAdmin status
-  const profileLink = isAdmin ? "/admin/settings" : "/profile";
-  
+  const profileLink = isAdmin ? "/admin/settings" : "/student/profile";
+
   const triggerButtonClasses = isAdmin
     ? `rounded-full border-2 border-admin-pink overflow-hidden hover:opacity-85 transition-all cursor-pointer bg-admin-surface-low flex items-center justify-center ${sizeClassName}`
     : `flex items-center justify-center rounded-full border-2 border-brand-pink/50 overflow-hidden hover:border-brand-pink transition-all cursor-pointer ${sizeClassName}`;
@@ -94,7 +94,9 @@ export function UserDropdown({
         type="button"
       >
         {!user?.avatarUrl || imageError ? (
-          <div className={`w-full h-full flex items-center justify-center ${isAdmin ? "bg-admin-pink/15 text-admin-pink" : "bg-brand-pink/15 text-brand-pink"}`}>
+          <div
+            className={`w-full h-full flex items-center justify-center ${isAdmin ? "bg-admin-pink/15 text-admin-pink" : "bg-brand-pink/15 text-brand-pink"}`}
+          >
             <User size={18} />
           </div>
         ) : (
@@ -114,7 +116,8 @@ export function UserDropdown({
               {user?.fullName || (isAdmin ? "Quản trị viên HH" : "Học sinh HH")}
             </p>
             <p className={emailTextClasses}>
-              {user?.email || (isAdmin ? "admin@hheducation.com" : "hocsinh@hheducation.com")}
+              {user?.email ||
+                (isAdmin ? "admin@hheducation.com" : "hocsinh@hheducation.com")}
             </p>
           </div>
           <div className="p-1">

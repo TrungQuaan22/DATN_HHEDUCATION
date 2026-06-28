@@ -33,12 +33,17 @@ import type {
 import { adminChapterRepository, adminLessonRepository } from '../repositories'
 import { mediaRepository } from '~/modules/media/repository'
 import type { MediaRepositoryPort } from '~/modules/media/ports/media-repository.port'
+import {
+  notificationEventService,
+  type NotificationEventService
+} from '~/modules/notifications/service'
 
 export class AdminLessonService {
   constructor(
     private readonly lessonRepository: AdminLessonRepositoryPort,
     private readonly chapterRepository: AdminChapterRepositoryPort,
-    private readonly mediaRepository: MediaRepositoryPort
+    private readonly mediaRepository: MediaRepositoryPort,
+    private readonly notifications: NotificationEventService
   ) {}
 
   private ensureChapterExists(
@@ -113,6 +118,16 @@ export class AdminLessonService {
       allowPreview: input.allowPreview ?? false,
       assessmentId: input.type === 'quiz' ? input.assessmentId : null
     })
+
+    if (chapter.course.status === 'published') {
+      await this.notifications.notifyCourseStudentsAboutNewLesson({
+        courseId: chapter.course.id,
+        courseTitle: chapter.course.title,
+        courseSlug: chapter.course.slug,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title
+      })
+    }
 
     return mapAdminLessonResponse(lesson)
   }
@@ -205,5 +220,6 @@ export class AdminLessonService {
 export const adminLessonService = new AdminLessonService(
   adminLessonRepository,
   adminChapterRepository,
-  mediaRepository
+  mediaRepository,
+  notificationEventService
 )

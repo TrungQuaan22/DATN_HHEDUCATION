@@ -1,12 +1,6 @@
-import type {
-  SubmissionStatus,
-  Subject,
-  Enrollment
-} from '@prisma/client'
+import type { SubmissionStatus, Subject, Enrollment } from '@prisma/client'
 
-import type {
-  SaveAnswerDto
-} from '../dto'
+import type { SaveAnswerDto } from '../dto'
 import type {
   StudentPlacementListItem,
   RuntimePlacement,
@@ -42,7 +36,10 @@ export interface StudentAssessmentRepositoryPort {
 
   countAttempts(userId: string, placementId: string): Promise<number>
 
-  findDoingSubmissionForPlacement(userId: string, placementId: string): Promise<SubmissionDetail | null>
+  findDoingSubmissionForPlacement(
+    userId: string,
+    placementId: string
+  ): Promise<SubmissionDetail | null>
 
   createSubmission(data: {
     userId: string
@@ -51,11 +48,21 @@ export interface StudentAssessmentRepositoryPort {
     attemptNumber: number
   }): Promise<SubmissionDetail>
 
-  findSubmissionForStudent(submissionId: string, userId: string): Promise<StudentSubmissionComplete | null>
+  findSubmissionForStudent(
+    submissionId: string,
+    userId: string
+  ): Promise<StudentSubmissionComplete | null>
+
+  listExpiredDoingSubmissions(data: {
+    now: Date
+    limit: number
+  }): Promise<StudentSubmissionComplete[]>
 
   saveAnswers(submissionId: string, answers: SaveAnswerDto[]): Promise<void>
 
-  updateAutoGrading(data: {
+  recordViolation(submissionId: string): Promise<StudentSubmissionComplete | null>
+
+  finalizeSubmission(data: {
     submissionId: string
     mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
     tfResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
@@ -63,5 +70,9 @@ export interface StudentAssessmentRepositoryPort {
     autoScore: string
     status: SubmissionStatus
     finalScore: string | null
-  }): Promise<StudentSubmissionComplete>
+    essayItemIds: string[]
+  }): Promise<{
+    submission: StudentSubmissionComplete
+    didFinalize: boolean
+  }>
 }

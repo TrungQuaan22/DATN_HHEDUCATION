@@ -81,7 +81,9 @@ export function QuestionEditor({
         {/* General Configs row */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-admin-muted uppercase">Độ khó</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">
+              Độ khó
+            </label>
             <select
               value={item.difficulty}
               onChange={(e) =>
@@ -98,7 +100,9 @@ export function QuestionEditor({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-admin-muted uppercase">Điểm số</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">
+              Điểm số
+            </label>
             <input
               type="number"
               step={0.25}
@@ -114,7 +118,9 @@ export function QuestionEditor({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-admin-muted uppercase">Dạng câu hỏi</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">
+              Dạng câu hỏi
+            </label>
             <select
               value={item.itemType}
               disabled
@@ -125,11 +131,12 @@ export function QuestionEditor({
                   item.questionNumber,
                   defaultMaxScoreByItemType[nextType],
                   item.id,
-                  assessmentType
+                  assessmentType,
                 );
                 handleFieldChange({
                   ...template,
-                  contentLabel: assessmentType === "quiz" ? item.contentLabel : "",
+                  contentLabel:
+                    assessmentType === "quiz" ? item.contentLabel : "",
                 });
               }}
               className="w-full rounded-lg border border-admin-border bg-admin-bg px-2.5 py-1.5 text-xs text-admin-cream outline-none font-bold disabled:cursor-not-allowed disabled:opacity-70"
@@ -141,7 +148,9 @@ export function QuestionEditor({
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-admin-muted uppercase">Chuyên đề</label>
+            <label className="text-xs font-bold text-admin-muted uppercase">
+              Chuyên đề
+            </label>
             <input
               type="text"
               list="assessment-builder-topic-options"
@@ -183,18 +192,24 @@ export function QuestionEditor({
           </div>
         ) : (
           <div className="rounded-lg border border-admin-border/70 bg-admin-bg px-3 py-2.5 text-xs text-admin-muted">
-            Nội dung câu {item.questionNumber} nằm trong PDF gốc. Builder chỉ lưu answer key và điểm
-            số cho câu này.
+            Nội dung câu {item.questionNumber} nằm trong PDF gốc. Builder chỉ
+            lưu answer key và điểm số cho câu này.
           </div>
         )}
 
         {/* Answers config according to type */}
         <div className="space-y-2 pt-2 border-t border-admin-border/40">
-          <span className="text-xs font-bold text-admin-muted block">Đáp án chính xác</span>
+          <span className="text-xs font-bold text-admin-muted block">
+            Đáp án chính xác
+          </span>
 
           {/* Sub Editors Dispatch */}
           {item.itemType === "mcq" && (
-            <McqEditor item={item} assessmentType={assessmentType} onUpdateItem={handleFieldChange} />
+            <McqEditor
+              item={item}
+              assessmentType={assessmentType}
+              onUpdateItem={handleFieldChange}
+            />
           )}
           {item.itemType === "true_false" && (
             <TrueFalseEditor
@@ -203,13 +218,17 @@ export function QuestionEditor({
               onUpdateItem={handleFieldChange}
             />
           )}
-          {item.itemType === "numeric" && <NumericEditor item={item} onUpdateItem={handleFieldChange} />}
-          {item.itemType === "essay" && <EssayEditor item={item} onUpdateItem={handleFieldChange} />}
+          {item.itemType === "numeric" && (
+            <NumericEditor item={item} onUpdateItem={handleFieldChange} />
+          )}
+          {item.itemType === "essay" && (
+            <EssayEditor item={item} onUpdateItem={handleFieldChange} />
+          )}
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-admin-muted uppercase">
-            Giải thích đáp án
+            Hướng dẫn và lời giải
           </label>
           <textarea
             rows={3}
@@ -219,14 +238,15 @@ export function QuestionEditor({
                 explanation: e.target.value,
               })
             }
-            placeholder="Nhập lời giải hoặc ghi chú giải thích đáp án..."
+            placeholder="Trình bày cách làm, lý do chọn đáp án hoặc các bước tính toán..."
             className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2.5 text-xs text-admin-cream outline-none focus:border-admin-pink"
           />
         </div>
       </div>
 
       <div className="text-xs text-admin-muted text-center italic mt-4 shrink-0">
-        Đề thi tự lưu trên giao diện. Bấm nút &quot;Lưu &amp; Xuất bản&quot; ở trên đầu để lưu vĩnh viễn vào CSDL.
+        Đề thi tự lưu trên giao diện. Bấm nút &quot;Lưu &amp; Xuất bản&quot; ở
+        trên đầu để lưu vĩnh viễn vào CSDL.
       </div>
     </div>
   );

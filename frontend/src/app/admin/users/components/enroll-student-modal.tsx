@@ -22,9 +22,15 @@ type EnrollStudentModalProps = {
 };
 
 const enrollStudentSchema = z.object({
-  teacherId: z.string().min(1, "Vui lòng chọn giảng viên phụ trách để hiển thị khóa học"),
+  teacherId: z
+    .string()
+    .min(1, "Vui lòng chọn giảng viên phụ trách để hiển thị khóa học"),
   courseId: z.string().min(1, "Vui lòng chọn khóa học muốn gán"),
-  manualReason: z.string().max(500, "Lý do tối đa 500 ký tự").optional().default(""),
+  manualReason: z
+    .string()
+    .max(500, "Lý do tối đa 500 ký tự")
+    .optional()
+    .default(""),
 });
 
 type EnrollStudentFormValues = z.infer<typeof enrollStudentSchema>;
@@ -76,7 +82,9 @@ export default function EnrollStudentModal({
   const enrollMutation = useMutation({
     mutationFn: createManualEnrollment,
     onSuccess: () => {
-      toast.success(`Gán khóa học cho học sinh ${student?.fullName} thành công!`);
+      toast.success(
+        `Gán khóa học cho học sinh ${student?.fullName} thành công!`,
+      );
       handleClose();
     },
     onError: (err: unknown) => {
@@ -127,7 +135,10 @@ export default function EnrollStudentModal({
           </h3>
           <p className="text-sm text-admin-muted mt-2 max-w-sm mx-auto">
             Gán khóa học đã phát hành cho học sinh{" "}
-            <span className="font-bold text-admin-cream">{student.fullName}</span> ({student.email})
+            <span className="font-bold text-admin-cream">
+              {student.fullName}
+            </span>{" "}
+            ({student.email})
           </p>
         </div>
 
@@ -138,15 +149,20 @@ export default function EnrollStudentModal({
           {/* Teacher Select for local filtering */}
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
-              Chọn giảng viên để lọc khóa học <span className="text-admin-pink">*</span>
+              Chọn giảng viên để lọc khóa học{" "}
+              <span className="text-admin-pink">*</span>
             </label>
             <SearchableTeacherSelect
               value={teacherId}
-              onChange={(val) => setValue("teacherId", val, { shouldValidate: true })}
+              onChange={(val) =>
+                setValue("teacherId", val, { shouldValidate: true })
+              }
               error={!!errors.teacherId}
             />
             {errors.teacherId && (
-              <p className="text-red-400 text-xs mt-1">{errors.teacherId.message}</p>
+              <p className="text-red-400 text-xs mt-1">
+                {errors.teacherId.message}
+              </p>
             )}
           </div>
 
@@ -157,18 +173,23 @@ export default function EnrollStudentModal({
             </label>
             <SearchableCourseSelect
               value={courseId}
-              onChange={(val) => setValue("courseId", val, { shouldValidate: true })}
+              onChange={(val) =>
+                setValue("courseId", val, { shouldValidate: true })
+              }
               coursesList={coursesList}
               isLoading={isLoadingCourses}
               disabled={!teacherId || isLoadingCourses}
               error={!!errors.courseId}
             />
             {errors.courseId && (
-              <p className="text-red-400 text-xs mt-1">{errors.courseId.message}</p>
+              <p className="text-red-400 text-xs mt-1">
+                {errors.courseId.message}
+              </p>
             )}
             {!teacherId && (
               <p className="text-xs text-admin-muted italic mt-1">
-                * Vui lòng chọn giảng viên phụ trách trước để xem danh sách khóa học.
+                * Vui lòng chọn giảng viên phụ trách trước để xem danh sách khóa
+                học.
               </p>
             )}
           </div>
@@ -176,7 +197,8 @@ export default function EnrollStudentModal({
           {/* Reason */}
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-admin-muted block uppercase tracking-wider">
-              Lý do thêm thủ công <span className="text-admin-muted/50">(Tùy chọn)</span>
+              Lý do thêm thủ công{" "}
+              <span className="text-admin-muted/50">(Tùy chọn)</span>
             </label>
             <textarea
               {...register("manualReason")}
@@ -186,7 +208,9 @@ export default function EnrollStudentModal({
               className="w-full bg-admin-surface-low border border-admin-border/30 focus:border-admin-pink focus:outline-none focus:ring-1 focus:ring-admin-pink rounded px-4 py-3 text-admin-cream placeholder:text-admin-muted/40 transition-all font-medium text-sm resize-none"
             />
             {errors.manualReason && (
-              <p className="text-red-400 text-xs mt-1">{errors.manualReason.message}</p>
+              <p className="text-red-400 text-xs mt-1">
+                {errors.manualReason.message}
+              </p>
             )}
             <div className="text-right text-xs text-admin-muted">
               {(manualReason || "").length}/500 ký tự
@@ -194,7 +218,11 @@ export default function EnrollStudentModal({
           </div>
 
           {/* Form submit button in the form for semantic structure */}
-          <button type="submit" className="hidden" id="enroll-student-submit-btn">
+          <button
+            type="submit"
+            className="hidden"
+            id="enroll-student-submit-btn"
+          >
             Submit
           </button>
         </form>
@@ -211,7 +239,9 @@ export default function EnrollStudentModal({
 
           <button
             type="button"
-            onClick={() => document.getElementById("enroll-student-submit-btn")?.click()}
+            onClick={() =>
+              document.getElementById("enroll-student-submit-btn")?.click()
+            }
             disabled={isSaving}
             className="bg-admin-pink text-white px-6 py-2.5 text-sm font-bold rounded shadow-lg shadow-admin-pink/20 hover:brightness-110 transition-all flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
           >

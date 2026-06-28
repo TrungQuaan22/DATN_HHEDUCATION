@@ -67,4 +67,3 @@ export default function UsersStats({ stats }: UsersStatsProps) {
     </div>
   );
 }
-

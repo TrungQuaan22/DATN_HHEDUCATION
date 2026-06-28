@@ -23,6 +23,10 @@ import {
   updateAssessmentVisibility,
   listStudentAssessments,
   getAssessmentWorkspace,
+  getStudentSubmissionResult,
+  listAdminAssessmentResults,
+  getAdminAssessmentStudentAttempts,
+  recordAssessmentViolation,
 } from "./api";
 import {
   AssessmentCreatePayload,
@@ -35,7 +39,10 @@ import {
 import { toast } from "sonner";
 
 // 1. Admin Queries
-export function useAdminAssessmentsQuery(filters?: ListAdminAssessmentsParams, options?: { enabled?: boolean }) {
+export function useAdminAssessmentsQuery(
+  filters?: ListAdminAssessmentsParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ["admin-assessments", filters],
     queryFn: () => listAdminAssessments(filters),
@@ -72,6 +79,29 @@ export function useAdminAssessmentDetailQuery(assessmentId?: string | null) {
   });
 }
 
+export function useAdminAssessmentResultsQuery(
+  assessmentId: string,
+  params?: Parameters<typeof listAdminAssessmentResults>[1],
+) {
+  return useQuery({
+    queryKey: ["admin-assessment-results", assessmentId, params],
+    queryFn: () => listAdminAssessmentResults(assessmentId, params),
+    enabled: Boolean(assessmentId),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAdminAssessmentStudentAttemptsQuery(
+  assessmentId: string,
+  studentId: string,
+) {
+  return useQuery({
+    queryKey: ["admin-assessment-student-attempts", assessmentId, studentId],
+    queryFn: () => getAdminAssessmentStudentAttempts(assessmentId, studentId),
+    enabled: Boolean(assessmentId && studentId),
+  });
+}
+
 // 2. Admin Mutations
 export function useCreateAssessmentMutation() {
   const queryClient = useQueryClient();
@@ -105,7 +135,8 @@ export function useUpdateAssessmentMutation() {
 export function useCreateAssessmentPlacementMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AssessmentPlacementCreatePayload) => createAssessmentPlacement(payload),
+    mutationFn: (payload: AssessmentPlacementCreatePayload) =>
+      createAssessmentPlacement(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
     },
@@ -134,7 +165,8 @@ export function useUpsertAssessmentPlacementMutation() {
 export function useDeleteAssessmentPlacementMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (assessmentId: string) => deleteAssessmentPlacement(assessmentId),
+    mutationFn: (assessmentId: string) =>
+      deleteAssessmentPlacement(assessmentId),
     onSuccess: (_, assessmentId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
       queryClient.invalidateQueries({
@@ -185,13 +217,19 @@ export function useGradeEssayMutation() {
       payload,
     }: {
       submissionId: string;
-      payload: { itemId: string; teacherScore: number; teacherNote?: string | null };
+      payload: {
+        itemId: string;
+        teacherScore: number;
+        teacherNote?: string | null;
+      };
     }) => gradeEssayAnswer(submissionId, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["grading-submission", variables.submissionId],
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-grading-submissions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-grading-submissions"],
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
     },
   });
@@ -200,12 +238,15 @@ export function useGradeEssayMutation() {
 export function useFinalizeSubmissionMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (submissionId: string) => finalizeGradingSubmission(submissionId),
+    mutationFn: (submissionId: string) =>
+      finalizeGradingSubmission(submissionId),
     onSuccess: (_, submissionId) => {
       queryClient.invalidateQueries({
         queryKey: ["grading-submission", submissionId],
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-grading-submissions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-grading-submissions"],
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-assessments"] });
     },
   });
@@ -242,7 +283,10 @@ export function usePublicAssessmentsQuery(filters?: {
   });
 }
 
-export function usePublicAssessmentDetailQuery(placementRef: string, options?: { enabled?: boolean }) {
+export function usePublicAssessmentDetailQuery(
+  placementRef: string,
+  options?: { enabled?: boolean },
+) {
   const uuidPattern =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   const isUuid = uuidPattern.test(placementRef);
@@ -280,12 +324,22 @@ export function useLearningAssessmentQuery(placementId?: string | null) {
   });
 }
 
+export function useStudentSubmissionResultQuery(submissionId?: string | null) {
+  return useQuery({
+    queryKey: ["student-submission-result", submissionId],
+    queryFn: () => getStudentSubmissionResult(submissionId as string),
+    enabled: Boolean(submissionId),
+  });
+}
+
 export function useStartAttemptMutation() {
   const queryClient = useQueryClient();
   return useMutation<AssessmentSubmission, Error, string>({
     mutationFn: (placementId: string) => startAssessmentAttempt(placementId),
     onSuccess: (_, placementId) => {
-      queryClient.invalidateQueries({ queryKey: ["learning-assessment", placementId] });
+      queryClient.invalidateQueries({
+        queryKey: ["learning-assessment", placementId],
+      });
       queryClient.invalidateQueries({ queryKey: ["student-assessments"] });
     },
   });
@@ -309,9 +363,27 @@ export function useSubmitAttemptMutation() {
     mutationFn: (submissionId: string) => submitAssessmentAttempt(submissionId),
     onSuccess: (data) => {
       if (data.placementId) {
-        queryClient.invalidateQueries({ queryKey: ["learning-assessment", data.placementId] });
+        queryClient.invalidateQueries({
+          queryKey: ["learning-assessment", data.placementId],
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["student-assessments"] });
+    },
+  });
+}
+
+export function useRecordAssessmentViolationMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (submissionId: string) =>
+      recordAssessmentViolation(submissionId),
+    onSuccess: (data) => {
+      if (!data.autoSubmitted || !data.submission?.placementId) return;
+
+      queryClient.invalidateQueries({ queryKey: ["student-assessments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["learning-assessment", data.submission.placementId],
+      });
     },
   });
 }
@@ -322,7 +394,8 @@ export function useAssessmentWorkspaceQuery(
 ) {
   return useQuery({
     queryKey: ["assessment-workspace", placementId, submissionId],
-    queryFn: () => getAssessmentWorkspace(placementId as string, submissionId as string),
+    queryFn: () =>
+      getAssessmentWorkspace(placementId as string, submissionId as string),
     enabled: !!placementId && !!submissionId,
   });
 }

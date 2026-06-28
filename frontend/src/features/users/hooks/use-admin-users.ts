@@ -15,8 +15,8 @@ export function useAdminUsers() {
 
   // Modals Visibility States
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
-  const [selectedStudentForEnroll, setSelectedStudentForEnroll] = useState<AdminUserItem | null>(null);
-  const [selectedStudentForProgress, setSelectedStudentForProgress] = useState<AdminUserItem | null>(null);
+  const [selectedStudentForEnroll, setSelectedStudentForEnroll] =
+    useState<AdminUserItem | null>(null);
 
   // Filter & Pagination States
   const [search, setSearch] = useState("");
@@ -55,7 +55,7 @@ export function useAdminUsers() {
       status: status === "all" ? undefined : status,
       search: search.trim() || undefined,
     }),
-    [currentPage, limit, role, status, search]
+    [currentPage, limit, role, status, search],
   );
 
   // TanStack Query
@@ -79,14 +79,19 @@ export function useAdminUsers() {
       toast.success(`${actionText} tài khoản người dùng thành công!`);
     },
     onError: (err: unknown) => {
-      toast.error(getApiErrorMessage(err, "Cập nhật trạng thái người dùng thất bại."));
+      toast.error(
+        getApiErrorMessage(err, "Cập nhật trạng thái người dùng thất bại."),
+      );
     },
   });
 
-  const handleToggleStatus = useCallback(async (userId: string, currentStatus: UserStatus) => {
-    const nextStatus = currentStatus === "banned" ? "active" : "banned";
-    await toggleStatusMutation.mutateAsync({ userId, status: nextStatus });
-  }, [toggleStatusMutation]);
+  const handleToggleStatus = useCallback(
+    async (userId: string, currentStatus: UserStatus) => {
+      const nextStatus = currentStatus === "banned" ? "active" : "banned";
+      await toggleStatusMutation.mutateAsync({ userId, status: nextStatus });
+    },
+    [toggleStatusMutation],
+  );
 
   const handleRefreshList = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -99,8 +104,6 @@ export function useAdminUsers() {
     setIsTeacherModalOpen,
     selectedStudentForEnroll,
     setSelectedStudentForEnroll,
-    selectedStudentForProgress,
-    setSelectedStudentForProgress,
     search,
     handleSearchChange,
     role,

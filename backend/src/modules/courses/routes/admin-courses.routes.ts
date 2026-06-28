@@ -16,12 +16,20 @@ import {
   updateCourseController
 } from '../controllers/admin-courses.controller'
 import {
+  getCourseStudentProgressController,
+  listCourseStudentsController
+} from '../controllers/admin-course-students.controller'
+import {
   changeCourseStatusSchema,
   createCourseSchema,
   getAdminCourseSchema,
   listAdminCoursesSchema,
   updateCourseSchema
 } from '../validators/admin-courses.validator'
+import {
+  getAdminCourseStudentProgressSchema,
+  listAdminCourseStudentsSchema
+} from '../validators/admin-course-students.validator'
 
 export const adminCourseRoutes = Router()
 
@@ -52,6 +60,24 @@ adminCourseRoutes.get(
   asyncHandler(getAdminCourseController)
 )
 
+adminCourseRoutes.get(
+  '/courses/:courseId/students',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(listAdminCourseStudentsSchema),
+  asyncHandler(listCourseStudentsController)
+)
+
+adminCourseRoutes.get(
+  '/courses/:courseId/students/:studentId/progress',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(getAdminCourseStudentProgressSchema),
+  asyncHandler(getCourseStudentProgressController)
+)
+
 adminCourseRoutes.patch(
   '/courses/:courseId',
   requireAuth,
@@ -78,4 +104,3 @@ adminCourseRoutes.patch(
   validateRequest(changeCourseStatusSchema),
   asyncHandler(archiveCourseController)
 )
-

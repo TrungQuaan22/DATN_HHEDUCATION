@@ -19,6 +19,9 @@ import {
   UpdateProgressResponse,
   AdminLessonMaterial,
   AdminLessonMaterialRequest,
+  AdminCourseStudentProgress,
+  ListAdminCourseStudentsParams,
+  ListAdminCourseStudentsResponse,
 } from "./types";
 
 type ApiEnvelope<T> = {
@@ -82,6 +85,27 @@ export const getAdminCourse = async (
 ): Promise<AdminCourseDetail> => {
   const response = await api.get<ApiEnvelope<AdminCourseDetail>>(
     `/admin/courses/${courseId}`,
+  );
+  return response.data.data;
+};
+
+export const getAdminCourseStudents = async (
+  courseId: string,
+  params?: ListAdminCourseStudentsParams,
+): Promise<ListAdminCourseStudentsResponse> => {
+  const response = await api.get<ApiEnvelope<ListAdminCourseStudentsResponse>>(
+    `/admin/courses/${courseId}/students`,
+    { params },
+  );
+  return response.data.data;
+};
+
+export const getAdminCourseStudentProgress = async (
+  courseId: string,
+  studentId: string,
+): Promise<AdminCourseStudentProgress> => {
+  const response = await api.get<ApiEnvelope<AdminCourseStudentProgress>>(
+    `/admin/courses/${courseId}/students/${studentId}/progress`,
   );
   return response.data.data;
 };
@@ -192,9 +216,10 @@ export const getTeacherOptions = async (
 };
 
 export const getMyLearningCourses = async (): Promise<LearningCourseItem[]> => {
-  const response = await api.get<ApiEnvelope<{ items: LearningCourseItem[] }>>(
-    "/learning/courses",
-  );
+  const response =
+    await api.get<ApiEnvelope<{ items: LearningCourseItem[] }>>(
+      "/learning/courses",
+    );
   return response.data.data.items;
 };
 
@@ -229,50 +254,50 @@ export const updateLessonProgress = async (
 
 // Admin Lesson Materials API
 export const getAdminLessonMaterials = async (
-  lessonId: string
+  lessonId: string,
 ): Promise<AdminLessonMaterial[]> => {
   const response = await api.get<ApiEnvelope<AdminLessonMaterial[]>>(
-    `/admin/lessons/${lessonId}/materials`
+    `/admin/lessons/${lessonId}/materials`,
   );
   return response.data.data;
 };
 
 export const createAdminLessonMaterial = async (
   lessonId: string,
-  data: AdminLessonMaterialRequest
+  data: AdminLessonMaterialRequest,
 ): Promise<AdminLessonMaterial> => {
   const response = await api.post<ApiEnvelope<AdminLessonMaterial>>(
     `/admin/lessons/${lessonId}/materials`,
-    data
+    data,
   );
   return response.data.data;
 };
 
 export const updateAdminLessonMaterial = async (
   materialId: string,
-  data: Partial<AdminLessonMaterialRequest>
+  data: Partial<AdminLessonMaterialRequest>,
 ): Promise<AdminLessonMaterial> => {
   const response = await api.patch<ApiEnvelope<AdminLessonMaterial>>(
     `/admin/lesson-materials/${materialId}`,
-    data
+    data,
   );
   return response.data.data;
 };
 
 export const deleteAdminLessonMaterial = async (
-  materialId: string
+  materialId: string,
 ): Promise<{ id: string; deleted: boolean }> => {
-  const response = await api.delete<ApiEnvelope<{ id: string; deleted: boolean }>>(
-    `/admin/lesson-materials/${materialId}`
-  );
+  const response = await api.delete<
+    ApiEnvelope<{ id: string; deleted: boolean }>
+  >(`/admin/lesson-materials/${materialId}`);
   return response.data.data;
 };
 
 export const ingestAdminLessonMaterial = async (
-  materialId: string
+  materialId: string,
 ): Promise<{ id: string; processingStatus: string; triggered: boolean }> => {
-  const response = await api.post<ApiEnvelope<{ id: string; processingStatus: string; triggered: boolean }>>(
-    `/admin/lesson-materials/${materialId}/ingest`
-  );
+  const response = await api.post<
+    ApiEnvelope<{ id: string; processingStatus: string; triggered: boolean }>
+  >(`/admin/lesson-materials/${materialId}/ingest`);
   return response.data.data;
 };

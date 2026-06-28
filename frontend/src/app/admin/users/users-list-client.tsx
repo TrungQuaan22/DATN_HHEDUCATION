@@ -7,7 +7,6 @@ import UsersFilters from "./components/users-filters";
 import UsersTable from "./components/users-table";
 import TeacherCreateModal from "./components/teacher-create-modal";
 import EnrollStudentModal from "./components/enroll-student-modal";
-import ProgressPlaceholderModal from "./components/progress-placeholder-modal";
 import UsersStats from "./components/users-stats";
 
 export default function UsersListClient() {
@@ -17,8 +16,6 @@ export default function UsersListClient() {
     setIsTeacherModalOpen,
     selectedStudentForEnroll,
     setSelectedStudentForEnroll,
-    selectedStudentForProgress,
-    setSelectedStudentForProgress,
     search,
     handleSearchChange,
     role,
@@ -47,7 +44,8 @@ export default function UsersListClient() {
             Quản Lý Người Dùng
           </h2>
           <p className="text-sm text-admin-muted mt-1">
-            Xem danh sách thành viên hệ thống, phân quyền và gán quyền học tập thủ công.
+            Xem danh sách thành viên hệ thống, phân quyền và gán quyền học tập
+            thủ công.
           </p>
         </div>
         {canCreateTeacher && (
@@ -86,7 +84,6 @@ export default function UsersListClient() {
         onLimitChange={handleLimitChange}
         onToggleStatus={handleToggleStatus}
         onEnrollClick={setSelectedStudentForEnroll}
-        onProgressClick={setSelectedStudentForProgress}
       />
 
       <UsersStats stats={usersQuery.data?.stats} />
@@ -103,13 +100,6 @@ export default function UsersListClient() {
         isOpen={!!selectedStudentForEnroll}
         onClose={() => setSelectedStudentForEnroll(null)}
         student={selectedStudentForEnroll}
-      />
-
-      {/* Progress Checker Modal */}
-      <ProgressPlaceholderModal
-        isOpen={!!selectedStudentForProgress}
-        onClose={() => setSelectedStudentForProgress(null)}
-        student={selectedStudentForProgress}
       />
     </div>
   );

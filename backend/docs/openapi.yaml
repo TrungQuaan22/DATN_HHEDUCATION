@@ -28,6 +28,10 @@ tags:
     description: Upload media files to Cloudflare R2
   - name: Assessments
     description: Assessment builder, placements, attempts, and grading
+  - name: Notifications
+    description: In-app notifications for students, teachers, and administrators
+  - name: Tutor
+    description: AI tutor sessions, messages, and citations
 
 paths:
   /auth/register:
@@ -730,6 +734,113 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /admin/courses/{courseId}/students:
+    get:
+      tags:
+        - Courses
+      summary: List students enrolled in a managed course
+      description: Admin can inspect any course. Teachers can inspect only courses assigned to them. Progress is aggregated from CourseProgress for each enrollment.
+      operationId: listAdminCourseStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseIdPath'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: search
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - in: query
+          name: progressStatus
+          schema:
+            $ref: '#/components/schemas/CourseStudentProgressStatus'
+      responses:
+        '200':
+          description: Enrolled students with summarized learning progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAdminCourseStudentsSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin or owning teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/courses/{courseId}/students/{studentId}/progress:
+    get:
+      tags:
+        - Courses
+      summary: Get one student's curriculum progress in a managed course
+      description: Returns the course curriculum with the student's LessonProgress attached to every lesson. Admin can inspect any course; teachers can inspect only courses assigned to them.
+      operationId: getAdminCourseStudentProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseIdPath'
+        - in: path
+          name: studentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Student curriculum progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourseStudentProgressSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Missing, expired, or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Admin or owning teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course not found or student is not enrolled in this course
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /admin/courses/{courseId}/publish:
     patch:
       tags:
@@ -1182,6 +1293,91 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications for the authenticated user
+      operationId: listNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - in: query
+          name: unreadOnly
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Notification page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      operationId: getUnreadNotificationCount
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationUnreadCountSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: Mark every notification as read
+      operationId: markAllNotificationsRead
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Number of notifications updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationReadAllSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark one owned notification as read
+      operationId: markNotificationRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: notificationId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Notification marked read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationReadSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /catalog/courses:
     get:
@@ -2154,6 +2350,62 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /admin/assessments/{assessmentId}/results:
+    get:
+      tags: [Assessments]
+      summary: List the participant roster and results for an assessment
+      description: For course and lesson placements, includes every enrolled student so a missing submission is represented as not started. Score statistics use each student's highest finalized score.
+      operationId: listAdminAssessmentResults
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+        - {
+            in: query,
+            name: limit,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+          }
+        - { in: query, name: search, schema: { type: string, minLength: 1, maxLength: 100 } }
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/AssessmentParticipantStatus'
+      responses:
+        '200':
+          description: Participant roster, aggregate statistics, and results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminAssessmentResultsSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/assessments/{assessmentId}/students/{studentId}/attempts:
+    get:
+      tags: [Assessments]
+      summary: Get every attempt made by one assessment participant
+      operationId: getAdminAssessmentStudentAttempts
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/AssessmentIdPath'
+        - in: path
+          name: studentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Participant summary and chronological attempt history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminAssessmentStudentAttemptsSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /admin/assessments/{assessmentId}/sections/{sectionId}:
     patch:
       tags: [Assessments]
@@ -2779,6 +3031,31 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /learning/assessment-submissions/{submissionId}/result:
+    get:
+      tags:
+        - Assessments
+      summary: Get an owned submission result
+      description: Returns no questions, answer key, explanation, or PDF URL until grading is finalized.
+      operationId: getStudentSubmissionResult
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      responses:
+        '200':
+          description: Final result or a safe pending-grading response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentSubmissionResultSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /learning/assessment-submissions/{submissionId}/submit:
     post:
       tags:
@@ -2796,6 +3073,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssessmentSubmissionSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /learning/assessment-submissions/{submissionId}/violations:
+    post:
+      tags:
+        - Assessments
+      summary: Record an exam-rule violation
+      description: Atomically increments the owned active submission violation count and auto-submits it on the fifth violation.
+      operationId: recordAssessmentViolation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionIdPath'
+      responses:
+        '200':
+          description: Updated violation count and optional auto-submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionViolationSuccessResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3255,6 +3559,140 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /tutor/sessions:
+    get:
+      tags:
+        - Tutor
+      summary: List tutor sessions
+      description: List AI tutor sessions for the authenticated student with optional course and lesson filters.
+      operationId: listTutorSessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: courseId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: lessonId
+          schema:
+            type: string
+            format: uuid
+            nullable: true
+      responses:
+        '200':
+          description: Tutor session list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTutorSessionsSuccessResponse'
+    post:
+      tags:
+        - Tutor
+      summary: Create tutor session
+      description: Create a new AI tutor session for a course and optional current lesson.
+      operationId: createTutorSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTutorSessionRequest'
+      responses:
+        '201':
+          description: Tutor session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTutorSessionSuccessResponse'
+
+  /tutor/sessions/{sessionId}:
+    get:
+      tags:
+        - Tutor
+      summary: Get tutor session detail
+      description: Return a tutor session with its messages and citations.
+      operationId: getTutorSessionDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tutor session detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorSessionDetailSuccessResponse'
+
+  /tutor/sessions/{sessionId}/messages:
+    post:
+      tags:
+        - Tutor
+      summary: Send tutor message
+      description: Send a message to AI Tutor and receive a grounded answer with citations.
+      operationId: sendTutorMessage
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendTutorMessageRequest'
+      responses:
+        '200':
+          description: Tutor message saved with response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendTutorMessageSuccessResponse'
+
+  /tutor/sessions/{sessionId}/messages/stream:
+    post:
+      tags:
+        - Tutor
+      summary: Stream tutor message
+      description: Stream tutor answer and citations using Server-Sent Events.
+      operationId: sendTutorMessageStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendTutorMessageRequest'
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
 
 components:
   parameters:
@@ -4213,6 +4651,333 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AdminCourseDetailResponseData'
+
+    CourseStudentProgressStatus:
+      type: string
+      enum:
+        - not_started
+        - in_progress
+        - completed
+
+    AdminCourseStudentProfile:
+      type: object
+      required:
+        - id
+        - fullName
+        - email
+        - avatarMediaId
+        - avatarUrl
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        avatarMediaId:
+          type: string
+          format: uuid
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - pending_verification
+            - active
+            - banned
+
+    AdminCourseStudentItem:
+      type: object
+      required:
+        - student
+        - source
+        - enrolledAt
+        - completedLessons
+        - totalLessons
+        - progressPercentage
+        - lastLearnedAt
+        - progressStatus
+        - assessmentProgress
+        - latestActivityAt
+      properties:
+        student:
+          $ref: '#/components/schemas/AdminCourseStudentProfile'
+        source:
+          type: string
+          enum:
+            - payment
+            - manual
+            - free
+        enrolledAt:
+          type: string
+          format: date-time
+        completedLessons:
+          type: integer
+          minimum: 0
+        totalLessons:
+          type: integer
+          minimum: 0
+        progressPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lastLearnedAt:
+          type: string
+          format: date-time
+          nullable: true
+        progressStatus:
+          $ref: '#/components/schemas/CourseStudentProgressStatus'
+        assessmentProgress:
+          type: object
+          required:
+            [
+              completedAssessments,
+              totalAssessments,
+              notStartedAssessments,
+              doingAssessments,
+              pendingGradingAssessments,
+              bestScore,
+              latestScore
+            ]
+          properties:
+            completedAssessments: { type: integer, minimum: 0 }
+            totalAssessments: { type: integer, minimum: 0 }
+            notStartedAssessments: { type: integer, minimum: 0 }
+            doingAssessments: { type: integer, minimum: 0 }
+            pendingGradingAssessments: { type: integer, minimum: 0 }
+            bestScore: { type: string, nullable: true }
+            latestScore: { type: string, nullable: true }
+        latestActivityAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ListAdminCourseStudentsResponseData:
+      type: object
+      required:
+        - items
+        - pagination
+        - stats
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminCourseStudentItem'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+        stats:
+          type: object
+          required:
+            - total
+            - notStarted
+            - inProgress
+            - completed
+          properties:
+            total:
+              type: integer
+            notStarted:
+              type: integer
+            inProgress:
+              type: integer
+            completed:
+              type: integer
+
+    ListAdminCourseStudentsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListAdminCourseStudentsResponseData'
+
+    AdminCourseStudentLessonProgress:
+      type: object
+      required:
+        - id
+        - title
+        - type
+        - orderIndex
+        - status
+        - progressPercentage
+        - watchedSeconds
+        - durationSec
+        - completedAt
+        - lastLearnedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum:
+            - video
+            - quiz
+            - document
+        orderIndex:
+          type: integer
+        status:
+          $ref: '#/components/schemas/CourseStudentProgressStatus'
+        progressPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        watchedSeconds:
+          type: integer
+          minimum: 0
+        durationSec:
+          type: integer
+          minimum: 0
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastLearnedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AdminCourseStudentProgressResponseData:
+      type: object
+      required:
+        - student
+        - enrollment
+        - course
+        - summary
+        - chapters
+        - assessments
+      properties:
+        student:
+          $ref: '#/components/schemas/AdminCourseStudentProfile'
+        enrollment:
+          type: object
+          required:
+            - source
+            - enrolledAt
+          properties:
+            source:
+              type: string
+              enum:
+                - payment
+                - manual
+                - free
+            enrolledAt:
+              type: string
+              format: date-time
+        course:
+          type: object
+          required:
+            - id
+            - title
+            - totalLessons
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            totalLessons:
+              type: integer
+        summary:
+          type: object
+          required:
+            - completedLessons
+            - progressPercentage
+            - lastLearnedAt
+            - progressStatus
+          properties:
+            completedLessons:
+              type: integer
+            progressPercentage:
+              type: integer
+              minimum: 0
+              maximum: 100
+            lastLearnedAt:
+              type: string
+              format: date-time
+              nullable: true
+            progressStatus:
+              $ref: '#/components/schemas/CourseStudentProgressStatus'
+        chapters:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - title
+              - orderIndex
+              - completedLessons
+              - totalLessons
+              - lessons
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              orderIndex:
+                type: integer
+              completedLessons:
+                type: integer
+              totalLessons:
+                type: integer
+              lessons:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminCourseStudentLessonProgress'
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminCourseStudentAssessmentProgress'
+
+    AdminCourseStudentAssessmentProgress:
+      type: object
+      required:
+        [
+          id,
+          title,
+          status,
+          attemptCount,
+          maxAttempts,
+          maxScore,
+          bestScore,
+          latestScore,
+          latestSubmissionId,
+          latestSubmitTime,
+          latestActivityAt,
+          openTime,
+          closeTime
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        status:
+          $ref: '#/components/schemas/AssessmentParticipantStatus'
+        attemptCount: { type: integer, minimum: 0 }
+        maxAttempts: { type: integer, minimum: 1, nullable: true }
+        maxScore: { type: string }
+        bestScore: { type: string, nullable: true }
+        latestScore: { type: string, nullable: true }
+        latestSubmissionId: { type: string, format: uuid, nullable: true }
+        latestSubmitTime: { type: string, format: date-time, nullable: true }
+        latestActivityAt: { type: string, format: date-time, nullable: true }
+        openTime: { type: string, format: date-time, nullable: true }
+        closeTime: { type: string, format: date-time, nullable: true }
+
+    AdminCourseStudentProgressSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminCourseStudentProgressResponseData'
 
     ListAdminCoursesResponseData:
       type: object
@@ -6185,6 +6950,9 @@ components:
         finalScore:
           type: string
           nullable: true
+        violationCount:
+          type: integer
+          minimum: 0
         answers:
           type: object
           properties:
@@ -6273,6 +7041,223 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AssessmentSubmission'
+
+    SubmissionViolationResponseData:
+      type: object
+      required: [violationCount, autoSubmitted, submission]
+      properties:
+        violationCount:
+          type: integer
+          minimum: 0
+        autoSubmitted:
+          type: boolean
+        submission:
+          allOf:
+            - $ref: '#/components/schemas/AssessmentSubmission'
+          nullable: true
+
+    SubmissionViolationSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SubmissionViolationResponseData'
+
+    SubmissionResultOutcome:
+      type: string
+      enum: [correct, incorrect, partial, unanswered]
+
+    StudentSubmissionResultOption:
+      type: object
+      required: [id, content, orderIndex, isSelected, isCorrect]
+      properties:
+        id: { type: string, format: uuid }
+        content: { nullable: true }
+        orderIndex: { type: integer }
+        isSelected: { type: boolean }
+        isCorrect: { type: boolean }
+
+    StudentSubmissionResultTrueFalseStatement:
+      type: object
+      required: [id, content, orderIndex, selectedValue, correctValue, isCorrect]
+      properties:
+        id: { type: string, format: uuid }
+        content: { nullable: true }
+        orderIndex: { type: integer }
+        selectedValue: { type: boolean, nullable: true }
+        correctValue: { type: boolean }
+        isCorrect: { type: boolean, nullable: true }
+
+    StudentSubmissionResultItem:
+      type: object
+      required:
+        [
+          id,
+          questionNumber,
+          itemType,
+          maxScore,
+          pointEarned,
+          outcome,
+          content,
+          explanation,
+          options,
+          trueFalseStatements,
+          numericAnswer,
+          essayAnswer
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        questionNumber: { type: integer, minimum: 1 }
+        itemType: { $ref: '#/components/schemas/AssessmentItemType' }
+        maxScore: { type: string }
+        pointEarned: { type: string }
+        outcome: { $ref: '#/components/schemas/SubmissionResultOutcome' }
+        content: { nullable: true }
+        explanation:
+          nullable: true
+          description: Builder explanation revealed only after final grading.
+        options:
+          type: array
+          items: { $ref: '#/components/schemas/StudentSubmissionResultOption' }
+        trueFalseStatements:
+          type: array
+          items: { $ref: '#/components/schemas/StudentSubmissionResultTrueFalseStatement' }
+        numericAnswer:
+          type: object
+          nullable: true
+          properties:
+            submittedValue: { type: string, nullable: true }
+            correctValue: { type: string, nullable: true }
+        essayAnswer:
+          type: object
+          nullable: true
+          properties:
+            answer: { type: string }
+            teacherScore: { type: string, nullable: true }
+            teacherNote: { type: string, nullable: true }
+
+    StudentSubmissionResult:
+      type: object
+      required: [id, status, reviewAvailable, assessment, attempt, summary, sections]
+      properties:
+        id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/SubmissionStatus' }
+        reviewAvailable: { type: boolean }
+        assessment:
+          type: object
+          required:
+            [id, title, subject, grade, type, gradingType, sourceMediaId, sourceMediaUrl, maxScore]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+            subject: { $ref: '#/components/schemas/Subject' }
+            grade: { type: integer }
+            type: { type: string, enum: [quiz, exam] }
+            gradingType: { type: string, enum: [auto, manual, mixed] }
+            sourceMediaId: { type: string, format: uuid, nullable: true }
+            sourceMediaUrl: { type: string, nullable: true }
+            maxScore: { type: string }
+        attempt:
+          type: object
+          required: [attemptNumber, startTime, submitTime, autoScore, finalScore]
+          properties:
+            attemptNumber: { type: integer, minimum: 1 }
+            startTime: { type: string, format: date-time }
+            submitTime: { type: string, format: date-time, nullable: true }
+            autoScore: { type: string, nullable: true }
+            finalScore: { type: string, nullable: true }
+        summary:
+          type: object
+          nullable: true
+          properties:
+            totalItems: { type: integer, minimum: 0 }
+            correctItems: { type: integer, minimum: 0 }
+            partialItems: { type: integer, minimum: 0 }
+            incorrectItems: { type: integer, minimum: 0 }
+            unansweredItems: { type: integer, minimum: 0 }
+        sections:
+          type: array
+          items:
+            type: object
+            required: [id, title, description, orderIndex, items]
+            properties:
+              id: { type: string, format: uuid }
+              title: { type: string }
+              description: { type: string, nullable: true }
+              orderIndex: { type: integer }
+              items:
+                type: array
+                items: { $ref: '#/components/schemas/StudentSubmissionResultItem' }
+
+    StudentSubmissionResultSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/StudentSubmissionResult' }
+
+    NotificationType:
+      type: string
+      enum: [new_lesson, graded, new_assignment, upcoming_assessment, essay_submission]
+
+    Notification:
+      type: object
+      required: [id, type, title, content, linkUrl, isRead, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/NotificationType' }
+        title: { type: string }
+        content: { type: string, nullable: true }
+        linkUrl: { type: string, nullable: true }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    NotificationListSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [items, unreadCount, pagination]
+              properties:
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/Notification' }
+                unreadCount: { type: integer, minimum: 0 }
+                pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+    NotificationUnreadCountSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                unreadCount: { type: integer, minimum: 0 }
+
+    NotificationReadSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                notificationId: { type: string, format: uuid }
+                isRead: { type: boolean, enum: [true] }
+
+    NotificationReadAllSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                updatedCount: { type: integer, minimum: 0 }
 
     SaveAnswer:
       oneOf:
@@ -6410,6 +7395,7 @@ components:
           type: string
           enum:
             - submitted
+            - auto_submitted
         submitTime:
           type: string
           format: date-time
@@ -6437,6 +7423,142 @@ components:
           type: integer
         gradedEssayCount:
           type: integer
+
+    AssessmentParticipantStatus:
+      type: string
+      enum: [not_started, doing, pending_grading, completed]
+
+    AdminAssessmentResultParticipant:
+      type: object
+      required:
+        [
+          student,
+          status,
+          attemptCount,
+          bestScore,
+          latestScore,
+          latestSubmissionId,
+          latestSubmissionStatus,
+          latestSubmitTime,
+          latestActivityAt
+        ]
+      properties:
+        student:
+          $ref: '#/components/schemas/AdminCourseStudentProfile'
+        status:
+          $ref: '#/components/schemas/AssessmentParticipantStatus'
+        attemptCount: { type: integer, minimum: 0 }
+        bestScore: { type: string, nullable: true }
+        latestScore: { type: string, nullable: true }
+        latestSubmissionId: { type: string, format: uuid, nullable: true }
+        latestSubmissionStatus:
+          allOf:
+            - $ref: '#/components/schemas/SubmissionStatus'
+          nullable: true
+        latestSubmitTime: { type: string, format: date-time, nullable: true }
+        latestActivityAt: { type: string, format: date-time, nullable: true }
+
+    AdminAssessmentResultsResponseData:
+      type: object
+      required: [assessment, stats, items, pagination]
+      properties:
+        assessment:
+          type: object
+          required:
+            [id, title, subject, grade, type, gradingType, timeLimitMinutes, maxScore, placement]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+            subject: { $ref: '#/components/schemas/Subject' }
+            grade: { type: integer }
+            type: { type: string, enum: [exam, quiz] }
+            gradingType: { type: string, enum: [auto, manual, mixed] }
+            timeLimitMinutes: { type: integer, nullable: true }
+            maxScore: { type: string }
+            placement:
+              type: object
+              nullable: true
+              additionalProperties: true
+        stats:
+          type: object
+          required:
+            [
+              totalStudents,
+              notStarted,
+              doing,
+              pendingGrading,
+              completed,
+              highestScore,
+              lowestScore,
+              averageScore
+            ]
+          properties:
+            totalStudents: { type: integer }
+            notStarted: { type: integer }
+            doing: { type: integer }
+            pendingGrading: { type: integer }
+            completed: { type: integer }
+            highestScore: { type: string, nullable: true }
+            lowestScore: { type: string, nullable: true }
+            averageScore: { type: string, nullable: true }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAssessmentResultParticipant'
+        pagination:
+          $ref: '#/components/schemas/OffsetPagination'
+
+    AdminAssessmentResultsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminAssessmentResultsResponseData'
+
+    AdminAssessmentResultAttempt:
+      type: object
+      required:
+        [
+          id,
+          attemptNumber,
+          status,
+          startTime,
+          submitTime,
+          updatedAt,
+          autoScore,
+          finalScore,
+          violationCount
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        attemptNumber: { type: integer, minimum: 1 }
+        status: { $ref: '#/components/schemas/SubmissionStatus' }
+        startTime: { type: string, format: date-time }
+        submitTime: { type: string, format: date-time, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        autoScore: { type: string, nullable: true }
+        finalScore: { type: string, nullable: true }
+        violationCount: { type: integer, minimum: 0 }
+
+    AdminAssessmentStudentAttemptsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [assessment, participant, attempts]
+              properties:
+                assessment:
+                  type: object
+                  additionalProperties: true
+                participant:
+                  $ref: '#/components/schemas/AdminAssessmentResultParticipant'
+                attempts:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AdminAssessmentResultAttempt'
 
     ListGradingSubmissionsResponseData:
       type: object
@@ -7103,6 +8225,169 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/CompleteUploadResponseData'
+
+    TutorSessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        studentId:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        lastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TutorCitation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        chunkId:
+          type: string
+          format: uuid
+        rank:
+          type: integer
+        score:
+          type: number
+          nullable: true
+        quote:
+          type: string
+          nullable: true
+        sourceTitle:
+          type: string
+          nullable: true
+
+    TutorMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        provider:
+          type: string
+          nullable: true
+        modelName:
+          type: string
+          nullable: true
+        latencyMs:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/TutorCitation'
+
+    TutorSessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/TutorSessionSummary'
+        - type: object
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/TutorMessage'
+
+    CreateTutorSessionRequest:
+      type: object
+      required:
+        - courseId
+      additionalProperties: false
+      properties:
+        courseId:
+          type: string
+          format: uuid
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+
+    SendTutorMessageRequest:
+      type: object
+      required:
+        - message
+      additionalProperties: false
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        lessonId:
+          type: string
+          format: uuid
+          nullable: true
+
+    ListTutorSessionsResponseData:
+      type: array
+      items:
+        $ref: '#/components/schemas/TutorSessionSummary'
+
+    ListTutorSessionsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ListTutorSessionsResponseData'
+
+    CreateTutorSessionSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/TutorSessionSummary'
+
+    TutorSessionDetailSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/TutorSessionDetail'
+
+    SendTutorMessageResponseData:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/TutorSessionSummary'
+        message:
+          $ref: '#/components/schemas/TutorMessage'
+
+    SendTutorMessageSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SendTutorMessageResponseData'
 
     SuccessResponse:
       type: object

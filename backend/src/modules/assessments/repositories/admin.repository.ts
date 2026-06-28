@@ -21,19 +21,12 @@ import {
 
 import { prisma } from '~/config/db'
 
-import type {
-  CreateAssessmentItemDto,
-  CreateAssessmentDto,
-  CreatePlacementDto
-} from '../dto'
+import type { CreateAssessmentItemDto, CreateAssessmentDto, CreatePlacementDto } from '../dto'
 import type {
   AdminAssessmentRepositoryPort,
   ListAdminAssessmentsFilters
 } from '../ports/admin-assessment-repository.port'
-import {
-  placementAccessInclude,
-  answerInclude
-} from './shared'
+import { placementAccessInclude, answerInclude } from './shared'
 import {
   toDecimal,
   toExamOptionLabel,
@@ -88,10 +81,7 @@ const buildTeacherFilters = (teacherId: string): Prisma.AssessmentWhereInput => 
     {
       placements: {
         some: {
-          OR: [
-            { course: { teacherId } },
-            { lesson: { chapter: { course: { teacherId } } } }
-          ]
+          OR: [{ course: { teacherId } }, { lesson: { chapter: { course: { teacherId } } } }]
         }
       }
     }
@@ -182,7 +172,9 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
 
     const where: Prisma.SubmissionWhereInput = {
       assessmentId: data.assessmentId,
-      status: SubmissionStatus.submitted,
+      status: {
+        in: [SubmissionStatus.submitted, SubmissionStatus.auto_submitted]
+      },
       assessment: {
         gradingType: {
           in: ['manual', 'mixed']
@@ -505,7 +497,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  findSectionInAssessment(assessmentId: string, sectionId: string): Promise<(AssessmentSection & { items: AssessmentItem[] }) | null> {
+  findSectionInAssessment(
+    assessmentId: string,
+    sectionId: string
+  ): Promise<(AssessmentSection & { items: AssessmentItem[] }) | null> {
     return prisma.assessmentSection.findFirst({
       where: {
         id: sectionId,
@@ -607,32 +602,46 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
             options:
               section.itemType === AssessmentItemType.mcq
                 ? {
-                    create: 'optionCount' in item
-                      ? Array.from({ length: item.optionCount || 0 }, (_, index) => {
-                          const label = toExamOptionLabel(index)
+                    create:
+                      'optionCount' in item
+                        ? Array.from({ length: item.optionCount || 0 }, (_, index) => {
+                            const label = toExamOptionLabel(index)
 
-                          return {
-                            content: { label, generated: true },
-                            isCorrect: (item.correctOptions || []).includes(label),
-                            orderIndex: index
-                          }
-                        })
-                      : ((item as AssessmentItemUnion).options || []).map((option: { content?: string | null; isCorrect?: boolean }, index: number) => ({
-                          content: { label: option.content ?? '' },
-                          isCorrect: option.isCorrect ?? false,
-                          orderIndex: index
-                        }))
+                            return {
+                              content: { label, generated: true },
+                              isCorrect: (item.correctOptions || []).includes(label),
+                              orderIndex: index
+                            }
+                          })
+                        : ((item as AssessmentItemUnion).options || []).map(
+                            (
+                              option: { content?: string | null; isCorrect?: boolean },
+                              index: number
+                            ) => ({
+                              content: { label: option.content ?? '' },
+                              isCorrect: option.isCorrect ?? false,
+                              orderIndex: index
+                            })
+                          )
                   }
                 : section.itemType === AssessmentItemType.true_false
                   ? {
-                      create: ((item as AssessmentItemUnion).statements || []).map((statement: { label?: string | null; correctValue?: boolean }, index: number) => ({
-                        content: {
-                          label: 'label' in statement && statement.label ? statement.label : `Mệnh đề ${index + 1}`,
-                          generated: !('label' in statement && statement.label)
-                        },
-                        isCorrect: statement.correctValue ?? false,
-                        orderIndex: index
-                      }))
+                      create: ((item as AssessmentItemUnion).statements || []).map(
+                        (
+                          statement: { label?: string | null; correctValue?: boolean },
+                          index: number
+                        ) => ({
+                          content: {
+                            label:
+                              'label' in statement && statement.label
+                                ? statement.label
+                                : `Mệnh đề ${index + 1}`,
+                            generated: !('label' in statement && statement.label)
+                          },
+                          isCorrect: statement.correctValue ?? false,
+                          orderIndex: index
+                        })
+                      )
                     }
                   : undefined
           }
@@ -711,7 +720,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
         value?: number
         correctOptions?: string[]
       } | null
-      const currentScoringConfig = existing.scoringConfig as { mode?: string; rubric?: unknown } | null
+      const currentScoringConfig = existing.scoringConfig as {
+        mode?: string
+        rubric?: unknown
+      } | null
       const mergedItem = {
         topicId: existing.topicId,
         difficulty: existing.difficulty,
@@ -719,26 +731,29 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
         explanation: typeof existing.explanation === 'string' ? existing.explanation : null,
         contentLabel: currentContent?.label ?? '',
         mode: currentScoringConfig?.mode ?? 'single',
-        options: existing.question?.options.map((option) => ({
-          content:
-            typeof option.content === 'object' && option.content && 'label' in option.content
-              ? String((option.content as { label?: unknown }).label ?? '')
-              : String(option.content ?? ''),
-          isCorrect: option.isCorrect
-        })) ?? [],
+        options:
+          existing.question?.options.map((option) => ({
+            content:
+              typeof option.content === 'object' && option.content && 'label' in option.content
+                ? String((option.content as { label?: unknown }).label ?? '')
+                : String(option.content ?? ''),
+            isCorrect: option.isCorrect
+          })) ?? [],
         optionCount: existing.question?.options.length ?? 0,
         correctOptions:
           currentCorrectAnswer?.correctOptions ??
           existing.question?.options
             .filter((option) => option.isCorrect)
-            .map((option) => toExamOptionLabel(option.orderIndex)) ?? [],
-        statements: existing.question?.options.map((option) => ({
-          label:
-            typeof option.content === 'object' && option.content && 'label' in option.content
-              ? String((option.content as { label?: unknown }).label ?? '')
-              : String(option.content ?? ''),
-          correctValue: option.isCorrect
-        })) ?? [],
+            .map((option) => toExamOptionLabel(option.orderIndex)) ??
+          [],
+        statements:
+          existing.question?.options.map((option) => ({
+            label:
+              typeof option.content === 'object' && option.content && 'label' in option.content
+                ? String((option.content as { label?: unknown }).label ?? '')
+                : String(option.content ?? ''),
+            correctValue: option.isCorrect
+          })) ?? [],
         correctAnswer: currentCorrectAnswer?.value,
         rubric: currentScoringConfig?.rubric,
         ...data.item
@@ -774,7 +789,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
       if (
         existing.questionId &&
         (itemType === AssessmentItemType.mcq || itemType === AssessmentItemType.true_false) &&
-        ('options' in data.item || 'optionCount' in data.item || 'correctOptions' in data.item || 'statements' in data.item)
+        ('options' in data.item ||
+          'optionCount' in data.item ||
+          'correctOptions' in data.item ||
+          'statements' in data.item)
       ) {
         await tx.questionOption.deleteMany({
           where: {
@@ -799,12 +817,14 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
           } else {
             const quizItem = mergedItem as AssessmentItemUnion
             await tx.questionOption.createMany({
-              data: (quizItem.options || []).map((option: { content?: string | null; isCorrect?: boolean }, index: number) => ({
-                questionId: existing.questionId!,
-                content: { label: option.content ?? '' },
-                isCorrect: option.isCorrect ?? false,
-                orderIndex: index
-              }))
+              data: (quizItem.options || []).map(
+                (option: { content?: string | null; isCorrect?: boolean }, index: number) => ({
+                  questionId: existing.questionId!,
+                  content: { label: option.content ?? '' },
+                  isCorrect: option.isCorrect ?? false,
+                  orderIndex: index
+                })
+              )
             })
           }
         }
@@ -812,15 +832,20 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
         if (itemType === AssessmentItemType.true_false && 'statements' in data.item) {
           const tfItem = mergedItem as AssessmentItemUnion
           await tx.questionOption.createMany({
-            data: (tfItem.statements || []).map((statement: { label?: string | null; correctValue?: boolean }, index: number) => ({
-              questionId: existing.questionId!,
-              content: {
-                label: 'label' in statement && statement.label ? statement.label : `Mệnh đề ${index + 1}`,
-                generated: !('label' in statement && statement.label)
-              },
-              isCorrect: statement.correctValue ?? false,
-              orderIndex: index
-            }))
+            data: (tfItem.statements || []).map(
+              (statement: { label?: string | null; correctValue?: boolean }, index: number) => ({
+                questionId: existing.questionId!,
+                content: {
+                  label:
+                    'label' in statement && statement.label
+                      ? statement.label
+                      : `Mệnh đề ${index + 1}`,
+                  generated: !('label' in statement && statement.label)
+                },
+                isCorrect: statement.correctValue ?? false,
+                orderIndex: index
+              })
+            )
           })
         }
       }
@@ -833,12 +858,19 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
           topicId: data.item.topicId,
           difficulty: data.item.difficulty,
           correctAnswer:
-            'correctAnswer' in data.item || 'correctOptions' in data.item || 'options' in data.item || 'statements' in data.item
+            'correctAnswer' in data.item ||
+            'correctOptions' in data.item ||
+            'options' in data.item ||
+            'statements' in data.item
               ? buildCorrectAnswer(mergedItem, itemType)
               : undefined,
           explanation: 'explanation' in data.item ? buildExplanation(mergedItem) : undefined,
           scoringConfig:
-            'mode' in data.item || 'rubric' in data.item || 'correctOptions' in data.item || 'options' in data.item || 'statements' in data.item
+            'mode' in data.item ||
+            'rubric' in data.item ||
+            'correctOptions' in data.item ||
+            'options' in data.item ||
+            'statements' in data.item
               ? buildScoringConfig(mergedItem, itemType)
               : undefined,
           maxScore: data.item.maxScore !== undefined ? toDecimal(data.item.maxScore) : undefined
@@ -859,7 +891,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  async deleteSectionItem(assessmentId: string, itemId: string): Promise<{ id: string; questionId: string | null } | null> {
+  async deleteSectionItem(
+    assessmentId: string,
+    itemId: string
+  ): Promise<{ id: string; questionId: string | null } | null> {
     return prisma.$transaction(async (tx) => {
       const item = await tx.assessmentItem.findFirst({
         where: {
@@ -921,7 +956,9 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  createPlacement(data: CreatePlacementDto): Promise<AssessmentPlacement & { assessment: Assessment }> {
+  createPlacement(
+    data: CreatePlacementDto
+  ): Promise<AssessmentPlacement & { assessment: Assessment }> {
     return prisma.assessmentPlacement.create({
       data: {
         assessmentId: data.assessmentId,
@@ -941,7 +978,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  upsertSinglePlacement(assessmentId: string, data: Omit<CreatePlacementDto, 'assessmentId'>): Promise<AssessmentPlacement & { assessment: Assessment }> {
+  upsertSinglePlacement(
+    assessmentId: string,
+    data: Omit<CreatePlacementDto, 'assessmentId'>
+  ): Promise<AssessmentPlacement & { assessment: Assessment }> {
     return prisma.$transaction(async (tx) => {
       await tx.assessmentPlacement.deleteMany({
         where: {
@@ -969,7 +1009,9 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  deleteSinglePlacement(assessmentId: string): Promise<Assessment | { id: string; visibility: AssessmentVisibility } | null> {
+  deleteSinglePlacement(
+    assessmentId: string
+  ): Promise<Assessment | { id: string; visibility: AssessmentVisibility } | null> {
     return prisma.$transaction(async (tx) => {
       await tx.assessmentPlacement.deleteMany({
         where: {
@@ -1031,11 +1073,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  async cloneAssessment(data: {
-    assessmentId: string
-    createdById: string
-    title: string
-  }) {
+  async cloneAssessment(data: { assessmentId: string; createdById: string; title: string }) {
     const source = await prisma.assessment.findFirst({
       where: {
         id: data.assessmentId,
@@ -1172,7 +1210,10 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
-  finalizeSubmission(submissionId: string, finalScore: number | string): Promise<StudentSubmissionComplete> {
+  finalizeSubmission(
+    submissionId: string,
+    finalScore: number | string
+  ): Promise<StudentSubmissionComplete> {
     return prisma.submission.update({
       where: {
         id: submissionId

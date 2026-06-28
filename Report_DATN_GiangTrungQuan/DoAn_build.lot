@@ -1,0 +1,37 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces So sánh một số giải pháp EdTech với hệ thống đề xuất}}{8}{table.caption.8}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Danh sách tổng quan các use case của hệ thống}}{15}{table.2.2}%
+\contentsline {table}{\numberline {2.3}{\ignorespaces Đặc tả use case Quản lý khóa học}}{16}{table.2.3}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces Đặc tả use case Quản lý bài kiểm tra}}{17}{table.2.4}%
+\contentsline {table}{\numberline {2.5}{\ignorespaces Đặc tả use case Mua khóa học}}{19}{table.2.5}%
+\contentsline {table}{\numberline {2.6}{\ignorespaces Đặc tả use case Học bài và xem học liệu}}{20}{table.2.6}%
+\contentsline {table}{\numberline {2.7}{\ignorespaces Đặc tả use case Hỏi AI Tutor}}{21}{table.2.7}%
+\contentsline {table}{\numberline {2.8}{\ignorespaces Đặc tả use case Làm bài kiểm tra}}{22}{table.2.8}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Danh sách các bảng dữ liệu chính}}{57}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Chi tiết bảng \texttt {users}}}{58}{table.4.2}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Chi tiết bảng \texttt {media}}}{59}{table.4.3}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Chi tiết bảng \texttt {courses}}}{59}{table.4.4}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Chi tiết bảng \texttt {chapters}}}{60}{table.4.5}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Chi tiết bảng \texttt {lessons}}}{61}{table.4.6}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Chi tiết bảng \texttt {lesson\_materials}}}{61}{table.4.7}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Chi tiết bảng \texttt {enrollments}}}{62}{table.4.8}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Chi tiết bảng \texttt {orders}}}{62}{table.4.9}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces Chi tiết bảng \texttt {payments}}}{63}{table.4.10}%
+\contentsline {table}{\numberline {4.11}{\ignorespaces Chi tiết bảng \texttt {assessments}}}{63}{table.4.11}%
+\contentsline {table}{\numberline {4.12}{\ignorespaces Chi tiết bảng \texttt {assessment\_placements}}}{64}{table.4.12}%
+\contentsline {table}{\numberline {4.13}{\ignorespaces Chi tiết bảng \texttt {assessment\_items}}}{65}{table.4.13}%
+\contentsline {table}{\numberline {4.14}{\ignorespaces Chi tiết bảng \texttt {submissions}}}{65}{table.4.14}%
+\contentsline {table}{\numberline {4.15}{\ignorespaces Chi tiết bảng \texttt {knowledge\_chunks}}}{66}{table.4.15}%
+\contentsline {table}{\numberline {4.16}{\ignorespaces Danh sách thư viện và công cụ sử dụng}}{67}{table.4.16}%
+\contentsline {table}{\numberline {4.17}{\ignorespaces Thống kê quy mô mã nguồn của hệ thống}}{70}{table.caption.29}%
+\contentsline {table}{\numberline {4.18}{\ignorespaces Test case cho chức năng đăng nhập}}{75}{table.4.18}%
+\contentsline {table}{\numberline {4.19}{\ignorespaces Test case cho chức năng mua khóa học}}{76}{table.4.19}%
+\contentsline {table}{\numberline {4.20}{\ignorespaces Test case cho chức năng học bài và hỏi AI}}{77}{table.4.20}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Các nhóm kết quả đối chiếu giao dịch thanh toán}}{96}{table.caption.36}%
+\addvspace {10\p@ }
+\contentsfinish 
+\contentsfinish 

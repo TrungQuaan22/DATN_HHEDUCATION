@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { SUBJECT_LABELS } from "@/types/common";
 import { CourseSummary } from "../types";
 import { formatVND } from "@/lib/utils/format-money";
-import { Star, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { getCatalogCourse } from "@/features/courses/api";
 import { useCartStore } from "@/stores/cart-store";
 import { toast } from "@/stores/toast-store";
@@ -56,9 +56,6 @@ export default function CourseCard({
     course.salePrice && course.price
       ? Math.round(((course.price - course.salePrice) / course.price) * 100)
       : 0;
-
-  // Mock rating fallback
-  const rating = 4.8;
 
   const aspectClass = aspectRatio === "video" ? "aspect-video" : "aspect-[3/4]";
   const courseHref = `/courses/${course.slug}`;
@@ -119,18 +116,11 @@ export default function CourseCard({
       {/* Info Body */}
       <div className="p-6 flex flex-col flex-grow justify-between">
         <div>
-          {/* Grade & Rating Row */}
-          <div className="flex justify-between items-center mb-2.5">
+          {/* Grade and lesson count */}
+          <div className="mb-2.5">
             <span className="text-xs font-bold text-muted-taupe uppercase">
               Khối {course.grade} • {course.totalLessons || 0} bài học
             </span>
-            <div className="flex items-center gap-1 text-accent-orange">
-              <Star
-                size={13}
-                className="fill-accent-orange stroke-accent-orange"
-              />
-              <span className="text-xs font-bold">{rating}</span>
-            </div>
           </div>
 
           {/* Title */}
@@ -189,7 +179,9 @@ export default function CourseCard({
                   ? "bg-brand-pink/10 border-brand-pink text-brand-pink hover:bg-brand-pink hover:text-white"
                   : "bg-off-black border-border-dark text-cream hover:bg-brand-pink hover:text-white hover:border-brand-pink"
               }`}
-              title={isAlreadyInCart ? "Đã có trong giỏ hàng" : "Thêm vào giỏ hàng"}
+              title={
+                isAlreadyInCart ? "Đã có trong giỏ hàng" : "Thêm vào giỏ hàng"
+              }
             >
               <ShoppingCart size={18} />
             </button>

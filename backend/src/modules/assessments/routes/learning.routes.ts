@@ -8,7 +8,9 @@ import { validateRequest } from '~/common/middlewares/validate-request'
 
 import {
   getAssessmentWorkspaceController,
+  getSubmissionResultController,
   listStudentAssessmentsController,
+  recordViolationController,
   saveAnswersController,
   startAttemptController,
   submitAttemptController
@@ -20,6 +22,7 @@ import {
   placementWorkspaceSchema,
   saveAnswersSchema,
   startAttemptSchema,
+  submissionIdSchema,
   submitAttemptSchema
 } from '../validators/assessment.validator'
 
@@ -39,6 +42,14 @@ learningAssessmentRoutes.get(
   requireRole(UserRole.student),
   validateRequest(placementWorkspaceSchema),
   asyncHandler(getAssessmentWorkspaceController)
+)
+
+learningAssessmentRoutes.get(
+  '/assessment-submissions/:submissionId/result',
+  requireAuth,
+  requireRole(UserRole.student),
+  validateRequest(submissionIdSchema),
+  asyncHandler(getSubmissionResultController)
 )
 
 learningAssessmentRoutes.get(
@@ -71,4 +82,12 @@ learningAssessmentRoutes.post(
   requireRole(UserRole.student),
   validateRequest(submitAttemptSchema),
   asyncHandler(submitAttemptController)
+)
+
+learningAssessmentRoutes.post(
+  '/assessment-submissions/:submissionId/violations',
+  requireAuth,
+  requireRole(UserRole.student),
+  validateRequest(submissionIdSchema),
+  asyncHandler(recordViolationController)
 )

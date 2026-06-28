@@ -49,6 +49,14 @@ import {
   updateAssessmentVisibilitySchema,
   upsertPlacementSchema
 } from '../validators/assessment.validator'
+import {
+  getAssessmentStudentAttemptsSchema,
+  listAssessmentResultsSchema
+} from '../validators/admin-assessment-results.validator'
+import {
+  getAssessmentStudentAttemptsController,
+  listAssessmentResultsController
+} from '../controllers/admin-results.controller'
 
 export const adminAssessmentRoutes = Router()
 
@@ -66,6 +74,22 @@ adminAssessmentRoutes.get(
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(assessmentIdSchema),
   asyncHandler(getAdminAssessmentController)
+)
+
+adminAssessmentRoutes.get(
+  '/assessments/:assessmentId/results',
+  requireAuth,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(listAssessmentResultsSchema),
+  asyncHandler(listAssessmentResultsController)
+)
+
+adminAssessmentRoutes.get(
+  '/assessments/:assessmentId/students/:studentId/attempts',
+  requireAuth,
+  requireRole(UserRole.admin, UserRole.teacher),
+  validateRequest(getAssessmentStudentAttemptsSchema),
+  asyncHandler(getAssessmentStudentAttemptsController)
 )
 
 adminAssessmentRoutes.post(

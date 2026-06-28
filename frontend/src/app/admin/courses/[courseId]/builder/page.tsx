@@ -41,7 +41,6 @@ export default function AdminCurriculumBuilderPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <CurriculumBuilderHeader
-        courseTitle={courseInfo?.title || null}
         courseStatus={courseInfo?.status}
         onPublish={handlePublish}
         onArchive={handleArchive}

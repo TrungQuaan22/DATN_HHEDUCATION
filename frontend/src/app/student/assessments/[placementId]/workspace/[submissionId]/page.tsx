@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -13,7 +19,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
-  HelpCircle
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
@@ -22,6 +28,7 @@ import {
   useSaveAnswersMutation,
   useSubmitAttemptMutation,
   useAssessmentWorkspaceQuery,
+  useRecordAssessmentViolationMutation,
 } from "@/features/assessments/hooks";
 import {
   type AssessmentSubmission,
@@ -67,7 +74,10 @@ const isAnswered = (item: RuntimeAssessmentItem, answers: AnswerState) => {
     return answer.selectedOptionIds.length > 0;
   }
   if (answer.type === "true_false") {
-    return Object.keys(answer.selections).length === (item.question?.options.length ?? 0);
+    return (
+      Object.keys(answer.selections).length ===
+      (item.question?.options.length ?? 0)
+    );
   }
   if (answer.type === "numeric") {
     return answer.answerValue.trim().length > 0;
@@ -76,7 +86,10 @@ const isAnswered = (item: RuntimeAssessmentItem, answers: AnswerState) => {
 };
 
 // Helper to convert form answers state to API payload format
-const buildAnswerPayload = (items: RuntimeAssessmentItem[], answers: AnswerState): SaveAnswerPayload[] => {
+const buildAnswerPayload = (
+  items: RuntimeAssessmentItem[],
+  answers: AnswerState,
+): SaveAnswerPayload[] => {
   return items
     .map((item) => {
       const answer = answers[item.id];
@@ -94,10 +107,12 @@ const buildAnswerPayload = (items: RuntimeAssessmentItem[], answers: AnswerState
         return {
           itemId: item.id,
           type: "true_false",
-          selections: Object.entries(answer.selections).map(([optionId, selectedValue]) => ({
-            optionId,
-            selectedValue,
-          })),
+          selections: Object.entries(answer.selections).map(
+            ([optionId, selectedValue]) => ({
+              optionId,
+              selectedValue,
+            }),
+          ),
         } satisfies SaveAnswerPayload;
       }
       if (answer.type === "numeric") {
@@ -123,7 +138,9 @@ const formatTime = (seconds: number) => {
 };
 
 // Build form answers state from a submission's previous answers
-const buildAnswerStateFromSubmission = (submission: AssessmentSubmission): AnswerState => {
+const buildAnswerStateFromSubmission = (
+  submission: AssessmentSubmission,
+): AnswerState => {
   const nextAnswers: AnswerState = {};
   submission.answers?.mcq.forEach((answer) => {
     nextAnswers[answer.itemId] = {
@@ -162,13 +179,12 @@ export default function StudentAssessmentWorkspacePage() {
   const { placementId, submissionId } = params;
 
   // Fetch assessment metadata
-  const { data: assessment, isLoading: isLoadingAssessment } = useLearningAssessmentQuery(placementId);
+  const { data: assessment, isLoading: isLoadingAssessment } =
+    useLearningAssessmentQuery(placementId);
 
   // Fetch attempt workspace (questions, PDF link, etc.)
-  const { data: workspaceData, isLoading: isLoadingWorkspace } = useAssessmentWorkspaceQuery(
-    placementId,
-    submissionId,
-  );
+  const { data: workspaceData, isLoading: isLoadingWorkspace } =
+    useAssessmentWorkspaceQuery(placementId, submissionId);
 
   const workspaceItems = useMemo(() => {
     return workspaceData?.sections?.flatMap((section) => section.items) || [];
@@ -215,7 +231,11 @@ export default function StudentAssessmentWorkspacePage() {
     onConfirm: () => {},
   });
 
-  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+  ) => {
     setConfirmConfig({
       isOpen: true,
       title,
@@ -242,12 +262,18 @@ export default function StudentAssessmentWorkspacePage() {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
 
   // Mutations
-  const saveAnswersMutation = useSaveAnswersMutation();
-  const submitAttemptMutation = useSubmitAttemptMutation();
+  const { mutateAsync: saveAnswers } = useSaveAnswersMutation();
+  const { mutateAsync: submitAttempt } = useSubmitAttemptMutation();
+  const { mutateAsync: recordViolation } =
+    useRecordAssessmentViolationMutation();
 
   // Sync remaining time from workspace query
   useEffect(() => {
-    if (workspaceData && workspaceData.timeRemainingSeconds !== undefined && workspaceData.timeRemainingSeconds !== null) {
+    if (
+      workspaceData &&
+      workspaceData.timeRemainingSeconds !== undefined &&
+      workspaceData.timeRemainingSeconds !== null
+    ) {
       setTimeLeft(workspaceData.timeRemainingSeconds);
     }
   }, [workspaceData]);
@@ -264,7 +290,8 @@ export default function StudentAssessmentWorkspacePage() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = "Bạn chưa lưu các thay đổi của bài làm. Bạn có chắc chắn muốn rời đi?";
+        e.returnValue =
+          "Bạn chưa lưu các thay đổi của bài làm. Bạn có chắc chắn muốn rời đi?";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -277,11 +304,44 @@ export default function StudentAssessmentWorkspacePage() {
       const subId = workspaceData.submission.id;
       if (subId !== lastLoadedSubmissionId.current) {
         setAnswers(buildAnswerStateFromSubmission(workspaceData.submission));
+        const savedViolationCount =
+          workspaceData.submission.violationCount ?? 0;
+        setViolationCount(savedViolationCount);
+        violationCountRef.current = savedViolationCount;
         setIsDirty(false);
         lastLoadedSubmissionId.current = subId;
       }
     }
   }, [workspaceData]);
+
+  // Auto-submit when time is up or on extreme anti-cheat violation
+  const handleAutoSubmit = useCallback(async () => {
+    toast.warning("Hệ thống đang tự động nộp bài làm của bạn.");
+    try {
+      const payload = buildAnswerPayload(workspaceItems, answersRef.current);
+      if (payload.length > 0) {
+        await saveAnswers({
+          submissionId,
+          answers: payload,
+        });
+      }
+      await submitAttempt(submissionId);
+      setIsDirty(false);
+      toast.success("Đã tự động nộp bài thành công!");
+      router.push(`/student/assessments/${placementId}`);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Vui lòng thử lại.";
+      toast.error(`Lỗi tự động nộp bài: ${message}`);
+    }
+  }, [
+    placementId,
+    router,
+    saveAnswers,
+    submissionId,
+    submitAttempt,
+    workspaceItems,
+  ]);
 
   // Handle countdown timer ticking
   useEffect(() => {
@@ -293,7 +353,7 @@ export default function StudentAssessmentWorkspacePage() {
         if (current === null) return null;
         if (current <= 1) {
           clearInterval(timer);
-          handleAutoSubmit();
+          void handleAutoSubmit();
           return 0;
         }
         return current - 1;
@@ -301,47 +361,47 @@ export default function StudentAssessmentWorkspacePage() {
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [timeLeft]);
-
-  // Auto-submit when time is up or on extreme anti-cheat violation
-  const handleAutoSubmit = async () => {
-    toast.warning("Hệ thống đang tự động nộp bài làm của bạn.");
-    try {
-      const payload = buildAnswerPayload(workspaceItems, answersRef.current);
-      if (payload.length > 0) {
-        await saveAnswersMutation.mutateAsync({
-          submissionId,
-          answers: payload,
-        });
-      }
-      await submitAttemptMutation.mutateAsync(submissionId);
-      setIsDirty(false);
-      toast.success("Đã tự động nộp bài thành công!");
-      router.push(`/student/assessments/${placementId}`);
-    } catch (e: any) {
-      toast.error("Lỗi tự động nộp bài: " + (e?.message || "Vui lòng thử lại."));
-    }
-  };
+  }, [handleAutoSubmit, timeLeft]);
 
   // Helper to handle anti-cheat violations
-  const handleViolation = (reason: string) => {
-    const nextCount = violationCountRef.current + 1;
-    violationCountRef.current = nextCount;
-    setViolationCount(nextCount);
+  const handleViolation = useCallback(
+    async (reason: string) => {
+      try {
+        const result = await recordViolation(submissionId);
+        violationCountRef.current = Math.max(
+          violationCountRef.current,
+          result.violationCount,
+        );
+        setViolationCount(violationCountRef.current);
 
-    if (nextCount >= 5) {
-      toast.error(`Bạn đã vi phạm quy chế thi 5 lần (${reason}). Hệ thống tự động nộp bài!`, {
-        duration: 8000,
-        id: "violation-autosubmit"
-      });
-      handleAutoSubmit();
-    } else {
-      toast.error(`Cảnh báo vi phạm quy chế (${nextCount}/5): ${reason}. Vi phạm quá 5 lần bài thi sẽ tự động nộp!`, {
-        duration: 6000,
-        id: `violation-warning-${nextCount}`
-      });
-    }
-  };
+        if (result.autoSubmitted) {
+          toast.error(
+            `Bạn đã vi phạm quy chế thi 5 lần (${reason}). Hệ thống đã tự động nộp bài.`,
+            { duration: 8000, id: "violation-autosubmit" },
+          );
+          router.replace(
+            `/student/assessments/${placementId}/results/${submissionId}`,
+          );
+          return;
+        }
+
+        toast.error(
+          `Cảnh báo vi phạm quy chế (${result.violationCount}/5): ${reason}. Đủ 5 lần, backend sẽ tự động nộp bài.`,
+          {
+            duration: 6000,
+            id: `violation-warning-${result.violationCount}`,
+          },
+        );
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Không thể ghi nhận vi phạm.";
+        toast.error(message);
+      }
+    },
+    [placementId, recordViolation, router, submissionId],
+  );
 
   // Fullscreen & Strict Keyboard/Focus Anti-Cheat Hook
   useEffect(() => {
@@ -369,19 +429,19 @@ export default function StudentAssessmentWorkspacePage() {
     // Block right-clicks (context menu)
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      handleViolation("Bấm chuột phải");
+      void handleViolation("Bấm chuột phải");
     };
     document.addEventListener("contextmenu", handleContextMenu);
 
     // Track tab switching and focus loss
     const handleWindowBlur = () => {
-      handleViolation("Thoát khỏi màn hình thi hoặc chuyển ứng dụng");
+      void handleViolation("Thoát khỏi màn hình thi hoặc chuyển ứng dụng");
     };
     window.addEventListener("blur", handleWindowBlur);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        handleViolation("Chuyển tab hoặc ẩn cửa sổ trình duyệt");
+        void handleViolation("Chuyển tab hoặc ẩn cửa sổ trình duyệt");
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -408,14 +468,16 @@ export default function StudentAssessmentWorkspacePage() {
 
       if (hasForbiddenModifier) {
         e.preventDefault();
-        handleViolation(`Sử dụng phím tắt hoặc phím chức năng bị cấm (${e.key})`);
+        void handleViolation(
+          `Sử dụng phím tắt hoặc phím chức năng bị cấm (${e.key})`,
+        );
         return;
       }
 
       // Block other functional keys (e.g. PageUp, F1-F12, Escape)
       if (e.key.length > 1 && !allowedSpecialKeys.includes(e.key)) {
         e.preventDefault();
-        handleViolation(`Nhấn phím chức năng không cho phép (${e.key})`);
+        void handleViolation(`Nhấn phím chức năng không cho phép (${e.key})`);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -423,7 +485,7 @@ export default function StudentAssessmentWorkspacePage() {
     // Prompt user if they exit fullscreen mode
     const handleFSChange = () => {
       if (!document.fullscreenElement) {
-        handleViolation("Thoát khỏi chế độ toàn màn hình");
+        void handleViolation("Thoát khỏi chế độ toàn màn hình");
       }
     };
     document.addEventListener("fullscreenchange", handleFSChange);
@@ -440,13 +502,13 @@ export default function StudentAssessmentWorkspacePage() {
         document.exitFullscreen().catch(() => {});
       }
     };
-  }, [workspaceData]);
+  }, [handleViolation, workspaceData]);
 
   // Save draft answers
   const handleSave = async (isSilent = false) => {
     const payload = buildAnswerPayload(workspaceItems, answers);
     try {
-      await saveAnswersMutation.mutateAsync({
+      await saveAnswers({
         submissionId,
         answers: payload,
       });
@@ -455,9 +517,13 @@ export default function StudentAssessmentWorkspacePage() {
       if (!isSilent) {
         toast.success("Đã lưu nháp bài làm thành công.");
       }
-    } catch (e: any) {
+    } catch (error: unknown) {
       if (!isSilent) {
-        toast.error("Không thể lưu nháp: " + (e?.message || "Vui lòng kiểm tra kết nối mạng."));
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Vui lòng kiểm tra kết nối mạng.";
+        toast.error(`Không thể lưu nháp: ${message}`);
       }
     }
   };
@@ -466,48 +532,48 @@ export default function StudentAssessmentWorkspacePage() {
   const handleSubmit = () => {
     // Validation: check count of unanswered questions
     const totalCount = workspaceItems.length;
-    const answeredCount = workspaceItems.filter((item) => isAnswered(item, answers)).length;
+    const answeredCount = workspaceItems.filter((item) =>
+      isAnswered(item, answers),
+    ).length;
     const unansweredCount = totalCount - answeredCount;
 
-    const confirmMessage = unansweredCount > 0
-      ? `Bạn còn ${unansweredCount} câu hỏi chưa hoàn thành. Bạn có chắc chắn muốn nộp bài làm?`
-      : "Bạn có chắc chắn muốn nộp bài thi? Sau khi nộp, bạn sẽ không thể chỉnh sửa đáp án.";
+    const confirmMessage =
+      unansweredCount > 0
+        ? `Bạn còn ${unansweredCount} câu hỏi chưa hoàn thành. Bạn có chắc chắn muốn nộp bài làm?`
+        : "Bạn có chắc chắn muốn nộp bài thi? Sau khi nộp, bạn sẽ không thể chỉnh sửa đáp án.";
 
-    showConfirm(
-      "Xác nhận nộp bài",
-      confirmMessage,
-      async () => {
-        try {
-          // Save answers one last time
-          const payload = buildAnswerPayload(workspaceItems, answers);
-          if (payload.length > 0) {
-            await saveAnswersMutation.mutateAsync({
-              submissionId,
-              answers: payload,
-            });
-          }
-
-          // Submit attempt
-          await submitAttemptMutation.mutateAsync(submissionId);
-          setIsDirty(false);
-          router.push(`/student/assessments/${placementId}`);
-
-          toast.success("Nộp bài thi thành công!");
-        } catch (e: any) {
-          toast.error("Nộp bài thất bại: " + (e?.message || "Vui lòng thử lại."));
+    showConfirm("Xác nhận nộp bài", confirmMessage, async () => {
+      try {
+        // Save answers one last time
+        const payload = buildAnswerPayload(workspaceItems, answers);
+        if (payload.length > 0) {
+          await saveAnswers({
+            submissionId,
+            answers: payload,
+          });
         }
+
+        // Submit attempt
+        await submitAttempt(submissionId);
+        setIsDirty(false);
+        router.push(`/student/assessments/${placementId}`);
+
+        toast.success("Nộp bài thi thành công!");
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Vui lòng thử lại.";
+        toast.error(`Nộp bài thất bại: ${message}`);
       }
-    );
+    });
   };
 
-
-
-  const assessmentType = workspaceData?.assessment?.type ?? assessment?.assessment?.type;
+  const assessmentType =
+    workspaceData?.assessment?.type ?? assessment?.assessment?.type;
   const isExam = assessmentType === "exam";
 
   // Active items for current Quiz page (3 questions per page)
   const quizPagesCount = Math.ceil(workspaceItems.length / questionsPerPage);
-  
+
   const paginatedItems = useMemo(() => {
     const start = currentPage * questionsPerPage;
     return workspaceItems.slice(start, start + questionsPerPage);
@@ -515,11 +581,14 @@ export default function StudentAssessmentWorkspacePage() {
 
   const totalMaxScore = useMemo(() => {
     if (workspaceItems.length === 0) return 10;
-    return workspaceItems.reduce((sum, item) => sum + Number(item.maxScore || 0), 0);
+    return workspaceItems.reduce(
+      (sum, item) => sum + Number(item.maxScore || 0),
+      0,
+    );
   }, [workspaceItems]);
 
   const totalQuestions = workspaceItems.length;
-  
+
   const answeredCount = useMemo(() => {
     return workspaceItems.filter((item) => isAnswered(item, answers)).length;
   }, [workspaceItems, answers]);
@@ -537,9 +606,12 @@ export default function StudentAssessmentWorkspacePage() {
       <div className="flex min-h-screen bg-brand-dark items-center justify-center">
         <div className="glass-panel p-12 text-center rounded-2xl border border-outline-variant/20 max-w-xl mx-auto space-y-4">
           <AlertTriangle className="mx-auto text-error" size={48} />
-          <h2 className="text-body-lg font-bold text-cream">Không thể tải phòng thi</h2>
+          <h2 className="text-body-lg font-bold text-cream">
+            Không thể tải phòng thi
+          </h2>
           <p className="text-label-md text-muted-text">
-            Không thể khởi chạy phòng thi. Đề thi này không tồn tại hoặc phiên thi đã kết thúc.
+            Không thể khởi chạy phòng thi. Đề thi này không tồn tại hoặc phiên
+            thi đã kết thúc.
           </p>
           <button
             onClick={() => router.push(`/student/assessments/${placementId}`)}
@@ -559,10 +631,13 @@ export default function StudentAssessmentWorkspacePage() {
         <div className="flex items-center gap-3">
           <div>
             <h2 className="font-semibold text-sm text-cream leading-none truncate max-w-[150px] sm:max-w-xs md:max-w-md">
-              {workspaceData?.assessment?.title || assessment?.assessment?.title}
+              {workspaceData?.assessment?.title ||
+                assessment?.assessment?.title}
             </h2>
             <span className="text-xs text-muted-text font-bold uppercase tracking-wider mt-0.5 block">
-              {isExam ? "Phòng thi trực tuyến (PDF)" : `Phòng thi Quiz • Trang ${currentPage + 1}/${quizPagesCount}`}
+              {isExam
+                ? "Phòng thi trực tuyến (PDF)"
+                : `Phòng thi Quiz • Trang ${currentPage + 1}/${quizPagesCount}`}
             </span>
           </div>
         </div>
@@ -575,7 +650,7 @@ export default function StudentAssessmentWorkspacePage() {
               {timeLeft === null ? "Không giới hạn" : formatTime(timeLeft)}
             </span>
           </div>
-          
+
           <button
             onClick={() => handleSave(false)}
             className="border border-outline-variant/60 hover:border-primary text-cream py-1 px-2.5 rounded-lg font-bold text-xs flex items-center gap-1 transition active:scale-95 cursor-pointer bg-surface-container-high"
@@ -597,14 +672,14 @@ export default function StudentAssessmentWorkspacePage() {
       <nav className="bg-deep-black/30 border border-outline-variant/20 rounded-xl py-1.5 px-3 mb-2 flex flex-col gap-1 shrink-0">
         <div className="flex justify-between items-center text-xs">
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-text uppercase tracking-widest font-semibold">Tiến độ làm bài</span>
+            <span className="text-muted-text uppercase tracking-widest font-semibold">
+              Tiến độ làm bài
+            </span>
             <span className="text-muted-text/30">•</span>
             <span className="text-warning font-bold">
-              {lastSavedAt ? (
-                `Đã lưu nháp lúc: ${lastSavedAt.toLocaleTimeString()}`
-              ) : (
-                "Lưu ý: Hãy bấm \"Lưu tạm\" sau mỗi câu trả lời"
-              )}
+              {lastSavedAt
+                ? `Đã lưu nháp lúc: ${lastSavedAt.toLocaleTimeString()}`
+                : 'Lưu ý: Hãy bấm "Lưu tạm" sau mỗi câu trả lời'}
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -613,7 +688,9 @@ export default function StudentAssessmentWorkspacePage() {
                 Vi phạm: {violationCount}/5
               </span>
             )}
-            <span className="text-primary font-bold">{answeredCount}/{totalQuestions} Hoàn thành</span>
+            <span className="text-primary font-bold">
+              {answeredCount}/{totalQuestions} Hoàn thành
+            </span>
           </div>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1.5 no-scrollbar items-center mt-1.5">
@@ -621,7 +698,9 @@ export default function StudentAssessmentWorkspacePage() {
             return (
               <React.Fragment key={section.id}>
                 {sIdx > 0 && (
-                  <span className="text-muted-text/30 px-1 font-bold shrink-0">|</span>
+                  <span className="text-muted-text/30 px-1 font-bold shrink-0">
+                    |
+                  </span>
                 )}
                 {showSectionHeadings && (
                   <span className="text-xs font-extrabold uppercase text-primary tracking-wider shrink-0 bg-primary/10 px-2 py-0.5 rounded border border-primary/20 max-w-fit">
@@ -629,10 +708,15 @@ export default function StudentAssessmentWorkspacePage() {
                   </span>
                 )}
                 {section.items.map((item) => {
-                  const index = workspaceItems.findIndex((x) => x.id === item.id);
+                  const index = workspaceItems.findIndex(
+                    (x) => x.id === item.id,
+                  );
                   if (index === -1) return null;
-                  const isCurrentPage = Math.floor(index / questionsPerPage) === currentPage;
-                  const active = isExam ? index === activeQuestionIndex : isCurrentPage;
+                  const isCurrentPage =
+                    Math.floor(index / questionsPerPage) === currentPage;
+                  const active = isExam
+                    ? index === activeQuestionIndex
+                    : isCurrentPage;
                   const answered = isAnswered(item, answers);
                   return (
                     <button
@@ -643,14 +727,24 @@ export default function StudentAssessmentWorkspacePage() {
                           setActiveQuestionIndex(index);
                           // Scroll the active answer input into view on the right sheet
                           setTimeout(() => {
-                            const element = document.getElementById(`ans-q-${item.id}`);
-                            element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            const element = document.getElementById(
+                              `ans-q-${item.id}`,
+                            );
+                            element?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
                           }, 100);
                         } else {
                           setCurrentPage(Math.floor(index / questionsPerPage));
                           setTimeout(() => {
-                            const element = document.getElementById(`q-${item.id}`);
-                            element?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            const element = document.getElementById(
+                              `q-${item.id}`,
+                            );
+                            element?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
                           }, 100);
                         }
                       }}
@@ -660,10 +754,10 @@ export default function StudentAssessmentWorkspacePage() {
                             ? "bg-primary border-primary text-deep-black font-bold ring-2 ring-primary ring-offset-2 ring-offset-brand-dark shadow-[0_0_6px_rgba(52,211,153,0.5)]"
                             : "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
                           : active && isExam
-                          ? "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
-                          : answered
-                          ? "bg-primary text-deep-black font-bold border-transparent"
-                          : "bg-surface-container-high border-outline-variant/30 text-muted-text hover:border-primary/50"
+                            ? "border-primary bg-primary/20 text-primary font-bold shadow-[0_0_6px_rgba(52,211,153,0.3)]"
+                            : answered
+                              ? "bg-primary text-deep-black font-bold border-transparent"
+                              : "bg-surface-container-high border-outline-variant/30 text-muted-text hover:border-primary/50"
                       }`}
                     >
                       {item.questionNumber}
@@ -720,21 +814,34 @@ export default function StudentAssessmentWorkspacePage() {
                   <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                     <ListChecks size={16} />
                   </div>
-                  <h2 className="font-semibold text-sm text-cream">Phiếu đáp án (Answer Key)</h2>
+                  <h2 className="font-semibold text-sm text-cream">
+                    Phiếu đáp án (Answer Key)
+                  </h2>
                 </div>
-                <span className="text-xs text-muted-text font-bold uppercase">Tổng: {totalQuestions} câu</span>
+                <span className="text-xs text-muted-text font-bold uppercase">
+                  Tổng: {totalQuestions} câu
+                </span>
               </div>
 
               {/* Progress track bar */}
               <div className="px-3.5 py-2 bg-surface-container border-b border-outline-variant/20 shrink-0">
                 <div className="flex justify-between items-center mb-1 text-xs">
-                  <span className="text-muted-text font-semibold">Đã hoàn thành: <span className="text-primary font-bold">{answeredCount}/{totalQuestions}</span></span>
-                  <span className="text-muted-text">Còn lại: {totalQuestions - answeredCount}</span>
+                  <span className="text-muted-text font-semibold">
+                    Đã hoàn thành:{" "}
+                    <span className="text-primary font-bold">
+                      {answeredCount}/{totalQuestions}
+                    </span>
+                  </span>
+                  <span className="text-muted-text">
+                    Còn lại: {totalQuestions - answeredCount}
+                  </span>
                 </div>
                 <div className="w-full h-1 bg-deep-black rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(52,211,153,0.4)]"
-                    style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
+                    style={{
+                      width: `${(answeredCount / totalQuestions) * 100}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -746,155 +853,207 @@ export default function StudentAssessmentWorkspacePage() {
                   const options = item.question?.options || [];
                   const mode = getMcqMode(item);
                   const itemAnswer = answers[item.id];
-                  const currentSelected = itemAnswer?.type === "mcq" ? itemAnswer.selectedOptionIds : [];
+                  const currentSelected =
+                    itemAnswer?.type === "mcq"
+                      ? itemAnswer.selectedOptionIds
+                      : [];
                   const section = sectionByItemId.get(item.id);
-                  const previousSection = idx > 0 ? sectionByItemId.get(workspaceItems[idx - 1].id) : null;
-                  const showHeading = showSectionHeadings && section?.id !== previousSection?.id;
+                  const previousSection =
+                    idx > 0
+                      ? sectionByItemId.get(workspaceItems[idx - 1].id)
+                      : null;
+                  const showHeading =
+                    showSectionHeadings && section?.id !== previousSection?.id;
 
                   return (
                     <React.Fragment key={item.id}>
-                    {showHeading && (
-                      <h3 className="pt-2 text-sm font-bold text-primary">{section?.title}</h3>
-                    )}
-                    <div
-                      id={`ans-q-${item.id}`}
-                      onClick={() => setActiveQuestionIndex(idx)}
-                      className={`p-3 rounded-lg border transition-all ${
-                        isActive
-                          ? "bg-primary/5 border-primary shadow-md"
-                          : "bg-surface-container-high/40 border-outline-variant/20 hover:border-primary/30"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2 border-b border-outline-variant/10 pb-1">
-                        <span className="font-bold text-xs text-cream">Câu {item.questionNumber}</span>
-                        <span className="text-xs text-muted-text uppercase font-bold tracking-wider">
-                          {item.itemType === "mcq" ? "Trắc nghiệm" : item.itemType === "true_false" ? "Đúng / Sai" : item.itemType === "numeric" ? "Điền số" : "Tự luận"}
-                        </span>
-                      </div>
-
-                      {/* Input controls by type */}
-                      {item.itemType === "mcq" && (
-                        <div className="flex flex-wrap gap-2">
-                          {options.map((option, oIdx) => {
-                            const optionChar = String.fromCharCode(65 + oIdx);
-                            const checked = currentSelected.includes(option.id);
-
-                            return (
-                              <button
-                                key={option.id}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAnswers((prev) => {
-                                    const nextSelected = mode === "single"
-                                      ? [option.id]
-                                      : checked
-                                      ? currentSelected.filter((id) => id !== option.id)
-                                      : [...currentSelected, option.id];
-                                    return { ...prev, [item.id]: { type: "mcq", selectedOptionIds: nextSelected } };
-                                  });
-                                  setIsDirty(true);
-                                  setAnswers((prev) => prev); // trigger state update
-                                }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                                  checked
-                                    ? "bg-primary text-deep-black shadow-md font-extrabold"
-                                    : "bg-surface-container border border-outline-variant/30 text-muted-text hover:border-primary"
-                                }`}
-                              >
-                                {optionChar}
-                              </button>
-                            );
-                          })}
-                        </div>
+                      {showHeading && (
+                        <h3 className="pt-2 text-sm font-bold text-primary">
+                          {section?.title}
+                        </h3>
                       )}
+                      <div
+                        id={`ans-q-${item.id}`}
+                        onClick={() => setActiveQuestionIndex(idx)}
+                        className={`p-3 rounded-lg border transition-all ${
+                          isActive
+                            ? "bg-primary/5 border-primary shadow-md"
+                            : "bg-surface-container-high/40 border-outline-variant/20 hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2 border-b border-outline-variant/10 pb-1">
+                          <span className="font-bold text-xs text-cream">
+                            Câu {item.questionNumber}
+                          </span>
+                          <span className="text-xs text-muted-text uppercase font-bold tracking-wider">
+                            {item.itemType === "mcq"
+                              ? "Trắc nghiệm"
+                              : item.itemType === "true_false"
+                                ? "Đúng / Sai"
+                                : item.itemType === "numeric"
+                                  ? "Điền số"
+                                  : "Tự luận"}
+                          </span>
+                        </div>
 
-                      {item.itemType === "true_false" && (
-                        <div className="space-y-1.5">
-                          {options.map((option, oIdx) => {
-                            const selections = itemAnswer?.type === "true_false" ? itemAnswer.selections : {};
-                            const selected = selections[option.id];
+                        {/* Input controls by type */}
+                        {item.itemType === "mcq" && (
+                          <div className="flex flex-wrap gap-2">
+                            {options.map((option, oIdx) => {
+                              const optionChar = String.fromCharCode(65 + oIdx);
+                              const checked = currentSelected.includes(
+                                option.id,
+                              );
 
-                            return (
-                              <div key={option.id} className="flex items-center justify-between text-xs">
-                                <span className="text-on-surface-variant font-medium">
-                                  {String.fromCharCode(97 + oIdx)}) Mệnh đề {oIdx + 1}
-                                </span>
-                                <div className="flex gap-1 bg-surface-container p-0.5 rounded-lg border border-outline-variant/20">
-                                  {[true, false].map((val) => (
-                                    <button
-                                      key={String(val)}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setAnswers((prev) => {
-                                          const prevAnswer = prev[item.id];
-                                          return {
-                                            ...prev,
-                                            [item.id]: {
-                                              type: "true_false",
-                                              selections: {
-                                                ...(prevAnswer?.type === "true_false" ? prevAnswer.selections : {}),
-                                                [option.id]: val,
+                              return (
+                                <button
+                                  key={option.id}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAnswers((prev) => {
+                                      const nextSelected =
+                                        mode === "single"
+                                          ? [option.id]
+                                          : checked
+                                            ? currentSelected.filter(
+                                                (id) => id !== option.id,
+                                              )
+                                            : [...currentSelected, option.id];
+                                      return {
+                                        ...prev,
+                                        [item.id]: {
+                                          type: "mcq",
+                                          selectedOptionIds: nextSelected,
+                                        },
+                                      };
+                                    });
+                                    setIsDirty(true);
+                                    setAnswers((prev) => prev); // trigger state update
+                                  }}
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                                    checked
+                                      ? "bg-primary text-deep-black shadow-md font-extrabold"
+                                      : "bg-surface-container border border-outline-variant/30 text-muted-text hover:border-primary"
+                                  }`}
+                                >
+                                  {optionChar}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {item.itemType === "true_false" && (
+                          <div className="space-y-1.5">
+                            {options.map((option, oIdx) => {
+                              const selections =
+                                itemAnswer?.type === "true_false"
+                                  ? itemAnswer.selections
+                                  : {};
+                              const selected = selections[option.id];
+
+                              return (
+                                <div
+                                  key={option.id}
+                                  className="flex items-center justify-between text-xs"
+                                >
+                                  <span className="text-on-surface-variant font-medium">
+                                    {String.fromCharCode(97 + oIdx)}) Mệnh đề{" "}
+                                    {oIdx + 1}
+                                  </span>
+                                  <div className="flex gap-1 bg-surface-container p-0.5 rounded-lg border border-outline-variant/20">
+                                    {[true, false].map((val) => (
+                                      <button
+                                        key={String(val)}
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setAnswers((prev) => {
+                                            const prevAnswer = prev[item.id];
+                                            return {
+                                              ...prev,
+                                              [item.id]: {
+                                                type: "true_false",
+                                                selections: {
+                                                  ...(prevAnswer?.type ===
+                                                  "true_false"
+                                                    ? prevAnswer.selections
+                                                    : {}),
+                                                  [option.id]: val,
+                                                },
                                               },
-                                            },
-                                          };
-                                        });
-                                        setIsDirty(true);
-                                      }}
-                                      className={`px-2.5 py-0.5 text-xs font-bold rounded-md transition ${
-                                        selected === val
-                                          ? "bg-primary text-deep-black font-extrabold"
-                                          : "text-muted-text hover:text-cream"
-                                      }`}
-                                    >
-                                      {val ? "ĐÚNG" : "SAI"}
-                                    </button>
-                                  ))}
+                                            };
+                                          });
+                                          setIsDirty(true);
+                                        }}
+                                        className={`px-2.5 py-0.5 text-xs font-bold rounded-md transition ${
+                                          selected === val
+                                            ? "bg-primary text-deep-black font-extrabold"
+                                            : "text-muted-text hover:text-cream"
+                                        }`}
+                                      >
+                                        {val ? "ĐÚNG" : "SAI"}
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                              );
+                            })}
+                          </div>
+                        )}
 
-                      {item.itemType === "numeric" && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="number"
-                            step="any"
-                            value={itemAnswer?.type === "numeric" ? itemAnswer.answerValue : ""}
-                            onChange={(e) => {
-                              setAnswers((prev) => ({
-                                ...prev,
-                                [item.id]: { type: "numeric", answerValue: e.target.value }
-                              }));
-                              setIsDirty(true);
-                            }}
-                            placeholder="Nhập giá trị số..."
-                            className="w-full bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-cream outline-none focus:border-primary transition text-xs font-semibold"
-                          />
-                        </div>
-                      )}
+                        {item.itemType === "numeric" && (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="number"
+                              step="any"
+                              value={
+                                itemAnswer?.type === "numeric"
+                                  ? itemAnswer.answerValue
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    type: "numeric",
+                                    answerValue: e.target.value,
+                                  },
+                                }));
+                                setIsDirty(true);
+                              }}
+                              placeholder="Nhập giá trị số..."
+                              className="w-full bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-cream outline-none focus:border-primary transition text-xs font-semibold"
+                            />
+                          </div>
+                        )}
 
-                      {item.itemType === "essay" && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <textarea
-                            rows={3}
-                            value={itemAnswer?.type === "essay" ? itemAnswer.answer : ""}
-                            onChange={(e) => {
-                              setAnswers((prev) => ({
-                                ...prev,
-                                [item.id]: { type: "essay", answer: e.target.value }
-                              }));
-                              setIsDirty(true);
-                            }}
-                            placeholder="Viết câu trả lời tự luận..."
-                            className="w-full bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-cream outline-none focus:border-primary transition text-xs font-sans"
-                          />
-                        </div>
-                      )}
-                    </div>
+                        {item.itemType === "essay" && (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <textarea
+                              rows={3}
+                              value={
+                                itemAnswer?.type === "essay"
+                                  ? itemAnswer.answer
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    type: "essay",
+                                    answer: e.target.value,
+                                  },
+                                }));
+                                setIsDirty(true);
+                              }}
+                              placeholder="Viết câu trả lời tự luận..."
+                              className="w-full bg-surface-container border border-outline-variant/30 rounded-lg px-3 py-2 text-cream outline-none focus:border-primary transition text-xs font-sans"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </React.Fragment>
                   );
                 })}
@@ -909,174 +1068,235 @@ export default function StudentAssessmentWorkspacePage() {
                 const options = item.question?.options || [];
                 const mode = getMcqMode(item);
                 const itemAnswer = answers[item.id];
-                const currentSelected = itemAnswer?.type === "mcq" ? itemAnswer.selectedOptionIds : [];
+                const currentSelected =
+                  itemAnswer?.type === "mcq"
+                    ? itemAnswer.selectedOptionIds
+                    : [];
                 const section = sectionByItemId.get(item.id);
-                const previousItem = pageIndex > 0 ? paginatedItems[pageIndex - 1] : null;
-                const previousSection = previousItem ? sectionByItemId.get(previousItem.id) : null;
-                const showHeading = showSectionHeadings && (pageIndex === 0 || section?.id !== previousSection?.id);
+                const previousItem =
+                  pageIndex > 0 ? paginatedItems[pageIndex - 1] : null;
+                const previousSection = previousItem
+                  ? sectionByItemId.get(previousItem.id)
+                  : null;
+                const showHeading =
+                  showSectionHeadings &&
+                  (pageIndex === 0 || section?.id !== previousSection?.id);
 
                 return (
                   <React.Fragment key={item.id}>
-                  {showHeading && (
-                    <h2 className="pt-2 text-base font-bold text-primary">{section?.title}</h2>
-                  )}
-                  <div
-                    id={`q-${item.id}`}
-                    className="glass-panel p-8 rounded-2xl relative overflow-hidden group transition-all hover:border-primary/30"
-                  >
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                    
-                    <div className="flex items-center justify-between mb-4 border-b border-outline-variant/20 pb-3">
-                      <span className="bg-primary-container/20 text-primary px-3 py-1 rounded text-xs font-bold uppercase tracking-widest">
-                        Câu {item.questionNumber}
-                      </span>
-                      <span className="text-caption text-muted-text font-bold uppercase tracking-wider text-xs">
-                        {item.itemType === "mcq" ? "Trắc nghiệm" : item.itemType === "true_false" ? "Đúng / Sai" : item.itemType === "numeric" ? "Điền số" : "Tự luận"} • {item.maxScore} điểm
-                      </span>
-                    </div>
-
-                    {/* Question content */}
-                    {!!item.question?.content && (
-                      <div className="text-cream text-lg font-medium leading-relaxed mb-6 font-sans">
-                        {getLabel(item.question.content, "Xem nội dung câu hỏi")}
-                      </div>
+                    {showHeading && (
+                      <h2 className="pt-2 text-base font-bold text-primary">
+                        {section?.title}
+                      </h2>
                     )}
+                    <div
+                      id={`q-${item.id}`}
+                      className="glass-panel p-8 rounded-2xl relative overflow-hidden group transition-all hover:border-primary/30"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    {/* Input fields depending on type */}
-                    {item.itemType === "mcq" && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {options.map((option, oIdx) => {
-                          const optionChar = String.fromCharCode(65 + oIdx);
-                          const checked = currentSelected.includes(option.id);
-
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => {
-                                setAnswers((prev) => {
-                                  const nextSelected = mode === "single"
-                                    ? [option.id]
-                                    : checked
-                                    ? currentSelected.filter((id) => id !== option.id)
-                                    : [...currentSelected, option.id];
-                                  return { ...prev, [item.id]: { type: "mcq", selectedOptionIds: nextSelected } };
-                                });
-                                setIsDirty(true);
-                              }}
-                              className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all active:scale-[0.99] w-full ${
-                                checked
-                                  ? "bg-primary/10 border-primary text-primary font-bold"
-                                  : "bg-surface-container border-outline-variant/30 text-cream hover:border-primary/50"
-                              }`}
-                            >
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all shrink-0 ${
-                                checked
-                                  ? "bg-primary text-deep-black"
-                                  : "bg-surface-container-high border border-outline-variant/30 text-muted-text"
-                              }`}>
-                                {optionChar}
-                              </div>
-                              <div className="text-sm">
-                                {getLabel(option.content, `Lựa chọn ${optionChar}`)}
-                              </div>
-                            </button>
-                          );
-                        })}
+                      <div className="flex items-center justify-between mb-4 border-b border-outline-variant/20 pb-3">
+                        <span className="bg-primary-container/20 text-primary px-3 py-1 rounded text-xs font-bold uppercase tracking-widest">
+                          Câu {item.questionNumber}
+                        </span>
+                        <span className="text-caption text-muted-text font-bold uppercase tracking-wider text-xs">
+                          {item.itemType === "mcq"
+                            ? "Trắc nghiệm"
+                            : item.itemType === "true_false"
+                              ? "Đúng / Sai"
+                              : item.itemType === "numeric"
+                                ? "Điền số"
+                                : "Tự luận"}{" "}
+                          • {item.maxScore} điểm
+                        </span>
                       </div>
-                    )}
 
-                    {item.itemType === "true_false" && (
-                      <div className="space-y-4">
-                        {options.map((option, oIdx) => {
-                          const selections = itemAnswer?.type === "true_false" ? itemAnswer.selections : {};
-                          const selected = selections[option.id];
-                          const optionChar = String.fromCharCode(97 + oIdx);
+                      {/* Question content */}
+                      {!!item.question?.content && (
+                        <div className="text-cream text-lg font-medium leading-relaxed mb-6 font-sans">
+                          {getLabel(
+                            item.question.content,
+                            "Xem nội dung câu hỏi",
+                          )}
+                        </div>
+                      )}
 
-                          return (
-                            <div
-                              key={option.id}
-                              className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-outline-variant/20 bg-surface-container/40"
-                            >
-                              <div className="flex gap-3 text-sm">
-                                <span className="text-primary font-bold">{optionChar})</span>
-                                <div>{getLabel(option.content, `Mệnh đề ${oIdx + 1}`)}</div>
-                              </div>
-                              
-                              <div className="flex gap-2 shrink-0">
-                                {[true, false].map((val) => (
-                                  <button
-                                    key={String(val)}
-                                    type="button"
-                                    onClick={() => {
-                                      setAnswers((prev) => {
-                                        const prevAnswer = prev[item.id];
-                                        return {
-                                          ...prev,
-                                          [item.id]: {
-                                            type: "true_false",
-                                            selections: {
-                                              ...(prevAnswer?.type === "true_false" ? prevAnswer.selections : {}),
-                                              [option.id]: val,
+                      {/* Input fields depending on type */}
+                      {item.itemType === "mcq" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {options.map((option, oIdx) => {
+                            const optionChar = String.fromCharCode(65 + oIdx);
+                            const checked = currentSelected.includes(option.id);
+
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => {
+                                  setAnswers((prev) => {
+                                    const nextSelected =
+                                      mode === "single"
+                                        ? [option.id]
+                                        : checked
+                                          ? currentSelected.filter(
+                                              (id) => id !== option.id,
+                                            )
+                                          : [...currentSelected, option.id];
+                                    return {
+                                      ...prev,
+                                      [item.id]: {
+                                        type: "mcq",
+                                        selectedOptionIds: nextSelected,
+                                      },
+                                    };
+                                  });
+                                  setIsDirty(true);
+                                }}
+                                className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all active:scale-[0.99] w-full ${
+                                  checked
+                                    ? "bg-primary/10 border-primary text-primary font-bold"
+                                    : "bg-surface-container border-outline-variant/30 text-cream hover:border-primary/50"
+                                }`}
+                              >
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all shrink-0 ${
+                                    checked
+                                      ? "bg-primary text-deep-black"
+                                      : "bg-surface-container-high border border-outline-variant/30 text-muted-text"
+                                  }`}
+                                >
+                                  {optionChar}
+                                </div>
+                                <div className="text-sm">
+                                  {getLabel(
+                                    option.content,
+                                    `Lựa chọn ${optionChar}`,
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {item.itemType === "true_false" && (
+                        <div className="space-y-4">
+                          {options.map((option, oIdx) => {
+                            const selections =
+                              itemAnswer?.type === "true_false"
+                                ? itemAnswer.selections
+                                : {};
+                            const selected = selections[option.id];
+                            const optionChar = String.fromCharCode(97 + oIdx);
+
+                            return (
+                              <div
+                                key={option.id}
+                                className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-outline-variant/20 bg-surface-container/40"
+                              >
+                                <div className="flex gap-3 text-sm">
+                                  <span className="text-primary font-bold">
+                                    {optionChar})
+                                  </span>
+                                  <div>
+                                    {getLabel(
+                                      option.content,
+                                      `Mệnh đề ${oIdx + 1}`,
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2 shrink-0">
+                                  {[true, false].map((val) => (
+                                    <button
+                                      key={String(val)}
+                                      type="button"
+                                      onClick={() => {
+                                        setAnswers((prev) => {
+                                          const prevAnswer = prev[item.id];
+                                          return {
+                                            ...prev,
+                                            [item.id]: {
+                                              type: "true_false",
+                                              selections: {
+                                                ...(prevAnswer?.type ===
+                                                "true_false"
+                                                  ? prevAnswer.selections
+                                                  : {}),
+                                                [option.id]: val,
+                                              },
                                             },
-                                          },
-                                        };
-                                      });
-                                      setIsDirty(true);
-                                    }}
-                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                                      selected === val
-                                        ? "bg-primary text-deep-black"
-                                        : "bg-surface-container-high border border-outline-variant/30 text-muted-text hover:text-cream"
-                                    }`}
-                                  >
-                                    {val ? "Đúng" : "Sai"}
-                                  </button>
-                                ))}
+                                          };
+                                        });
+                                        setIsDirty(true);
+                                      }}
+                                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                        selected === val
+                                          ? "bg-primary text-deep-black"
+                                          : "bg-surface-container-high border border-outline-variant/30 text-muted-text hover:text-cream"
+                                      }`}
+                                    >
+                                      {val ? "Đúng" : "Sai"}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      )}
 
-                    {item.itemType === "numeric" && (
-                      <div className="max-w-md">
-                        <input
-                          type="number"
-                          step="any"
-                          value={itemAnswer?.type === "numeric" ? itemAnswer.answerValue : ""}
-                          onChange={(e) => {
-                            setAnswers((prev) => ({
-                              ...prev,
-                              [item.id]: { type: "numeric", answerValue: e.target.value }
-                            }));
-                            setIsDirty(true);
-                          }}
-                          placeholder="Nhập giá trị số..."
-                          className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-cream outline-none focus:border-primary transition text-sm font-semibold"
-                        />
-                      </div>
-                    )}
+                      {item.itemType === "numeric" && (
+                        <div className="max-w-md">
+                          <input
+                            type="number"
+                            step="any"
+                            value={
+                              itemAnswer?.type === "numeric"
+                                ? itemAnswer.answerValue
+                                : ""
+                            }
+                            onChange={(e) => {
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                  type: "numeric",
+                                  answerValue: e.target.value,
+                                },
+                              }));
+                              setIsDirty(true);
+                            }}
+                            placeholder="Nhập giá trị số..."
+                            className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-cream outline-none focus:border-primary transition text-sm font-semibold"
+                          />
+                        </div>
+                      )}
 
-                    {item.itemType === "essay" && (
-                      <div>
-                        <textarea
-                          rows={4}
-                          value={itemAnswer?.type === "essay" ? itemAnswer.answer : ""}
-                          onChange={(e) => {
-                            setAnswers((prev) => ({
-                              ...prev,
-                              [item.id]: { type: "essay", answer: e.target.value }
-                            }));
-                            setIsDirty(true);
-                          }}
-                          placeholder="Viết câu trả lời tự luận ở đây..."
-                          className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-cream outline-none focus:border-primary transition text-sm font-sans"
-                        />
-                      </div>
-                    )}
-                  </div>
+                      {item.itemType === "essay" && (
+                        <div>
+                          <textarea
+                            rows={4}
+                            value={
+                              itemAnswer?.type === "essay"
+                                ? itemAnswer.answer
+                                : ""
+                            }
+                            onChange={(e) => {
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                  type: "essay",
+                                  answer: e.target.value,
+                                },
+                              }));
+                              setIsDirty(true);
+                            }}
+                            placeholder="Viết câu trả lời tự luận ở đây..."
+                            className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-cream outline-none focus:border-primary transition text-sm font-sans"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </React.Fragment>
                 );
               })}

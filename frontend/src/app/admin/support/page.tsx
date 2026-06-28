@@ -1,5 +1,5 @@
-import AdminPlaceholder from '@/components/layout/admin-placeholder';
+import { redirect } from "next/navigation";
 
 export default function AdminSupportPage() {
-  return <AdminPlaceholder title="Hỗ trợ &amp; Trợ giúp" />;
+  redirect("/admin/settings");
 }

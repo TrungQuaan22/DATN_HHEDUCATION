@@ -245,6 +245,7 @@ export class AdminLessonMaterialService {
         course_id: material.courseId,
         lesson_id: material.lessonId,
         type: material.type,
+        title: material.title,
         file_url: fileUrl,
         content_text: material.contentText
       })

@@ -225,7 +225,10 @@ export default function StudentAssessmentRuntimePage() {
                     ) : (
                       submissionsList.map((sub) => {
                         const isDoing = sub.status === "doing";
-                        const isSubmitted = sub.status === "submitted";
+                        const isSubmitted =
+                          sub.status === "submitted" ||
+                          (sub.status === "auto_submitted" &&
+                            sub.finalScore === null);
 
                         let statusBadge = (
                           <span className="px-2.5 py-0.5 rounded bg-success/20 text-success text-xs font-bold whitespace-nowrap">
@@ -286,9 +289,12 @@ export default function StudentAssessmentRuntimePage() {
                                   <ChevronRight size={12} />
                                 </button>
                               ) : (
-                                <button className="text-primary hover:underline flex items-center gap-1 font-medium text-sm cursor-pointer whitespace-nowrap">
+                                <Link
+                                  href={`/student/assessments/${placementId}/results/${sub.id}`}
+                                  className="text-primary hover:underline flex items-center gap-1 font-medium text-sm cursor-pointer whitespace-nowrap"
+                                >
                                   <Info size={16} /> Xem chi tiết
-                                </button>
+                                </Link>
                               )}
                             </td>
                           </tr>
@@ -392,4 +398,3 @@ export default function StudentAssessmentRuntimePage() {
     </div>
   );
 }
-

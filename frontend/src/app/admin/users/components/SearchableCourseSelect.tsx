@@ -52,10 +52,11 @@ export function SearchableCourseSelect({
   const selectedCourse = coursesList.find((c) => c.id === value);
 
   // Client-side local filter for instantaneous search response
-  const filteredCourses = coursesList.filter((c) =>
-    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `lớp ${c.grade}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCourses = coursesList.filter(
+    (c) =>
+      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `lớp ${c.grade}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.subject.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleSelect = (id: string) => {
@@ -144,7 +145,9 @@ export function SearchableCourseSelect({
                         Lớp {c.grade} • {formatPrice(c.price)}
                       </p>
                     </div>
-                    {isSelected && <Check size={14} className="flex-shrink-0" />}
+                    {isSelected && (
+                      <Check size={14} className="flex-shrink-0" />
+                    )}
                   </button>
                 );
               })

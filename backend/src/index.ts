@@ -12,6 +12,8 @@ import {
   learningAssessmentRoutes,
   publicAssessmentRoutes
 } from './modules/assessments'
+import { studentAssessmentService } from './modules/assessments/wiring'
+import { startAssessmentDeadlineWorker } from './modules/assessments/jobs/assessment-deadline.worker'
 import { adminBlogRoutes } from './modules/blogs/routes/admin.routes'
 import { publicBlogRoutes } from './modules/blogs/routes/public.routes'
 import { errorHandler } from './common/error/error'
@@ -25,6 +27,7 @@ import { uploadRoutes } from './modules/media/routes/upload.routes'
 import { adminOrderRoutes } from './modules/orders/routes/admin-order.routes'
 import { orderRoutes } from './modules/orders/routes/order.routes'
 import { adminPaymentTransactionRoutes } from './modules/payments/routes/admin-payment-transaction.routes'
+import { notificationRoutes } from './modules/notifications/routes'
 import { paymentWebhookRoutes } from './modules/payments/routes/webhook.routes'
 import { tutorRoutes } from './modules/tutor/routes'
 import { adminUserRoutes } from './modules/users/routes/admin.routes'
@@ -82,6 +85,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
 app.use('/auth', authRoutes)
 app.use('/users', userRoutes)
+app.use('/notifications', notificationRoutes)
 app.use('/catalog', publicCourseRoutes)
 app.use('/practice', publicAssessmentRoutes)
 app.use('/learning', learningCourseRoutes)
@@ -106,4 +110,5 @@ app.use(errorHandler)
 
 app.listen(process.env.PORT || 4000, () => {
   console.log(`Server is running on http://localhost:${process.env.PORT || 4000}`)
+  startAssessmentDeadlineWorker(studentAssessmentService)
 })

@@ -1,0 +1,17 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{ABSTRACT}}\\
+\end{center}
+\vspace{1cm}
+
+The rapid development of online education has enabled independent teachers and small-scale test preparation centers to digitally transform their teaching activities. However, relying on fragmented tools such as social media networks, messaging applications, or web conferencing software exposes significant limitations in student management, fragmented learning materials, and increased manual operations. Current solutions like Google Classroom, Moodle, or Udemy handle basic classroom activities well, but they either struggle with commercial course packaging, require complex deployment processes for small units, or lack personalized artificial intelligence (AI) assistants to support students during self-study hours outside of lectures.
+
+To overcome these constraints, this thesis adopts the approach of building a lightweight, centralized Learning Management System (LMS) based on the Client-Server model, integrated with Retrieval-Augmented Generation (RAG) techniques. This approach clearly separates the user interaction interface, business logic coordination, and system data. Furthermore, it leverages existing large language models to provide answers strictly aligned with internal learning materials without requiring excessive computational resources to train a new model from scratch.
+
+The comprehensive solution of this thesis involves designing and developing an AI-powered online learning platform optimized for both the administrative workflows of teachers and the personalized learning paths of students. The system is developed using a complete TypeScript ecosystem featuring Next.js/React for the frontend and Node.js/Express for the backend, alongside a PostgreSQL database system coupled with the pgvector extension. It covers all core operations, ranging from lecture organization, HTTP Live Streaming (HLS) video processing, question bank management, and secure examination room control, to automated enrollment workflows triggered via payment gateway webhooks.
+
+The primary contribution of this thesis lies in the successful integration of a RAG pipeline with a context-boosting strategy for the AI Tutor assistant, enabling the model to generate automated responses in Vietnamese with precise source citations. The final outcome is a fully functional and highly practical LMS that empowers educational units to fully control student data, minimize manual operational overhead, and significantly enhance the effectiveness of learners' self-study.
+
+\end{document}

@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   GraduationCap,
   FileQuestion,
   FileText,
@@ -12,7 +11,6 @@ import {
   ShoppingCart,
   CreditCard,
   Settings,
-  HelpCircle,
   ChevronLeft,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants/routes";
@@ -26,7 +24,6 @@ type SidebarItem = {
 
 const bottomItems: SidebarItem[] = [
   { label: "Cài đặt", href: ROUTES.ADMIN.SETTINGS, icon: Settings },
-  { label: "Hỗ trợ", href: ROUTES.ADMIN.SUPPORT, icon: HelpCircle },
 ];
 
 type AdminSidebarProps = {
@@ -47,7 +44,6 @@ export default function AdminSidebar({
 
   const navigationItems = React.useMemo((): SidebarItem[] => {
     const items: SidebarItem[] = [
-      { label: "Tổng quan", href: ROUTES.ADMIN.DASHBOARD, icon: LayoutDashboard },
       {
         label: "Quản lý khóa học",
         href: ROUTES.ADMIN.COURSES,
@@ -58,14 +54,26 @@ export default function AdminSidebar({
         href: ROUTES.ADMIN.ASSESSMENTS,
         icon: FileQuestion,
       },
-      { label: "Quản lý bài viết", href: ROUTES.ADMIN.BLOG_POSTS, icon: FileText },
+      {
+        label: "Quản lý bài viết",
+        href: ROUTES.ADMIN.BLOG_POSTS,
+        icon: FileText,
+      },
     ];
 
     if (role === "admin") {
       items.push(
         { label: "Quản lý người dùng", href: ROUTES.ADMIN.USERS, icon: Users },
-        { label: "Quản lý đơn hàng", href: ROUTES.ADMIN.ORDERS, icon: ShoppingCart },
-        { label: "Quản lý giao dịch", href: ROUTES.ADMIN.PAYMENT_TRANSACTIONS, icon: CreditCard }
+        {
+          label: "Quản lý đơn hàng",
+          href: ROUTES.ADMIN.ORDERS,
+          icon: ShoppingCart,
+        },
+        {
+          label: "Quản lý giao dịch",
+          href: ROUTES.ADMIN.PAYMENT_TRANSACTIONS,
+          icon: CreditCard,
+        },
       );
     }
 
@@ -87,22 +95,32 @@ export default function AdminSidebar({
         } ${isCollapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         {/* Brand logo & Close button */}
-        <div className={`flex items-center mb-8 justify-between relative transition-all duration-300 ${isCollapsed ? "px-2" : "px-6"}`}>
+        <div
+          className={`flex items-center mb-8 justify-between relative transition-all duration-300 ${isCollapsed ? "px-2" : "px-6"}`}
+        >
           <div className="flex items-center overflow-hidden w-full relative h-10">
             {/* Collapsed HH Logo */}
-            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-              isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
-            }`}>
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+                isCollapsed
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-75 pointer-events-none"
+              }`}
+            >
               <h1 className="text-xl font-black text-admin-pink tracking-tighter font-serif select-none animate-pulse">
                 HH
               </h1>
             </div>
             {/* Expanded Full Logo */}
-            <div className={`transition-all duration-300 transform origin-left ${
-              isCollapsed ? "opacity-0 scale-75 translate-x-4 pointer-events-none" : "opacity-100 scale-100 translate-x-0"
-            }`}>
+            <div
+              className={`transition-all duration-300 transform origin-left ${
+                isCollapsed
+                  ? "opacity-0 scale-75 translate-x-4 pointer-events-none"
+                  : "opacity-100 scale-100 translate-x-0"
+              }`}
+            >
               <h1 className="text-xl font-bold text-admin-cream tracking-tight font-serif whitespace-nowrap">
-                 HH <span className="text-admin-pink">Education</span>
+                HH <span className="text-admin-pink">Education</span>
               </h1>
               <p className="text-xs text-admin-muted font-semibold uppercase tracking-widest mt-0.5 whitespace-nowrap">
                 Admin Terminal
@@ -133,7 +151,9 @@ export default function AdminSidebar({
         </div>
 
         {/* Main navigation tabs */}
-        <nav className={`flex-1 space-y-1 transition-all duration-300 ${isCollapsed ? "px-2" : "px-3"}`}>
+        <nav
+          className={`flex-1 space-y-1 transition-all duration-300 ${isCollapsed ? "px-2" : "px-3"}`}
+        >
           {navigationItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -148,9 +168,11 @@ export default function AdminSidebar({
                       : "text-admin-muted hover:text-admin-cream hover:bg-admin-surface-low/50"
                   }`}
                 >
-                  <div className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    isCollapsed ? "w-full" : "w-11"
-                  }`}>
+                  <div
+                    className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isCollapsed ? "w-full" : "w-11"
+                    }`}
+                  >
                     <Icon
                       className={`w-5 h-5 shrink-0 transition-all duration-300 ${isActive ? "text-white" : "text-admin-muted"} group-hover:scale-110`}
                     />
@@ -179,7 +201,9 @@ export default function AdminSidebar({
         </nav>
 
         {/* Footer navigation */}
-        <div className={`mt-auto space-y-1 border-t border-admin-border/20 pt-4 transition-all duration-300 ${isCollapsed ? "px-2" : "px-3"}`}>
+        <div
+          className={`mt-auto space-y-1 border-t border-admin-border/20 pt-4 transition-all duration-300 ${isCollapsed ? "px-2" : "px-3"}`}
+        >
           {/* Toggle Collapse Button (Desktop only, positioned above settings/support footer items) */}
           <div className="hidden lg:block group relative mb-2">
             <button
@@ -187,10 +211,14 @@ export default function AdminSidebar({
               className="flex items-center rounded transition-all duration-300 overflow-hidden h-11 relative w-full text-admin-muted hover:text-admin-cream hover:bg-admin-surface-low/50 cursor-pointer text-left"
               aria-label={isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
             >
-              <div className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
-                isCollapsed ? "w-full" : "w-11"
-              }`}>
-                <ChevronLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`} />
+              <div
+                className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  isCollapsed ? "w-full" : "w-11"
+                }`}
+              >
+                <ChevronLeft
+                  className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}
+                />
               </div>
               <span
                 className={`text-sm whitespace-nowrap transition-all duration-300 ease-in-out origin-left absolute left-14 ${
@@ -226,9 +254,11 @@ export default function AdminSidebar({
                       : "text-admin-muted hover:text-admin-cream hover:bg-admin-surface-low/50"
                   }`}
                 >
-                  <div className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    isCollapsed ? "w-full" : "w-11"
-                  }`}>
+                  <div
+                    className={`flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isCollapsed ? "w-full" : "w-11"
+                    }`}
+                  >
                     <Icon
                       className={`w-5 h-5 shrink-0 transition-all duration-300 ${isActive ? "text-white" : "text-admin-muted"} group-hover:scale-110`}
                     />
@@ -259,5 +289,3 @@ export default function AdminSidebar({
     </>
   );
 }
-
-

@@ -40,7 +40,6 @@ export type AssessmentItemUnion = Partial<
     ExamEssayItemDto
 >
 
-
 export type PlacementWithAssessment = AssessmentPlacement & {
   assessment: Assessment
 }
@@ -127,38 +126,51 @@ export type SubmissionWorkspaceGate = {
 } | null
 
 export type SubmissionDetail = Submission & {
-  mcqAnswers: Array<SubmissionMcqAnswer & {
-    selectedOptions: SubmissionMcqSelectedOption[]
-  }>
+  mcqAnswers: Array<
+    SubmissionMcqAnswer & {
+      selectedOptions: SubmissionMcqSelectedOption[]
+    }
+  >
   tfAnswers: SubmissionTfAnswer[]
   numericAnswers: SubmissionNumericAnswer[]
   essayAnswers: SubmissionEssayAnswer[]
 }
 
 export type StudentSubmissionComplete = Submission & {
-  mcqAnswers: Array<SubmissionMcqAnswer & {
-    selectedOptions: SubmissionMcqSelectedOption[]
-  }>
+  mcqAnswers: Array<
+    SubmissionMcqAnswer & {
+      selectedOptions: SubmissionMcqSelectedOption[]
+    }
+  >
   tfAnswers: SubmissionTfAnswer[]
   numericAnswers: SubmissionNumericAnswer[]
   essayAnswers: SubmissionEssayAnswer[]
   assessment: Assessment & {
-    sections: Array<AssessmentSection & {
-      items: Array<AssessmentItem & {
-        question: (Question & {
-          options: QuestionOption[]
-        }) | null
-      }>
-    }>
-  }
-  placement: (AssessmentPlacement & {
-    course: { teacherId: string } | null
-    lesson: {
-      chapter: {
-        course: { teacherId: string }
+    sourceMedia: Media | null
+    sections: Array<
+      AssessmentSection & {
+        items: Array<
+          AssessmentItem & {
+            question:
+              | (Question & {
+                  options: QuestionOption[]
+                })
+              | null
+          }
+        >
       }
-    } | null
-  }) | null
+    >
+  }
+  placement:
+    | (AssessmentPlacement & {
+        course: { teacherId: string } | null
+        lesson: {
+          chapter: {
+            course: { teacherId: string }
+          }
+        } | null
+      })
+    | null
   student: {
     id: string
     fullName: string
@@ -167,14 +179,16 @@ export type StudentSubmissionComplete = Submission & {
 }
 
 export type AdminAssessmentListItem = Assessment & {
-  placements: Array<AssessmentPlacement & {
-    course: { teacherId: string } | null
-    lesson: {
-      chapter: {
-        course: { teacherId: string }
-      }
-    } | null
-  }>
+  placements: Array<
+    AssessmentPlacement & {
+      course: { teacherId: string } | null
+      lesson: {
+        chapter: {
+          course: { teacherId: string }
+        }
+      } | null
+    }
+  >
   _count: {
     items: number
     sections: number
@@ -184,14 +198,16 @@ export type AdminAssessmentListItem = Assessment & {
 
 export type GradingSubmissionListItem = Submission & {
   assessment: Assessment
-  placement: (AssessmentPlacement & {
-    course: { teacherId: string } | null
-    lesson: {
-      chapter: {
-        course: { teacherId: string }
-      }
-    } | null
-  }) | null
+  placement:
+    | (AssessmentPlacement & {
+        course: { teacherId: string } | null
+        lesson: {
+          chapter: {
+            course: { teacherId: string }
+          }
+        } | null
+      })
+    | null
   student: {
     id: string
     fullName: string
@@ -201,21 +217,29 @@ export type GradingSubmissionListItem = Submission & {
 }
 
 export type AdminAssessmentDetail = Assessment & {
-  sections: Array<AssessmentSection & {
-    items: Array<AssessmentItem & {
-      question: (Question & {
-        options: QuestionOption[]
-      }) | null
-    }>
-  }>
-  placements: Array<AssessmentPlacement & {
-    course: { teacherId: string } | null
-    lesson: {
-      chapter: {
-        course: { teacherId: string }
-      }
-    } | null
-  }>
+  sections: Array<
+    AssessmentSection & {
+      items: Array<
+        AssessmentItem & {
+          question:
+            | (Question & {
+                options: QuestionOption[]
+              })
+            | null
+        }
+      >
+    }
+  >
+  placements: Array<
+    AssessmentPlacement & {
+      course: { teacherId: string } | null
+      lesson: {
+        chapter: {
+          course: { teacherId: string }
+        }
+      } | null
+    }
+  >
   _count: {
     items: number
     sections: number
@@ -228,34 +252,44 @@ export type AssessmentForPublishDetail = Assessment & {
   createdBy: {
     role: UserRole
   } | null
-  placements: Array<AssessmentPlacement & {
-    course: { teacherId: string } | null
-    lesson: {
-      chapter: {
-        course: { teacherId: string }
-      }
-    } | null
-  }>
+  placements: Array<
+    AssessmentPlacement & {
+      course: { teacherId: string } | null
+      lesson: {
+        chapter: {
+          course: { teacherId: string }
+        }
+      } | null
+    }
+  >
   _count: {
     submissions: number
   }
-  sections: Array<AssessmentSection & {
-    items: Array<AssessmentItem & {
-      topic: {
-        id: string
-        name: string
-      } | null
-      question: (Question & {
-        options: QuestionOption[]
-      }) | null
-    }>
-  }>
+  sections: Array<
+    AssessmentSection & {
+      items: Array<
+        AssessmentItem & {
+          topic: {
+            id: string
+            name: string
+          } | null
+          question:
+            | (Question & {
+                options: QuestionOption[]
+              })
+            | null
+        }
+      >
+    }
+  >
 }
 
 export type SectionItemDetail = AssessmentItem & {
-  question: (Question & {
-    options: QuestionOption[]
-  }) | null
+  question:
+    | (Question & {
+        options: QuestionOption[]
+      })
+    | null
   section: AssessmentSection
 }
 

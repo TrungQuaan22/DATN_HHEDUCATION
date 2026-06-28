@@ -18,6 +18,11 @@ import {
   ListStudentAssessmentsResponse,
   StudentAssessmentSummary,
   AssessmentWorkspaceResponse,
+  AdminAssessmentResultsResponse,
+  AdminAssessmentStudentAttemptsResponse,
+  AssessmentParticipantStatus,
+  StudentSubmissionResult,
+  SubmissionViolationResult,
 } from "./types";
 
 type ApiEnvelope<T> = {
@@ -26,13 +31,20 @@ type ApiEnvelope<T> = {
 };
 
 export const createAssessment = async (payload: AssessmentCreatePayload) => {
-  const response = await api.post<ApiEnvelope<{ id: string }>>("/admin/assessments", payload);
+  const response = await api.post<ApiEnvelope<{ id: string }>>(
+    "/admin/assessments",
+    payload,
+  );
   return response.data.data;
 };
 
 export const createAssessmentSection = async (
   assessmentId: string,
-  payload: { title: string; description?: string | null; itemType: AssessmentItemType },
+  payload: {
+    title: string;
+    description?: string | null;
+    itemType: AssessmentItemType;
+  },
 ) => {
   const response = await api.post<ApiEnvelope<unknown>>(
     `/admin/assessments/${assessmentId}/sections`,
@@ -53,7 +65,10 @@ export const updateAssessmentSection = async (
   return response.data.data;
 };
 
-export const deleteAssessmentSection = async (assessmentId: string, sectionId: string) => {
+export const deleteAssessmentSection = async (
+  assessmentId: string,
+  sectionId: string,
+) => {
   const response = await api.delete<ApiEnvelope<unknown>>(
     `/admin/assessments/${assessmentId}/sections/${sectionId}`,
   );
@@ -96,15 +111,23 @@ export const updateAssessmentItem = async (
   return response.data.data;
 };
 
-export const deleteAssessmentItem = async (assessmentId: string, itemId: string) => {
+export const deleteAssessmentItem = async (
+  assessmentId: string,
+  itemId: string,
+) => {
   const response = await api.delete<ApiEnvelope<unknown>>(
     `/admin/assessments/${assessmentId}/items/${itemId}`,
   );
   return response.data.data;
 };
 
-export const createAssessmentPlacement = async (payload: AssessmentPlacementCreatePayload) => {
-  const response = await api.post<ApiEnvelope<{ id: string }>>("/admin/assessment-placements", payload);
+export const createAssessmentPlacement = async (
+  payload: AssessmentPlacementCreatePayload,
+) => {
+  const response = await api.post<ApiEnvelope<{ id: string }>>(
+    "/admin/assessment-placements",
+    payload,
+  );
   return response.data.data;
 };
 
@@ -120,9 +143,9 @@ export const upsertAssessmentPlacement = async (
 };
 
 export const deleteAssessmentPlacement = async (assessmentId: string) => {
-  const response = await api.delete<ApiEnvelope<{ assessmentId: string; placementDeleted: boolean }>>(
-    `/admin/assessments/${assessmentId}/placement`,
-  );
+  const response = await api.delete<
+    ApiEnvelope<{ assessmentId: string; placementDeleted: boolean }>
+  >(`/admin/assessments/${assessmentId}/placement`);
   return response.data.data;
 };
 
@@ -137,14 +160,16 @@ export const updateAssessmentVisibility = async (
   assessmentId: string,
   visibility: "draft" | "published" | "hidden",
 ) => {
-  const response = await api.patch<ApiEnvelope<{ id: string; visibility: string }>>(
-    `/admin/assessments/${assessmentId}/visibility`,
-    { visibility },
-  );
+  const response = await api.patch<
+    ApiEnvelope<{ id: string; visibility: string }>
+  >(`/admin/assessments/${assessmentId}/visibility`, { visibility });
   return response.data.data;
 };
 
-export const cloneAssessment = async (assessmentId: string, payload?: { title?: string }) => {
+export const cloneAssessment = async (
+  assessmentId: string,
+  payload?: { title?: string },
+) => {
   const response = await api.post<ApiEnvelope<{ id: string }>>(
     `/admin/assessments/${assessmentId}/clone`,
     payload ?? {},
@@ -152,12 +177,19 @@ export const cloneAssessment = async (assessmentId: string, payload?: { title?: 
   return response.data.data;
 };
 
-export const listAdminAssessments = async (params?: ListAdminAssessmentsParams): Promise<ListAdminAssessmentsResponse> => {
-  const response = await api.get<ApiEnvelope<ListAdminAssessmentsResponse>>("/admin/assessments", { params });
+export const listAdminAssessments = async (
+  params?: ListAdminAssessmentsParams,
+): Promise<ListAdminAssessmentsResponse> => {
+  const response = await api.get<ApiEnvelope<ListAdminAssessmentsResponse>>(
+    "/admin/assessments",
+    { params },
+  );
   return response.data.data;
 };
 
-export const getAdminAssessment = async (assessmentId: string): Promise<AdminAssessmentDetail> => {
+export const getAdminAssessment = async (
+  assessmentId: string,
+): Promise<AdminAssessmentDetail> => {
   const response = await api.get<ApiEnvelope<AdminAssessmentDetail>>(
     `/admin/assessments/${assessmentId}`,
   );
@@ -180,23 +212,54 @@ export const listAdminGradingSubmissions = async (params?: {
   limit?: number;
   assessmentId?: string;
 }): Promise<ListAdminGradingSubmissionsResponse> => {
-  const response = await api.get<ApiEnvelope<ListAdminGradingSubmissionsResponse>>(
-    "/admin/assessment-submissions/grading",
-    { params },
-  );
+  const response = await api.get<
+    ApiEnvelope<ListAdminGradingSubmissionsResponse>
+  >("/admin/assessment-submissions/grading", { params });
   return response.data.data;
 };
 
-export const getAdminGradingSubmission = async (submissionId: string): Promise<AdminGradingSubmissionDetail> => {
+export const getAdminGradingSubmission = async (
+  submissionId: string,
+): Promise<AdminGradingSubmissionDetail> => {
   const response = await api.get<ApiEnvelope<AdminGradingSubmissionDetail>>(
     `/admin/assessment-submissions/${submissionId}`,
   );
   return response.data.data;
 };
 
+export const listAdminAssessmentResults = async (
+  assessmentId: string,
+  params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: AssessmentParticipantStatus;
+  },
+): Promise<AdminAssessmentResultsResponse> => {
+  const response = await api.get<ApiEnvelope<AdminAssessmentResultsResponse>>(
+    `/admin/assessments/${assessmentId}/results`,
+    { params },
+  );
+  return response.data.data;
+};
+
+export const getAdminAssessmentStudentAttempts = async (
+  assessmentId: string,
+  studentId: string,
+): Promise<AdminAssessmentStudentAttemptsResponse> => {
+  const response = await api.get<
+    ApiEnvelope<AdminAssessmentStudentAttemptsResponse>
+  >(`/admin/assessments/${assessmentId}/students/${studentId}/attempts`);
+  return response.data.data;
+};
+
 export const gradeEssayAnswer = async (
   submissionId: string,
-  payload: { itemId: string; teacherScore: number; teacherNote?: string | null },
+  payload: {
+    itemId: string;
+    teacherScore: number;
+    teacherNote?: string | null;
+  },
 ) => {
   const response = await api.patch<ApiEnvelope<unknown>>(
     `/admin/assessment-submissions/${submissionId}/essay-score`,
@@ -205,28 +268,36 @@ export const gradeEssayAnswer = async (
   return response.data.data;
 };
 
-export const finalizeGradingSubmission = async (submissionId: string): Promise<AssessmentSubmission> => {
+export const finalizeGradingSubmission = async (
+  submissionId: string,
+): Promise<AssessmentSubmission> => {
   const response = await api.post<ApiEnvelope<AssessmentSubmission>>(
     `/admin/assessment-submissions/${submissionId}/finalize`,
   );
   return response.data.data;
 };
 
-export const getLearningAssessment = async (placementId: string): Promise<RuntimeAssessment> => {
+export const getLearningAssessment = async (
+  placementId: string,
+): Promise<RuntimeAssessment> => {
   const response = await api.get<ApiEnvelope<RuntimeAssessment>>(
     `/learning/assessment-placements/${placementId}`,
   );
   return response.data.data;
 };
 
-export const getPublicAssessment = async (placementId: string): Promise<RuntimeAssessment> => {
+export const getPublicAssessment = async (
+  placementId: string,
+): Promise<RuntimeAssessment> => {
   const response = await api.get<ApiEnvelope<RuntimeAssessment>>(
     `/practice/assessment-placements/${placementId}`,
   );
   return response.data.data;
 };
 
-export const getPublicAssessmentBySlug = async (slug: string): Promise<RuntimeAssessment> => {
+export const getPublicAssessmentBySlug = async (
+  slug: string,
+): Promise<RuntimeAssessment> => {
   const response = await api.get<ApiEnvelope<RuntimeAssessment>>(
     `/practice/assessment-placements/slug/${slug}`,
   );
@@ -246,7 +317,9 @@ export const listPublicAssessmentPlacements = async (params?: {
   return response.data.data;
 };
 
-export const startAssessmentAttempt = async (placementId: string): Promise<AssessmentSubmission> => {
+export const startAssessmentAttempt = async (
+  placementId: string,
+): Promise<AssessmentSubmission> => {
   const response = await api.post<ApiEnvelope<AssessmentSubmission>>(
     `/learning/assessment-placements/${placementId}/attempts`,
   );
@@ -257,16 +330,26 @@ export const saveAssessmentAnswers = async (
   submissionId: string,
   answers: SaveAnswerPayload[],
 ) => {
-  const response = await api.put<ApiEnvelope<{ submissionId: string; saved: boolean }>>(
-    `/learning/assessment-submissions/${submissionId}/answers`,
-    { answers },
+  const response = await api.put<
+    ApiEnvelope<{ submissionId: string; saved: boolean }>
+  >(`/learning/assessment-submissions/${submissionId}/answers`, { answers });
+  return response.data.data;
+};
+
+export const submitAssessmentAttempt = async (
+  submissionId: string,
+): Promise<AssessmentSubmission> => {
+  const response = await api.post<ApiEnvelope<AssessmentSubmission>>(
+    `/learning/assessment-submissions/${submissionId}/submit`,
   );
   return response.data.data;
 };
 
-export const submitAssessmentAttempt = async (submissionId: string): Promise<AssessmentSubmission> => {
-  const response = await api.post<ApiEnvelope<AssessmentSubmission>>(
-    `/learning/assessment-submissions/${submissionId}/submit`,
+export const recordAssessmentViolation = async (
+  submissionId: string,
+): Promise<SubmissionViolationResult> => {
+  const response = await api.post<ApiEnvelope<SubmissionViolationResult>>(
+    `/learning/assessment-submissions/${submissionId}/violations`,
   );
   return response.data.data;
 };
@@ -292,6 +375,15 @@ export const getAssessmentWorkspace = async (
   const response = await api.get<ApiEnvelope<AssessmentWorkspaceResponse>>(
     `/learning/assessment-placements/${placementId}/workspace`,
     { params: { submissionId } },
+  );
+  return response.data.data;
+};
+
+export const getStudentSubmissionResult = async (
+  submissionId: string,
+): Promise<StudentSubmissionResult> => {
+  const response = await api.get<ApiEnvelope<StudentSubmissionResult>>(
+    `/learning/assessment-submissions/${submissionId}/result`,
   );
   return response.data.data;
 };

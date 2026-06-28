@@ -18,10 +18,12 @@ import {
   scoresAreEqual,
   zeroScore
 } from '../policies/submission.policy'
-import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
 import {
-  ensureSubmissionForStudentExists
-} from '../ensures/assessment.ensure'
+  getTimeRemainingSeconds,
+  isSubmissionExpired
+} from '../policies/submission-deadline.policy'
+import type { StudentAssessmentRepositoryPort } from '../ports/student-assessment-repository.port'
+import { ensureSubmissionForStudentExists } from '../ensures/assessment.ensure'
 import {
   validatePlacementAccess,
   validatePlacementAvailable,
@@ -32,34 +34,13 @@ import type {
   StudentPlacementListItem,
   StudentSubmissionComplete
 } from '../types'
+import { mapStudentSubmissionResult } from '../mappers/submission-result.mapper'
+import type { NotificationEventService } from '~/modules/notifications/service'
 
 const ensureSubmissionIsDoing = (status: SubmissionStatus) => {
   if (status !== SubmissionStatus.doing) {
     throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission is already submitted')
   }
-}
-
-const calculateTimeRemainingSeconds = (data: {
-  startTime: Date
-  timeLimitMinutes: number | null
-  closeTime: Date | null
-}) => {
-  const deadlines = []
-
-  if (data.timeLimitMinutes !== null) {
-    deadlines.push(data.startTime.getTime() + data.timeLimitMinutes * 60 * 1000)
-  }
-
-  if (data.closeTime) {
-    deadlines.push(data.closeTime.getTime())
-  }
-
-  if (deadlines.length === 0) {
-    return null
-  }
-
-  const remainingMs = Math.min(...deadlines) - Date.now()
-  return Math.max(0, Math.floor(remainingMs / 1000))
 }
 
 const getQuestionOptions = (item: {
@@ -81,6 +62,7 @@ const mapSubmissionForRuntime = (submission: SubmissionDetail) => ({
   submitTime: submission.submitTime,
   autoScore: submission.autoScore?.toString() ?? null,
   finalScore: submission.finalScore?.toString() ?? null,
+  violationCount: submission.violationCount,
   answers: {
     mcq: (submission.mcqAnswers ?? []).map((answer) => ({
       itemId: answer.itemId,
@@ -103,7 +85,10 @@ const mapSubmissionForRuntime = (submission: SubmissionDetail) => ({
 })
 
 export class StudentAssessmentService {
-  constructor(private readonly repository: StudentAssessmentRepositoryPort) {}
+  constructor(
+    private readonly repository: StudentAssessmentRepositoryPort,
+    private readonly notifications: NotificationEventService
+  ) {}
 
   async listStudentAssessments(data: ListStudentAssessmentsDto & { userId: string }) {
     const [placements, totalItems] = await this.repository.listStudentAssessmentPlacements({
@@ -168,6 +153,20 @@ export class StudentAssessmentService {
     }
   }
 
+  async getSubmissionResult(data: { userId: string; submissionId: string }) {
+    const submissionRecord = await this.repository.findSubmissionForStudent(
+      data.submissionId,
+      data.userId
+    )
+    const submission = ensureSubmissionForStudentExists(submissionRecord)
+
+    if (submission.status === SubmissionStatus.doing) {
+      throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission has not been submitted yet')
+    }
+
+    return mapStudentSubmissionResult(submission)
+  }
+
   async getAssessmentWorkspace(data: {
     userId: string
     placementId: string
@@ -187,17 +186,24 @@ export class StudentAssessmentService {
       throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Assessment attempt is not active')
     }
 
-    validatePlacementAvailable(submission.placement)
-
-    const timeRemainingSeconds = calculateTimeRemainingSeconds({
+    const deadlineInput = {
       startTime: submission.startTime,
       timeLimitMinutes: submission.placement.assessment.timeLimitMinutes,
       closeTime: submission.placement.closeTime
-    })
-
-    if (timeRemainingSeconds !== null && timeRemainingSeconds <= 0) {
-      throw new AppError(403, ERROR_CODE.FORBIDDEN, 'Assessment time limit exceeded')
     }
+    const timeRemainingSeconds = getTimeRemainingSeconds(deadlineInput)
+
+    if (isSubmissionExpired(deadlineInput)) {
+      const expiredSubmissionRecord = await this.repository.findSubmissionForStudent(
+        data.submissionId,
+        data.userId
+      )
+      const expiredSubmission = ensureSubmissionForStudentExists(expiredSubmissionRecord)
+      await this.finalizeAttempt(expiredSubmission, 'automatic')
+      throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission was auto-submitted at its deadline')
+    }
+
+    validatePlacementAvailable(submission.placement)
 
     const placement = await this.repository.findRuntimePlacementById(data.placementId)
     const submissionRecord = await this.repository.findSubmissionForStudent(
@@ -271,6 +277,11 @@ export class StudentAssessmentService {
 
     ensureSubmissionIsDoing(submission.status)
 
+    if (this.hasReachedDeadline(submission)) {
+      await this.finalizeAttempt(submission, 'automatic')
+      throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission was auto-submitted at its deadline')
+    }
+
     const enrollment = submission.placement
       ? submission.placement.type === AssessmentPlacementType.course
         ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
@@ -298,6 +309,41 @@ export class StudentAssessmentService {
 
     ensureSubmissionIsDoing(submission.status)
 
+    const hasReachedDeadline = this.hasReachedDeadline(submission)
+
+    const enrollment = submission.placement
+      ? submission.placement.type === AssessmentPlacementType.course
+        ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
+        : await this.repository.findEnrollmentForLessonPlacement(
+            data.userId,
+            submission.placement.id
+          )
+      : null
+    if (!hasReachedDeadline) {
+      validateSubmissionAccess(data.userId, submission, enrollment)
+    }
+
+    return this.finalizeAttempt(submission, hasReachedDeadline ? 'automatic' : 'manual')
+  }
+
+  async recordViolation(data: { userId: string; submissionId: string }) {
+    const submissionRecord = await this.repository.findSubmissionForStudent(
+      data.submissionId,
+      data.userId
+    )
+    const submission = ensureSubmissionForStudentExists(submissionRecord)
+
+    ensureSubmissionIsDoing(submission.status)
+
+    if (this.hasReachedDeadline(submission)) {
+      const autoSubmitted = await this.finalizeAttempt(submission, 'automatic')
+      return {
+        violationCount: submission.violationCount,
+        autoSubmitted: true,
+        submission: autoSubmitted
+      }
+    }
+
     const enrollment = submission.placement
       ? submission.placement.type === AssessmentPlacementType.course
         ? await this.repository.findEnrollmentForPlacement(data.userId, submission.placement.id)
@@ -308,24 +354,111 @@ export class StudentAssessmentService {
       : null
     validateSubmissionAccess(data.userId, submission, enrollment)
 
-    const grading = this.calculateObjectiveScore(submission)
-    const hasEssay = flattenSections(submission.assessment.sections).some(
-      (item) => item.itemType === AssessmentItemType.essay
+    const updatedSubmission = await this.repository.recordViolation(submission.id)
+    if (!updatedSubmission) {
+      throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission is already submitted')
+    }
+
+    if (updatedSubmission.violationCount >= 5) {
+      const autoSubmitted = await this.finalizeAttempt(updatedSubmission, 'automatic')
+      return {
+        violationCount: updatedSubmission.violationCount,
+        autoSubmitted: true,
+        submission: autoSubmitted
+      }
+    }
+
+    return {
+      violationCount: updatedSubmission.violationCount,
+      autoSubmitted: false,
+      submission: null
+    }
+  }
+
+  async autoSubmitExpiredAttempts(data: { now?: Date; limit?: number } = {}) {
+    const now = data.now ?? new Date()
+    const limit = data.limit ?? 100
+    const submissions = await this.repository.listExpiredDoingSubmissions({ now, limit })
+    let submittedCount = 0
+    let failedCount = 0
+
+    for (const submission of submissions) {
+      try {
+        if (!this.hasReachedDeadline(submission, now)) continue
+        const result = await this.finalizeAttempt(submission, 'automatic')
+        if (result.status === SubmissionStatus.auto_submitted) submittedCount += 1
+      } catch (error) {
+        failedCount += 1
+        console.error(`[assessment-deadline] Failed to auto-submit ${submission.id}`, error)
+      }
+    }
+
+    return {
+      candidateCount: submissions.length,
+      submittedCount,
+      failedCount
+    }
+  }
+
+  private hasReachedDeadline(submission: StudentSubmissionComplete, now = new Date()) {
+    return isSubmissionExpired(
+      {
+        startTime: submission.startTime,
+        timeLimitMinutes: submission.assessment.timeLimitMinutes,
+        closeTime: submission.placement?.closeTime ?? null
+      },
+      now
     )
-    const status = hasEssay ? SubmissionStatus.submitted : SubmissionStatus.completed
+  }
+
+  private async finalizeAttempt(
+    submission: StudentSubmissionComplete,
+    mode: 'manual' | 'automatic'
+  ) {
+    const grading = this.calculateObjectiveScore(submission)
+    const essayItemIds = flattenSections(submission.assessment.sections)
+      .filter((item) => item.itemType === AssessmentItemType.essay)
+      .map((item) => item.id)
+    const hasEssay = essayItemIds.length > 0
+    const status =
+      mode === 'automatic'
+        ? SubmissionStatus.auto_submitted
+        : hasEssay
+          ? SubmissionStatus.submitted
+          : SubmissionStatus.completed
     const finalScore = hasEssay ? null : grading.autoScore
 
-    const updatedSubmission = await this.repository.updateAutoGrading({
+    const result = await this.repository.finalizeSubmission({
       submissionId: submission.id,
       mcqResults: grading.mcqResults,
       tfResults: grading.tfResults,
       numericResults: grading.numericResults,
       autoScore: grading.autoScore,
       status,
-      finalScore
+      finalScore,
+      essayItemIds
     })
 
-    return mapSubmissionForRuntime(updatedSubmission)
+    if (result.didFinalize && hasEssay) {
+      await this.notifications.notifyGradersAboutEssaySubmission({
+        assessmentId: submission.assessmentId,
+        assessmentTitle: submission.assessment.title,
+        studentId: submission.studentId,
+        studentName: submission.student.fullName
+      })
+    }
+
+    if (result.didFinalize && mode === 'automatic' && !hasEssay) {
+      await this.notifications.notifyStudentAboutGradedSubmission({
+        studentId: submission.studentId,
+        assessmentTitle: submission.assessment.title,
+        placementId: submission.placementId,
+        submissionId: submission.id,
+        finalScore: grading.autoScore
+      })
+    }
+
+    return mapSubmissionForRuntime(result.submission)
   }
 
   private ensureAnswersBelongToAssessment(

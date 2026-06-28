@@ -53,6 +53,7 @@ export const runtimeAssessmentInclude = {
 export const runtimeAssessmentPreviewInclude = {
   assessment: {
     include: {
+      sourceMedia: true,
       sections: {
         orderBy: {
           orderIndex: 'asc' as const
@@ -80,6 +81,7 @@ export const answerInclude = {
   essayAnswers: true,
   assessment: {
     include: {
+      sourceMedia: true,
       sections: {
         orderBy: {
           orderIndex: 'asc' as const

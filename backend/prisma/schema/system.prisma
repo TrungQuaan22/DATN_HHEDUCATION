@@ -3,6 +3,7 @@ enum NotificationType {
   graded
   new_assignment
   upcoming_assessment
+  essay_submission
 }
 
 model AuditLog {

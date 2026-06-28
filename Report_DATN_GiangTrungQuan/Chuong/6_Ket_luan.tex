@@ -1,0 +1,32 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Kết luận}
+
+Đồ án đã xuất phát từ bài toán vận hành dạy học trực tuyến còn phân tán ở các nhóm giáo viên và trung tâm nhỏ: livestream ở một nền tảng, tài liệu gửi qua kênh khác, video cũ khó tìm lại, đăng ký khóa học cần nhiều thao tác thủ công và giáo viên khó theo dõi quá trình học tập của học sinh. Trên cơ sở đó, đề tài đã xây dựng một hệ thống quản lý học tập trực tuyến tích hợp AI nhằm tập trung các hoạt động chính của một khóa học vào cùng một nền tảng.
+
+Về chức năng, hệ thống đã triển khai được các nhóm chức năng cốt lõi gồm quản lý người dùng, quản lý khóa học theo cấu trúc khóa học - chương - bài học, upload và xử lý media, học bài và xem tài liệu, theo dõi tiến độ học tập, tạo và làm bài kiểm tra, quản lý blog, mua khóa học, xử lý thanh toán và cấp quyền học. Bên cạnh đó, hệ thống có dịch vụ AI hỗ trợ hỏi đáp theo học liệu nội bộ bằng hướng tiếp cận RAG, trong đó câu trả lời được tạo dựa trên các đoạn tài liệu đã được truy xuất và có thể trả về thông tin citation.
+
+Về mặt kỹ thuật, đồ án đã áp dụng kiến trúc phân lớp để tách giao diện, xử lý nghiệp vụ, truy cập dữ liệu và các tích hợp hạ tầng. Backend được tổ chức theo các module nghiệp vụ, frontend được chia theo các nhóm chức năng và dịch vụ AI được tách riêng để xử lý ingest tài liệu, embedding, truy xuất ngữ cảnh và sinh câu trả lời. Cơ sở dữ liệu PostgreSQL kết hợp pgvector được sử dụng để lưu dữ liệu nghiệp vụ và dữ liệu vector, trong khi Cloudflare R2 được dùng để lưu trữ media dung lượng lớn. Các kết quả kiểm tra kỹ thuật ở Chương 4 cho thấy backend, frontend và dịch vụ AI có thể build hoặc kiểm tra cú pháp thành công trong môi trường phát triển.
+
+So với các công cụ được khảo sát ở Chương 2, hệ thống không đặt mục tiêu thay thế những nền tảng lớn như Moodle, Google Classroom hoặc Udemy. Điểm khác biệt của đồ án nằm ở việc kết hợp các nhu cầu thường bị tách rời trong mô hình dạy học trực tuyến quy mô nhỏ: đóng gói học liệu thành khóa học có cấu trúc, tự động hóa mua khóa học và cấp quyền học, quản lý bài kiểm tra, theo dõi học tập và hỗ trợ hỏi đáp theo học liệu riêng. Cách tiếp cận này phù hợp với nhóm giáo viên tự do hoặc trung tâm nhỏ muốn tự chủ hơn về nội dung, dữ liệu học viên và quy trình vận hành.
+
+Trong quá trình thực hiện, đồ án vẫn còn một số hạn chế. Thứ nhất, hệ thống mới được kiểm thử chủ yếu trong môi trường phát triển, chưa triển khai production ổn định để đo tải, đo thời gian phản hồi và đánh giá với số lượng người dùng thật. Thứ hai, AI Tutor mới dừng ở mức hỗ trợ hỏi đáp theo học liệu đã được đánh chỉ mục, chưa có cơ chế đánh giá tự động toàn diện về độ đúng của câu trả lời trên nhiều bộ dữ liệu học tập. Thứ ba, luồng xử lý video đã hỗ trợ HLS nhưng chưa tối ưu nhiều mức chất lượng phát khác nhau. Thứ tư, hệ thống phân quyền hiện còn đơn giản, phù hợp với giai đoạn đầu của sản phẩm, nhưng cần được mở rộng nếu triển khai cho nhiều trung tâm hoặc nhiều nhóm giáo viên độc lập.
+
+Qua quá trình thực hiện đồ án, sinh viên đã rút ra một số bài học quan trọng. Khi xây dựng một hệ thống có nhiều nghiệp vụ liên quan, việc thiết kế ranh giới giữa service, repository, dữ liệu và tích hợp bên ngoài cần được thực hiện sớm để tránh mã nguồn bị trộn trách nhiệm. Với các chức năng có yếu tố AI, chất lượng dữ liệu đầu vào, cách truy xuất ngữ cảnh và cơ chế từ chối khi thiếu thông tin quan trọng không kém việc gọi mô hình ngôn ngữ. Với các chức năng vận hành như thanh toán và media, hệ thống cần chú ý nhiều đến trạng thái lỗi, xử lý lặp và khả năng khôi phục, thay vì chỉ xử lý luồng thành công.
+
+\section{Hướng phát triển}
+
+Trong thời gian tới, hướng phát triển đầu tiên là hoàn thiện triển khai production và đo đạc hệ thống trong điều kiện gần với sử dụng thực tế. Hệ thống cần được đặt trên một môi trường public ổn định, cấu hình HTTPS, reverse proxy, cơ chế backup CSDL, giám sát log và giám sát tài nguyên. Sau khi triển khai, cần đo các chỉ số như thời gian tải trang, thời gian phản hồi API, thời gian xử lý video, độ ổn định của webhook thanh toán và khả năng phục vụ nhiều học sinh cùng truy cập.
+
+Hướng phát triển thứ hai là nâng cấp trải nghiệm học tập và kiểm tra. Hệ thống có thể bổ sung lịch học, thông báo nhắc học, thống kê học tập theo từng học sinh, phân tích kết quả bài kiểm tra theo chủ đề và gợi ý nội dung ôn tập dựa trên điểm yếu. Đối với bài kiểm tra, hệ thống có thể mở rộng ngân hàng câu hỏi, hỗ trợ trộn đề, giới hạn gian lận tốt hơn và cung cấp báo cáo kết quả chi tiết hơn cho giáo viên.
+
+Hướng phát triển thứ ba là cải thiện AI Tutor. Dịch vụ AI cần được đánh giá bằng các bộ câu hỏi chuẩn cho từng môn học, đo các chỉ số retrieval như recall@k, MRR và độ phù hợp citation. Ngoài hỏi đáp theo bài học, hệ thống có thể bổ sung gợi ý bài ôn tập, tóm tắt nội dung bài giảng, giải thích lỗi sai trong bài kiểm tra và hỗ trợ giáo viên tạo câu hỏi nháp từ học liệu. Khi mở rộng các chức năng này, hệ thống vẫn cần giữ nguyên nguyên tắc không để AI thay thế vai trò chuyên môn của giáo viên.
+
+Hướng phát triển thứ tư là mở rộng mô hình phân quyền và vận hành nhiều đơn vị. Khi hệ thống phục vụ nhiều trung tâm hoặc nhiều nhóm giáo viên, cần bổ sung các vai trò như trợ giảng, nhân viên vận hành, kế toán hoặc quản lý trung tâm. Dữ liệu khóa học, học sinh, đơn hàng và báo cáo cần được tách theo từng đơn vị sử dụng. Đây là bước cần thiết nếu hệ thống phát triển từ một sản phẩm dùng nội bộ thành nền tảng có thể cung cấp cho nhiều khách hàng.
+
+Hướng phát triển cuối cùng là tối ưu media và hạ tầng. Hệ thống có thể bổ sung nhiều chất lượng video HLS, CDN, cơ chế giới hạn truy cập media theo thời gian, hàng đợi xử lý video và cơ chế retry cho các công việc nền. Với thanh toán, hệ thống cần hoàn thiện quy trình đối soát, hoàn tiền và xử lý giao dịch bất thường. Những cải tiến này sẽ giúp sản phẩm ổn định hơn khi số lượng khóa học, video và học sinh tăng lên.
+
+Nhìn chung, đồ án đã hoàn thành mục tiêu xây dựng một hệ thống LMS có các chức năng cốt lõi và có hướng tích hợp AI theo học liệu nội bộ. Tuy nhiên, để trở thành một sản phẩm sử dụng rộng rãi trong thực tế, hệ thống cần tiếp tục được triển khai, đo đạc, kiểm thử với người dùng thật và cải tiến dần theo phản hồi vận hành.
+
+\end{document}

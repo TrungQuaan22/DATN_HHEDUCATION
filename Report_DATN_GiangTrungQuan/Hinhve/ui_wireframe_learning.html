@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 1366px;
+      height: 768px;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #111111;
+    }
+    .frame {
+      width: 1366px;
+      height: 768px;
+      padding: 28px;
+      border: 2px solid #111111;
+      background: #ffffff;
+    }
+    .title {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid #111111;
+      padding: 0 16px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr 320px;
+      gap: 18px;
+      height: 660px;
+      margin-top: 18px;
+    }
+    .panel {
+      border: 2px solid #111111;
+      padding: 14px;
+      background: #ffffff;
+    }
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 16px;
+      text-align: center;
+    }
+    .line, .item, .button, .box {
+      border: 1.5px solid #111111;
+      background: #f7f7f7;
+    }
+    .line { height: 18px; margin-bottom: 10px; }
+    .chapter { margin-bottom: 18px; }
+    .chapter-title { height: 28px; border: 1.5px solid #111111; margin-bottom: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; background: #eeeeee; }
+    .lesson { height: 30px; border: 1.5px solid #111111; margin-bottom: 7px; padding: 6px 8px; font-size: 12px; }
+    .lesson.active { background: #dddddd; font-weight: 700; }
+    .video {
+      height: 360px;
+      border: 2px solid #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      background:
+        linear-gradient(30deg, transparent 49.5%, #111111 50%, transparent 50.5%),
+        linear-gradient(-30deg, transparent 49.5%, #111111 50%, transparent 50.5%),
+        #ffffff;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .tabs-two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .tab { height: 34px; border: 1.5px solid #111111; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #eeeeee; }
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 12px;
+      height: 180px;
+    }
+    .doc-list, .progress-box { border: 1.5px solid #111111; padding: 12px; }
+    .chat-body {
+      height: 510px;
+      border: 1.5px solid #111111;
+      padding: 12px;
+    }
+    .msg { border: 1.5px solid #111111; padding: 8px; margin-bottom: 12px; font-size: 12px; }
+    .msg.student { margin-left: 42px; background: #eeeeee; }
+    .chat-input {
+      height: 86px;
+      margin-top: 12px;
+      border: 1.5px solid #111111;
+      padding: 10px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="title">
+      <span>Màn hình học tập</span>
+      <span>Header: tên khóa học, tiến độ, điều hướng</span>
+    </div>
+    <div class="layout">
+      <aside class="panel">
+        <h2>Sidebar lộ trình</h2>
+        <div class="chapter">
+          <div class="chapter-title">Chương 1</div>
+          <div class="lesson active">Bài 1: Video bài giảng</div>
+          <div class="lesson">Bài 2: Tài liệu</div>
+          <div class="lesson">Quiz sau bài học</div>
+        </div>
+        <div class="chapter">
+          <div class="chapter-title">Chương 2</div>
+          <div class="lesson">Bài 4</div>
+          <div class="lesson">Bài 5</div>
+          <div class="lesson">Bài kiểm tra</div>
+        </div>
+      </aside>
+      <main class="panel">
+        <h2>Khu vực nội dung chính</h2>
+        <div class="video">Video Player / HLS</div>
+        <div class="tabs tabs-two">
+          <div class="tab">Mô tả bài học</div>
+          <div class="tab">Tài liệu</div>
+        </div>
+        <div class="content-grid">
+          <div class="doc-list">
+            <div class="line"></div>
+            <div class="line" style="width: 86%"></div>
+            <div class="line" style="width: 72%"></div>
+            <div class="line" style="width: 92%"></div>
+          </div>
+          <div class="progress-box">
+            <div class="line"></div>
+            <div class="line" style="width: 75%"></div>
+            <div class="button" style="height: 42px; margin-top: 28px;"></div>
+          </div>
+        </div>
+      </main>
+      <aside class="panel">
+        <h2>AI Tutor</h2>
+        <div class="chat-body">
+          <div class="msg">Gợi ý câu hỏi theo bài học hiện tại.</div>
+          <div class="msg student">Em chưa hiểu phần này.</div>
+          <div class="msg">Trả lời dựa trên học liệu của bài học.</div>
+        </div>
+        <div class="chat-input">Ô nhập câu hỏi <span>Gửi</span></div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

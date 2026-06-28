@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Edit, Copy, RefreshCw, ListChecks } from "lucide-react";
+import { Edit, Copy, RefreshCw, ListChecks, BarChart3 } from "lucide-react";
 import { AdminAssessmentSummary } from "../types";
 import { AdminCourseDetail } from "@/features/courses/types";
 import { useCloneAssessmentMutation } from "../hooks";
@@ -95,7 +95,7 @@ export function AssessmentListTable({
           assessments.map((assessment) => (
             <div
               key={assessment.id}
-              className="grid gap-4 items-center p-5 md:grid-cols-[1fr_auto_140px] hover:bg-admin-bg/20 transition-colors"
+              className="grid gap-4 items-center p-5 md:grid-cols-[1fr_auto_230px] hover:bg-admin-bg/20 transition-colors"
             >
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap gap-2 items-center">
@@ -140,6 +140,16 @@ export function AssessmentListTable({
                 <button
                   type="button"
                   onClick={() =>
+                    router.push(`/admin/assessments/${assessment.id}/results`)
+                  }
+                  className="inline-flex items-center gap-1 rounded bg-admin-deep hover:bg-admin-pink/15 hover:text-admin-pink border border-admin-border px-3 py-1.5 text-xs font-bold text-admin-cream transition active:scale-95"
+                >
+                  <BarChart3 size={12} />
+                  Kết quả
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
                     router.push(
                       `/admin/assessments/builder?id=${assessment.id}`,
                     )
@@ -166,4 +176,3 @@ export function AssessmentListTable({
     </div>
   );
 }
-

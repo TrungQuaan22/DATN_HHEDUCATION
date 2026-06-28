@@ -134,7 +134,9 @@ export type AdminGradingSubmissionSummary = {
   assessmentId: string;
   placementId: string | null;
   attemptNumber: number;
-  status: "submitted";
+  status: "doing" | "submitted" | "auto_submitted" | "completed";
+  startTime?: string;
+  violationCount?: number;
   submitTime: string | null;
   autoScore: string | null;
   finalScore: string | null;
@@ -155,24 +157,31 @@ export type AdminGradingSubmissionSummary = {
 };
 
 export type AdminGradingSubmissionDetail = AdminGradingSubmissionSummary & {
-  sections: Array<AssessmentSection & { items: Array<{
-    id: string;
-    itemType: AssessmentItemType;
-    orderIndex: number;
-    questionNumber: number;
-    maxScore: string;
-    scoringConfig: unknown;
-    question: {
-      id: string;
-      content: unknown;
-      options: Array<{
+  sections: Array<
+    AssessmentSection & {
+      items: Array<{
         id: string;
-        content: unknown;
+        itemType: AssessmentItemType;
         orderIndex: number;
-        isCorrect: boolean;
+        questionNumber: number;
+        maxScore: string;
+        scoringConfig: unknown;
+        correctAnswer: unknown;
+        explanation: unknown;
+        question: {
+          id: string;
+          content: unknown;
+          explanation: unknown;
+          options: Array<{
+            id: string;
+            content: unknown;
+            orderIndex: number;
+            isCorrect: boolean;
+          }>;
+        } | null;
       }>;
-    } | null;
-  }> }>;
+    }
+  >;
   essayAnswers: Array<{
     id: string;
     itemId: string;
@@ -181,6 +190,27 @@ export type AdminGradingSubmissionDetail = AdminGradingSubmissionSummary & {
     teacherNote: string | null;
     gradedAt: string | null;
   }>;
+  answers: {
+    mcq: Array<{
+      itemId: string;
+      selectedOptionIds: string[];
+      isCorrect: boolean | null;
+      pointEarned: string;
+    }>;
+    trueFalse: Array<{
+      itemId: string;
+      optionId: string;
+      selectedValue: boolean;
+      isCorrect: boolean | null;
+      pointEarned: string;
+    }>;
+    numeric: Array<{
+      itemId: string;
+      answerValue: string;
+      isCorrect: boolean | null;
+      pointEarned: string;
+    }>;
+  };
 };
 
 export type ListAssessmentPlacementsResponse = {
@@ -203,12 +233,23 @@ export type AssessmentSubmission = {
   finalScore?: string | null;
   startTime?: string;
   submitTime?: string | null;
+  violationCount?: number;
   answers?: {
     mcq: Array<{ itemId: string; selectedOptionIds: string[] }>;
-    trueFalse: Array<{ itemId: string; optionId: string; selectedValue: boolean }>;
+    trueFalse: Array<{
+      itemId: string;
+      optionId: string;
+      selectedValue: boolean;
+    }>;
     numeric: Array<{ itemId: string; answerValue: string }>;
     essay: Array<{ itemId: string; answer: string }>;
   };
+};
+
+export type SubmissionViolationResult = {
+  violationCount: number;
+  autoSubmitted: boolean;
+  submission: AssessmentSubmission | null;
 };
 
 export type SaveAnswerPayload =
@@ -257,30 +298,34 @@ export type AdminAssessmentDetail = {
     closeTime: string | null;
     maxAttempts: number | null;
   }>;
-  sections: Array<AssessmentSection & { items: Array<{
-    id: string;
-    orderIndex: number;
-    questionNumber: number;
-    itemType: AssessmentItemType;
-    topicId: string | null;
-    topicName: string | null;
-    difficulty: string;
-    maxScore: string;
-    scoringConfig: any;
-    correctAnswer: any;
-    explanation: string | null;
-    question: {
-      id: string;
-      content: any;
-      explanation: string | null;
-      options: Array<{
+  sections: Array<
+    AssessmentSection & {
+      items: Array<{
         id: string;
-        content: any;
-        isCorrect: boolean;
         orderIndex: number;
+        questionNumber: number;
+        itemType: AssessmentItemType;
+        topicId: string | null;
+        topicName: string | null;
+        difficulty: string;
+        maxScore: string;
+        scoringConfig: any;
+        correctAnswer: any;
+        explanation: string | null;
+        question: {
+          id: string;
+          content: any;
+          explanation: string | null;
+          options: Array<{
+            id: string;
+            content: any;
+            isCorrect: boolean;
+            orderIndex: number;
+          }>;
+        } | null;
       }>;
-    } | null;
-  }> }>;
+    }
+  >;
 };
 
 export type ListAdminAssessmentsResponse = {
@@ -291,6 +336,82 @@ export type ListAdminAssessmentsResponse = {
 export type ListAdminGradingSubmissionsResponse = {
   items: AdminGradingSubmissionSummary[];
   pagination: ListAssessmentPlacementsResponse["pagination"];
+};
+
+export type AssessmentParticipantStatus =
+  "not_started" | "doing" | "pending_grading" | "completed";
+
+export type AdminAssessmentResultParticipant = {
+  student: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarMediaId: string | null;
+    avatarUrl: string | null;
+    status: string;
+  };
+  status: AssessmentParticipantStatus;
+  attemptCount: number;
+  bestScore: string | null;
+  latestScore: string | null;
+  latestSubmissionId: string | null;
+  latestSubmissionStatus: AssessmentSubmission["status"] | null;
+  latestSubmitTime: string | null;
+  latestActivityAt: string | null;
+};
+
+export type AdminAssessmentResultsResponse = {
+  assessment: {
+    id: string;
+    title: string;
+    subject: Subject;
+    grade: number;
+    type: "exam" | "quiz";
+    gradingType: "auto" | "manual" | "mixed";
+    timeLimitMinutes: number | null;
+    maxScore: string;
+    placement: {
+      id: string;
+      type: "public_practice" | "course" | "lesson";
+      openTime: string | null;
+      closeTime: string | null;
+      maxAttempts: number | null;
+      course: { id: string; title: string } | null;
+    } | null;
+  };
+  stats: {
+    totalStudents: number;
+    notStarted: number;
+    doing: number;
+    pendingGrading: number;
+    completed: number;
+    highestScore: string | null;
+    lowestScore: string | null;
+    averageScore: string | null;
+  };
+  items: AdminAssessmentResultParticipant[];
+  pagination: ListAssessmentPlacementsResponse["pagination"];
+};
+
+export type AdminAssessmentStudentAttemptsResponse = {
+  assessment: {
+    id: string;
+    title: string;
+    maxScore: string;
+    gradingType: "auto" | "manual" | "mixed";
+  };
+  participant: AdminAssessmentResultParticipant;
+  attempts: Array<{
+    id: string;
+    attemptNumber: number;
+    status: AssessmentSubmission["status"];
+    startTime: string;
+    submitTime: string | null;
+    updatedAt: string;
+    autoScore: string | null;
+    finalScore: string | null;
+    violationCount: number;
+  }>;
 };
 
 export type StudentAssessmentSummary = {
@@ -336,4 +457,80 @@ export type AssessmentWorkspaceResponse = Omit<RuntimeAssessment, "type"> & {
   submissionId: string;
   submission: AssessmentSubmission;
   timeRemainingSeconds: number | null;
+};
+
+export type SubmissionResultOutcome =
+  "correct" | "incorrect" | "partial" | "unanswered";
+
+export type StudentSubmissionResultItem = {
+  id: string;
+  questionNumber: number;
+  itemType: AssessmentItemType;
+  maxScore: string;
+  pointEarned: string;
+  outcome: SubmissionResultOutcome;
+  content: unknown;
+  explanation: unknown;
+  options: Array<{
+    id: string;
+    content: unknown;
+    orderIndex: number;
+    isSelected: boolean;
+    isCorrect: boolean;
+  }>;
+  trueFalseStatements: Array<{
+    id: string;
+    content: unknown;
+    orderIndex: number;
+    selectedValue: boolean | null;
+    correctValue: boolean;
+    isCorrect: boolean | null;
+  }>;
+  numericAnswer: {
+    submittedValue: string | null;
+    correctValue: string | null;
+  } | null;
+  essayAnswer: {
+    answer: string;
+    teacherScore: string | null;
+    teacherNote: string | null;
+  } | null;
+};
+
+export type StudentSubmissionResult = {
+  id: string;
+  status: AssessmentSubmission["status"];
+  reviewAvailable: boolean;
+  assessment: {
+    id: string;
+    title: string;
+    subject: Subject;
+    grade: number;
+    type: "exam" | "quiz";
+    gradingType: "auto" | "manual" | "mixed";
+    sourceMediaId: string | null;
+    sourceMediaUrl: string | null;
+    maxScore: string;
+  };
+  attempt: {
+    attemptNumber: number;
+    startTime: string;
+    submitTime: string | null;
+    autoScore: string | null;
+    finalScore: string | null;
+  };
+  summary: {
+    totalItems: number;
+    correctItems: number;
+    partialItems: number;
+    incorrectItems: number;
+    unansweredItems: number;
+  } | null;
+  sections: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    orderIndex: number;
+    items: StudentSubmissionResultItem[];
+  }>;
 };

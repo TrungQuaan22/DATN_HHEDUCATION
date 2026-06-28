@@ -1,5 +1,5 @@
-import AdminPlaceholder from '@/components/layout/admin-placeholder';
+import ProfileSettings from "@/features/users/components/profile-settings";
 
 export default function AdminSettingsPage() {
-  return <AdminPlaceholder title="Cài đặt hệ thống" />;
+  return <ProfileSettings />;
 }

@@ -2,7 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
-import { Shield, GraduationCap, User, UserPlus, BookOpen, UserCheck, UserX } from "lucide-react";
+import {
+  Shield,
+  GraduationCap,
+  User,
+  UserPlus,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import { AdminUserItem, UserStatus } from "@/features/users/types";
 
 interface UserRowProps {
@@ -10,19 +17,36 @@ interface UserRowProps {
   isActionPending: boolean;
   onToggleStatus: (userId: string, currentStatus: UserStatus) => Promise<void>;
   onEnrollClick: (user: AdminUserItem) => void;
-  onProgressClick: (user: AdminUserItem) => void;
 }
 
 const ROLE_LABELS = {
-  admin: { text: "Quản trị viên", class: "bg-rose-500/10 text-rose-400 border-rose-500/20" },
-  teacher: { text: "Giảng viên", class: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  student: { text: "Học sinh", class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  admin: {
+    text: "Quản trị viên",
+    class: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+  },
+  teacher: {
+    text: "Giảng viên",
+    class: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  },
+  student: {
+    text: "Học sinh",
+    class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  },
 };
 
 const STATUS_LABELS = {
-  active: { text: "Hoạt động", class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  banned: { text: "Bị khóa", class: "bg-red-500/10 text-red-400 border-red-500/20" },
-  pending_verification: { text: "Chờ xác minh", class: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  active: {
+    text: "Hoạt động",
+    class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  },
+  banned: {
+    text: "Bị khóa",
+    class: "bg-red-500/10 text-red-400 border-red-500/20",
+  },
+  pending_verification: {
+    text: "Chờ xác minh",
+    class: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  },
 };
 
 const formatDate = (dateStr: string) => {
@@ -43,7 +67,6 @@ export default function UserRow({
   isActionPending,
   onToggleStatus,
   onEnrollClick,
-  onProgressClick,
 }: UserRowProps) {
   const roleConfig = ROLE_LABELS[user.role] || {
     text: user.role,
@@ -77,10 +100,16 @@ export default function UserRow({
             )}
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-admin-cream truncate max-w-[200px]" title={user.fullName}>
+            <p
+              className="font-bold text-admin-cream truncate max-w-[200px]"
+              title={user.fullName}
+            >
               {user.fullName}
             </p>
-            <p className="text-xs text-admin-muted truncate max-w-[200px]" title={user.email}>
+            <p
+              className="text-xs text-admin-muted truncate max-w-[200px]"
+              title={user.email}
+            >
               {user.email}
             </p>
           </div>
@@ -89,14 +118,18 @@ export default function UserRow({
 
       {/* Role */}
       <td className="py-4">
-        <span className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${roleConfig.class}`}>
+        <span
+          className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${roleConfig.class}`}
+        >
           {roleConfig.text}
         </span>
       </td>
 
       {/* Status */}
       <td className="py-4">
-        <span className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${statusConfig.class}`}>
+        <span
+          className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${statusConfig.class}`}
+        >
           {statusConfig.text}
         </span>
       </td>
@@ -120,14 +153,6 @@ export default function UserRow({
               >
                 <UserPlus size={16} />
               </button>
-              <button
-                onClick={() => onProgressClick(user)}
-                disabled={isActionPending}
-                className="p-1.5 text-admin-muted hover:text-admin-cream hover:bg-admin-surface-low/50 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
-                title="Xem tiến độ học tập"
-              >
-                <BookOpen size={16} />
-              </button>
             </>
           )}
 
@@ -141,16 +166,22 @@ export default function UserRow({
                   ? "text-emerald-500/70 hover:text-emerald-400 hover:bg-emerald-500/10"
                   : "text-red-500/70 hover:text-red-400 hover:bg-red-500/10"
               }`}
-              title={user.status === "banned" ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+              title={
+                user.status === "banned"
+                  ? "Mở khóa tài khoản"
+                  : "Khóa tài khoản"
+              }
             >
-              {user.status === "banned" ? <UserCheck size={16} /> : <UserX size={16} />}
+              {user.status === "banned" ? (
+                <UserCheck size={16} />
+              ) : (
+                <UserX size={16} />
+              )}
             </button>
           )}
 
           {/* Admin placeholder to keep layout alignment */}
-          {user.role === "admin" && (
-            <div className="w-[28px] h-7 shrink-0" />
-          )}
+          {user.role === "admin" && <div className="w-[28px] h-7 shrink-0" />}
         </div>
       </td>
     </tr>

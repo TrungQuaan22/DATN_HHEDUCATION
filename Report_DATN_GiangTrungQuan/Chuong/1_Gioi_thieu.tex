@@ -1,0 +1,57 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+\setcounter{chapter}{1}
+
+Sự phát triển của học tập trực tuyến tạo ra nhu cầu mới đối với các hệ thống phần mềm hỗ trợ dạy học, quản lý học liệu và theo dõi quá trình học tập. Trong bối cảnh đó, nhiều giáo viên và nhóm luyện thi nhỏ đã bắt đầu chuyển một phần hoạt động giảng dạy lên môi trường số. Tuy nhiên, khi quy mô học sinh tăng, cách vận hành dựa trên livestream, nhóm mạng xã hội và ứng dụng nhắn tin bộc lộ nhiều hạn chế về tổ chức học liệu, quản lý học sinh và hỗ trợ người học. Chương này trình bày bối cảnh hình thành đề tài, mục tiêu cần đạt được, phạm vi triển khai và bố cục của toàn bộ báo cáo.
+
+\section{Đặt vấn đề}
+\label{section:1.1}
+
+Trong những năm gần đây, nhu cầu học tập trực tuyến tăng nhanh do học sinh có xu hướng tìm kiếm các lớp học linh hoạt, có thể xem lại bài giảng và luyện tập ngoài giờ học chính khóa. Đối với các lớp luyện thi THPT Quốc gia hoặc tuyển sinh vào lớp 10, hình thức học trực tuyến còn giúp học sinh tiếp cận giáo viên ở nhiều địa phương khác nhau mà không bị giới hạn bởi khoảng cách địa lý. Vì vậy, nhiều giáo viên tự do và trung tâm luyện thi quy mô nhỏ đã sử dụng các công cụ sẵn có như mạng xã hội, phần mềm họp trực tuyến và ứng dụng nhắn tin để tổ chức lớp học.
+
+Cách tổ chức này phù hợp trong giai đoạn ban đầu vì giáo viên có thể triển khai nhanh mà không cần đầu tư hệ thống riêng. Một buổi học có thể được tổ chức qua livestream hoặc phòng họp trực tuyến, tài liệu có thể được gửi qua nhóm chat, còn việc đăng ký khóa học có thể được xử lý bằng chuyển khoản và duyệt thủ công. Tuy nhiên, khi số lượng học sinh tăng từ vài chục lên vài trăm hoặc vài nghìn, mô hình vận hành phân tán bắt đầu tạo ra nhiều chi phí ẩn. Giáo viên hoặc trợ lý phải kiểm tra biên lai, duyệt quyền truy cập, gửi lại tài liệu, trả lời các câu hỏi lặp lại và tổng hợp tiến độ học tập từ nhiều nguồn khác nhau.
+
+Vấn đề trên ảnh hưởng trực tiếp đến cả giáo viên và học sinh. Đối với giáo viên, học liệu cũ như video livestream, đề luyện tập và tài liệu lý thuyết không được tổ chức thành một cấu trúc ổn định nên khó tái sử dụng cho các khóa học sau. Đối với học sinh, việc học qua nhiều nền tảng rời rạc làm giảm khả năng theo dõi lộ trình cá nhân, đặc biệt với những học sinh tham gia sau hoặc cần xem lại bài giảng cũ. Khi không có một hệ thống tập trung, học sinh khó biết mình đã học đến đâu, còn thiếu bài tập nào và cần hỏi lại nội dung nào.
+
+Từ thực tế đó, bài toán đặt ra là cần một hệ thống phần mềm có khả năng tập trung hóa việc tổ chức khóa học, học liệu, quyền truy cập và quá trình học tập. Hệ thống này cần phù hợp với giáo viên cá nhân hoặc nhóm giáo viên quy mô nhỏ và vừa, nơi nguồn lực vận hành còn hạn chế nhưng nhu cầu quản lý học sinh và tái sử dụng học liệu ngày càng lớn. Nếu bài toán được giải quyết, giáo viên có thể giảm bớt các thao tác thủ công, còn học sinh có thể tiếp cận nội dung học tập theo một lộ trình rõ ràng hơn.
+
+\section{Mục tiêu và phạm vi đề tài}
+\label{section:1.2}
+
+Mục tiêu của đề tài là xây dựng một hệ thống quản lý học tập trực tuyến phục vụ đồng thời nhu cầu tổ chức dạy học của giáo viên và nhu cầu học tập có cấu trúc của học sinh trong môi trường EdTech. Ở phía vận hành, hệ thống hướng tới giáo viên tự do, nhóm giáo viên hoặc trung tâm luyện thi quy mô nhỏ và vừa cần một nền tảng để đóng gói bài giảng thành khóa học, quản lý học sinh và giảm khối lượng thao tác thủ công. Ở phía người học, hệ thống hướng tới học sinh cần một không gian học tập tập trung, trong đó bài giảng, tài liệu, bài đánh giá và tiến độ cá nhân được tổ chức theo một lộ trình rõ ràng.
+
+Về chức năng, đề tài tập trung vào các nghiệp vụ cốt lõi của một hệ thống học tập trực tuyến. Hệ thống cần cho phép quản trị viên hoặc giáo viên tạo khóa học theo cấu trúc khóa học, chương và bài học; quản lý học liệu như video, tài liệu và nội dung bài viết; quản lý học sinh và quyền truy cập khóa học; theo dõi tiến độ học tập; tổ chức bài đánh giá hoặc bài luyện tập; đồng thời cung cấp chức năng trợ lý AI hỗ trợ hỏi đáp theo nội dung học liệu nội bộ. Các chức năng này được lựa chọn nhằm giải quyết trực tiếp tình trạng học liệu phân tán và khó theo dõi quá trình học tập đã nêu ở Mục \ref{section:1.1}.
+
+Về phạm vi, đề tài không hướng tới việc xây dựng một nền tảng mạng xã hội học tập hoặc một sàn thương mại khóa học quy mô lớn. Hệ thống được xây dựng như một nền tảng quản lý học tập có thể triển khai cho một đơn vị giáo dục cụ thể, trong đó dữ liệu học viên, khóa học và học liệu thuộc quyền quản lý của đơn vị vận hành. Đối với chức năng AI, đề tài không đặt mục tiêu huấn luyện mô hình ngôn ngữ từ đầu, mà tập trung tích hợp mô hình hoặc dịch vụ có sẵn vào quy trình hỏi đáp dựa trên học liệu của hệ thống.
+
+Trên cơ sở đó, đề tài hướng tới khắc phục hạn chế cốt lõi của mô hình dạy học trực tuyến phân tán: học liệu không được đóng gói có hệ thống, quyền truy cập khóa học còn phụ thuộc nhiều vào thao tác thủ công và quá trình học tập của học sinh khó được theo dõi liên tục. Điểm mới của phần mềm nằm ở việc kết hợp các chức năng quản lý học tập truyền thống với trợ lý AI dựa trên học liệu nội bộ, qua đó tạo ra một môi trường học tập tập trung cho học sinh và cung cấp hệ thống quản lý học tập hiệu quả cho giáo viên, giảm bớt các thao tác thủ công và tăng khả năng tái sử dụng học liệu.
+
+\section{Định hướng giải pháp}
+\label{section:1.3}
+
+Từ mục tiêu đã xác định ở Mục \ref{section:1.2}, đề tài lựa chọn định hướng xây dựng hệ thống dưới dạng ứng dụng web theo mô hình Client-Server. Phần giao diện người dùng được phát triển bằng Next.js và React, phần xử lý nghiệp vụ phía máy chủ được xây dựng bằng Node.js, Express và TypeScript, còn dữ liệu nghiệp vụ được lưu trữ bằng PostgreSQL thông qua Prisma ORM. Định hướng này phù hợp với một hệ thống LMS vì giao diện học tập, API nghiệp vụ và dữ liệu có thể được tách biệt rõ ràng, giúp hệ thống dễ bảo trì và mở rộng theo từng phần.
+
+Đối với chức năng AI, đề tài lựa chọn kỹ thuật RAG để xây dựng trợ lý hỏi đáp theo học liệu nội bộ. Theo định hướng này, học liệu của giáo viên được trích xuất, chia nhỏ và biểu diễn dưới dạng vector embedding; khi học sinh đặt câu hỏi, hệ thống truy xuất các đoạn học liệu liên quan để cung cấp ngữ cảnh cho mô hình ngôn ngữ tạo câu trả lời. Cách tiếp cận này giúp chức năng hỏi đáp bám sát nội dung bài học hơn so với việc sử dụng mô hình ngôn ngữ độc lập, đồng thời không yêu cầu huấn luyện mô hình từ đầu.
+
+Giải pháp của đồ án là xây dựng một nền tảng quản lý học tập trực tuyến tích hợp các nghiệp vụ cốt lõi gồm tổ chức khóa học, quản lý học liệu, quản lý người học, theo dõi tiến độ, quản lý quyền truy cập, tổ chức bài đánh giá và hỗ trợ hỏi đáp bằng trợ lý AI. Hệ thống được thiết kế theo hướng phân tầng để tách biệt phần giao diện, phần điều phối nghiệp vụ, phần truy cập dữ liệu và phần tích hợp dịch vụ ngoài. Cách tổ chức này giúp các nhóm chức năng như khóa học, bài học, đánh giá, thanh toán và trợ lý AI có thể phát triển tương đối độc lập nhưng vẫn hoạt động trong cùng một nền tảng.
+
+Đóng góp chính của đề tài nằm ở việc đưa các nghiệp vụ thường bị phân tán trong mô hình dạy học trực tuyến quy mô nhỏ vào một hệ thống tập trung, đồng thời bổ sung cơ chế hỏi đáp theo học liệu nội bộ để hỗ trợ học sinh trong quá trình tự học. Kết quả hướng tới là một hệ thống LMS có khả năng phục vụ đồng thời giáo viên, học sinh và người quản trị, trong đó nội dung học tập, tiến độ, quyền truy cập và hỗ trợ học tập được quản lý thống nhất hơn so với cách vận hành thủ công trên nhiều công cụ rời rạc.
+
+\section{Bố cục đồ án}
+\label{section:1.4}
+
+Phần còn lại của báo cáo đồ án tốt nghiệp này được tổ chức như sau.
+
+Chương 2 trình bày quá trình khảo sát và phân tích yêu cầu hệ thống. Chương này phân tích hiện trạng dạy học trực tuyến phân tán, xác định các nhóm người dùng chính, khảo sát một số nền tảng có liên quan và rút ra các yêu cầu chức năng, phi chức năng cần đáp ứng. Trên cơ sở đó, chương này trình bày tổng quan chức năng, biểu đồ use case và đặc tả một số use case quan trọng của hệ thống.
+
+Chương 3 trình bày các nền tảng lý thuyết và công nghệ được sử dụng trong quá trình thực hiện đồ án. Chương này giới thiệu các công nghệ chính như Next.js, React, Node.js, Express, TypeScript, PostgreSQL, Prisma ORM và kỹ thuật RAG, đồng thời giải thích lý do lựa chọn các công nghệ này trong mối liên hệ với yêu cầu đã xác định ở Chương 2.
+
+Chương 4 trình bày phần phân tích, thiết kế, triển khai và đánh giá hệ thống. Nội dung chương bao gồm thiết kế kiến trúc tổng quan, thiết kế chi tiết các module chính, thiết kế giao diện, thiết kế cơ sở dữ liệu, quá trình xây dựng ứng dụng, kết quả đạt được, kiểm thử và mô tả triển khai. Chương này cũng trình bày các hình ảnh minh họa chức năng chính để làm rõ cách hệ thống được hiện thực hóa.
+
+Chương 5 trình bày các giải pháp và đóng góp nổi bật của đồ án. Chương này tập trung vào những vấn đề kỹ thuật có vai trò quan trọng trong hệ thống, bao gồm tổ chức học liệu theo cấu trúc khóa học, quản lý quyền truy cập học tập, theo dõi tiến độ, tổ chức bài đánh giá và tích hợp trợ lý AI theo học liệu nội bộ. Mỗi nội dung được trình bày theo hướng làm rõ khó khăn, giải pháp thực hiện và kết quả đạt được.
+
+Chương 6 trình bày kết luận và hướng phát triển của đồ án. Chương này tổng kết các kết quả đã đạt được so với mục tiêu ban đầu, chỉ ra những hạn chế còn tồn tại trong phạm vi thực hiện và đề xuất một số hướng mở rộng trong tương lai, đặc biệt là khả năng triển khai thực tế, mở rộng quy mô người dùng và cải thiện các chức năng hỗ trợ học tập bằng AI.
+
+Chương này đã trình bày bối cảnh hình thành đề tài, bài toán cần giải quyết, mục tiêu, phạm vi và định hướng giải pháp ở mức tổng quan. Từ các vấn đề đã nêu, chương tiếp theo sẽ khảo sát hiện trạng và phân tích yêu cầu để xác định cụ thể các chức năng cần có của hệ thống.
+
+\end{document}

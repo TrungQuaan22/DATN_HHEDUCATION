@@ -6,9 +6,30 @@ from docx import Document
 from pptx import Presentation
 from pypdf import PdfReader
 
+try:
+    from markitdown import MarkItDown
+except ImportError:  # pragma: no cover - optional dependency
+    MarkItDown = None
+
+
+def extract_markitdown_text(path: Path) -> str | None:
+    if MarkItDown is None:
+        return None
+
+    converter = MarkItDown()
+    result = converter.convert(str(path))
+    text = getattr(result, "text_content", None)
+    if not text or not text.strip():
+        return None
+    return text.strip()
+
 
 def extract_text_from_file(path: str, material_type: str) -> str:
     file_path = Path(path)
+    markitdown_text = extract_markitdown_text(file_path)
+    if markitdown_text:
+        return markitdown_text
+
     if material_type == "pdf":
         return extract_pdf_text(file_path)
     if material_type == "docx":

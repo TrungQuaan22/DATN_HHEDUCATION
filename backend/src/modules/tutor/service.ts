@@ -38,6 +38,16 @@ type AiChatResponse = {
   latency_ms?: number | null
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const isAiCitation = (value: unknown): value is AiCitation =>
+  isRecord(value) &&
+  typeof value.chunk_id === 'string' &&
+  typeof value.rank === 'number' &&
+  (typeof value.score === 'number' || value.score === null) &&
+  (typeof value.quote === 'string' || value.quote === null)
+
 const mapSession = (session: TutorSessionRecord): TutorSessionDto => ({
   id: session.id,
   studentId: session.studentId,
@@ -110,10 +120,7 @@ export class TutorService {
     return sessions.map(mapSession)
   }
 
-  async createSession(
-    studentId: string,
-    input: CreateTutorSessionDto
-  ): Promise<TutorSessionDto> {
+  async createSession(studentId: string, input: CreateTutorSessionDto): Promise<TutorSessionDto> {
     await this.ensureEnrollment(studentId, input.courseId)
     await this.ensureLessonInCourse(input.courseId, input.lessonId)
 
@@ -298,24 +305,29 @@ export class TutorService {
       }
 
       const decoder = new TextDecoder()
-      let citations: any[] = []
+      let citations: AiCitation[] = []
       let accumulatedContent = ''
-      let provider = null
-      let modelName = null
+      let provider: string | null = null
+      let modelName: string | null = null
       let buffer = ''
+      const collectEvent = (event: string, data: unknown) => {
+        if (event === 'citations' && Array.isArray(data)) {
+          citations = data.filter(isAiCitation)
+        }
+        if (event === 'content' && isRecord(data) && typeof data.text === 'string') {
+          accumulatedContent += data.text
+        }
+        if (event === 'done' && isRecord(data)) {
+          provider = typeof data.provider === 'string' ? data.provider : null
+          modelName = typeof data.model_name === 'string' ? data.model_name : null
+        }
+      }
 
       while (!isAborted) {
         const { done, value } = await reader.read()
         if (done) {
           if (buffer) {
-            this.processSseBuffer(buffer, clientRes, (event, data) => {
-              if (event === 'citations') citations = data
-              if (event === 'content') accumulatedContent += data.text
-              if (event === 'done') {
-                provider = data.provider
-                modelName = data.model_name
-              }
-            })
+            this.processSseBuffer(buffer, clientRes, collectEvent)
           }
           break
         }
@@ -325,14 +337,7 @@ export class TutorService {
         if (boundary !== -1) {
           const completeEvents = buffer.substring(0, boundary)
           buffer = buffer.substring(boundary + 2)
-          this.processSseBuffer(completeEvents, clientRes, (event, data) => {
-            if (event === 'citations') citations = data
-            if (event === 'content') accumulatedContent += data.text
-            if (event === 'done') {
-              provider = data.provider
-              modelName = data.model_name
-            }
-          })
+          this.processSseBuffer(completeEvents, clientRes, collectEvent)
         }
       }
 
@@ -343,7 +348,12 @@ export class TutorService {
 
       // Save assistant response to DB
       const existingChunks = new Set(
-        (await this.repository.findChunksByIds(session.courseId, citations.map(c => c.chunk_id))).map((chunk) => chunk.id)
+        (
+          await this.repository.findChunksByIds(
+            session.courseId,
+            citations.map((c) => c.chunk_id)
+          )
+        ).map((chunk) => chunk.id)
       )
 
       await this.repository.saveAssistantResponse({
@@ -364,10 +374,11 @@ export class TutorService {
       })
 
       clientRes.end()
-    } catch (err: any) {
-      console.error('Error in sendMessageStream:', err)
+    } catch (error: unknown) {
+      console.error('Error in sendMessageStream:', error)
       if (!isAborted) {
-        clientRes.write(`event: error\ndata: ${JSON.stringify({ message: err.message })}\n\n`)
+        const message = error instanceof Error ? error.message : 'Unexpected streaming error'
+        clientRes.write(`event: error\ndata: ${JSON.stringify({ message })}\n\n`)
         clientRes.end()
       }
     }
@@ -376,7 +387,7 @@ export class TutorService {
   private processSseBuffer(
     bufferText: string,
     clientRes: Response,
-    onParsed: (event: string, data: any) => void
+    onParsed: (event: string, data: unknown) => void
   ) {
     const blocks = bufferText.split('\n\n')
     for (const block of blocks) {
@@ -399,9 +410,9 @@ export class TutorService {
         clientRes.write(`event: ${event}\ndata: ${data}\n\n`)
 
         try {
-          const parsedData = JSON.parse(data)
+          const parsedData: unknown = JSON.parse(data)
           onParsed(event, parsedData)
-        } catch (err) {
+        } catch {
           // not JSON, just pass raw
           onParsed(event, data)
         }

@@ -12,13 +12,15 @@ import {
   Search,
   Calendar,
   AlertTriangle,
-  PlayCircle
+  PlayCircle,
 } from "lucide-react";
 import { useStudentAssessmentsQuery } from "@/features/assessments/hooks";
 import { StudentAssessmentSummary } from "@/features/assessments/types";
 
 export default function StudentAssessmentsPage() {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past_due" | "completed">("upcoming");
+  const [activeTab, setActiveTab] = useState<
+    "upcoming" | "past_due" | "completed"
+  >("upcoming");
   const [courseFilter, setCourseFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -32,7 +34,10 @@ export default function StudentAssessmentsPage() {
     const coursesMap = new Map<string, { id: string; title: string }>();
     rawItems.forEach((item) => {
       if (item.course) {
-        coursesMap.set(item.course.id, { id: item.course.id, title: item.course.title });
+        coursesMap.set(item.course.id, {
+          id: item.course.id,
+          title: item.course.title,
+        });
       }
     });
     return Array.from(coursesMap.values());
@@ -49,7 +54,8 @@ export default function StudentAssessmentsPage() {
         item.course.title.toLowerCase().includes(q);
 
       // 2. Course Filter
-      const matchCourse = courseFilter === "all" || item.course.id === courseFilter;
+      const matchCourse =
+        courseFilter === "all" || item.course.id === courseFilter;
 
       return matchSearch && matchCourse;
     });
@@ -68,8 +74,7 @@ export default function StudentAssessmentsPage() {
       const latest = item.attempt.latestSubmission;
 
       const isCompleted =
-        (latest && (latest.status === "completed" || latest.status === "auto_submitted")) ||
-        (max !== null && used >= max);
+        (latest && latest.status !== "doing") || (max !== null && used >= max);
 
       const isClosed = item.closeTime ? new Date(item.closeTime) < now : false;
 
@@ -89,7 +94,10 @@ export default function StudentAssessmentsPage() {
 
   // Group current tab items by Course for structured display
   const groupedByCourse = useMemo(() => {
-    const groups: Record<string, { title: string; items: StudentAssessmentSummary[] }> = {};
+    const groups: Record<
+      string,
+      { title: string; items: StudentAssessmentSummary[] }
+    > = {};
     currentList.forEach((item) => {
       const cId = item.course.id;
       if (!groups[cId]) {
@@ -108,14 +116,19 @@ export default function StudentAssessmentsPage() {
           <nav className="mb-2">
             <ul className="flex items-center gap-2 text-caption text-muted-text">
               <li>
-                <Link href="/student" className="hover:text-primary transition-colors">
+                <Link
+                  href="/student"
+                  className="hover:text-primary transition-colors"
+                >
                   Không gian học tập
                 </Link>
               </li>
               <li>
                 <ChevronRight size={14} className="text-muted-text/60" />
               </li>
-              <li className="text-cream font-medium">Đánh giá & Bài kiểm tra</li>
+              <li className="text-cream font-medium">
+                Đánh giá & Bài kiểm tra
+              </li>
             </ul>
           </nav>
           <h1 className="font-headline-h2 text-headline-h2 text-cream flex items-center gap-3">
@@ -123,7 +136,8 @@ export default function StudentAssessmentsPage() {
             Đánh giá của tôi
           </h1>
           <p className="mt-1 text-label-md text-muted-text">
-            Thực hiện các bài kiểm tra định kỳ, bài tập lộ trình và nhận đánh giá học tập theo khóa học.
+            Thực hiện các bài kiểm tra định kỳ, bài tập lộ trình và nhận đánh
+            giá học tập theo khóa học.
           </p>
         </div>
       </div>
@@ -131,9 +145,21 @@ export default function StudentAssessmentsPage() {
       {/* Tabs Navigation (MS Teams-like) */}
       <div className="flex border-b border-outline-variant/20 gap-6">
         {[
-          { key: "upcoming", label: "Đang & Sắp diễn ra", count: tabsData.upcoming.length },
-          { key: "past_due", label: "Quá hạn", count: tabsData.past_due.length },
-          { key: "completed", label: "Đã hoàn thành", count: tabsData.completed.length },
+          {
+            key: "upcoming",
+            label: "Đang & Sắp diễn ra",
+            count: tabsData.upcoming.length,
+          },
+          {
+            key: "past_due",
+            label: "Quá hạn",
+            count: tabsData.past_due.length,
+          },
+          {
+            key: "completed",
+            label: "Đã hoàn thành",
+            count: tabsData.completed.length,
+          },
         ].map((t) => (
           <button
             key={t.key}
@@ -145,9 +171,13 @@ export default function StudentAssessmentsPage() {
             }`}
           >
             <span>{t.label}</span>
-            <span className={`px-1.5 py-0.5 rounded-full text-xs font-extrabold bg-surface-container-high border border-outline-variant/30 ${
-              activeTab === t.key ? "text-primary border-primary/30" : "text-muted-text"
-            }`}>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-extrabold bg-surface-container-high border border-outline-variant/30 ${
+                activeTab === t.key
+                  ? "text-primary border-primary/30"
+                  : "text-muted-text"
+              }`}
+            >
               {t.count}
             </span>
             {activeTab === t.key && (
@@ -161,7 +191,10 @@ export default function StudentAssessmentsPage() {
       <div className="glass-panel p-4 rounded-xl grid gap-4 md:grid-cols-12 items-center">
         {/* Search */}
         <div className="relative md:col-span-6">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text"
+          />
           <input
             type="text"
             placeholder="Tìm kiếm bài tập, bài kiểm tra..."
@@ -193,13 +226,20 @@ export default function StudentAssessmentsPage() {
         <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-low">
           <div className="text-center space-y-2">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-            <p className="text-label-md text-muted-text">Đang tải danh sách bài tập...</p>
+            <p className="text-label-md text-muted-text">
+              Đang tải danh sách bài tập...
+            </p>
           </div>
         </div>
       ) : currentList.length === 0 ? (
         <div className="glass-panel p-12 text-center rounded-2xl border border-outline-variant/20">
-          <BookOpenCheck className="mx-auto text-muted-text/30 mb-4" size={48} />
-          <h3 className="text-body-lg font-bold text-cream">Không có bài tập nào</h3>
+          <BookOpenCheck
+            className="mx-auto text-muted-text/30 mb-4"
+            size={48}
+          />
+          <h3 className="text-body-lg font-bold text-cream">
+            Không có bài tập nào
+          </h3>
           <p className="mt-2 text-label-md text-muted-text max-w-md mx-auto">
             Không tìm thấy bài tập nào trong mục này.
           </p>
@@ -232,20 +272,36 @@ export default function StudentAssessmentsPage() {
                     if (used > 0 && latest) {
                       if (latest.status === "doing") {
                         statusLabel = "Đang làm";
-                        badgeClass = "bg-warning/20 text-warning border border-warning/30";
-                      } else if (latest.status === "submitted") {
+                        badgeClass =
+                          "bg-warning/20 text-warning border border-warning/30";
+                      } else if (
+                        latest.status === "submitted" ||
+                        (latest.status === "auto_submitted" &&
+                          latest.finalScore === null)
+                      ) {
                         statusLabel = "Đã nộp (Chờ chấm)";
-                        badgeClass = "bg-secondary-container/20 text-secondary border border-secondary-container/30";
-                      } else if (latest.status === "completed" || latest.status === "auto_submitted") {
-                        statusLabel = latest.finalScore ? `Đạt ${latest.finalScore}/10` : "Đã hoàn thành";
-                        badgeClass = "bg-success/20 text-success border border-success/30";
+                        badgeClass =
+                          "bg-secondary-container/20 text-secondary border border-secondary-container/30";
+                      } else if (
+                        latest.status === "completed" ||
+                        latest.status === "auto_submitted"
+                      ) {
+                        statusLabel = latest.finalScore
+                          ? `Đạt ${latest.finalScore}/10`
+                          : "Đã hoàn thành";
+                        badgeClass =
+                          "bg-success/20 text-success border border-success/30";
                       }
                     }
 
                     // Date range checks
                     const now = new Date();
-                    const isOpen = item.openTime ? new Date(item.openTime) <= now : true;
-                    const isClosed = item.closeTime ? new Date(item.closeTime) < now : false;
+                    const isOpen = item.openTime
+                      ? new Date(item.openTime) <= now
+                      : true;
+                    const isClosed = item.closeTime
+                      ? new Date(item.closeTime) < now
+                      : false;
 
                     return (
                       <div
@@ -256,9 +312,12 @@ export default function StudentAssessmentsPage() {
                           {/* Top row: Badges */}
                           <div className="flex items-center justify-between gap-2 mb-3">
                             <span className="text-xs uppercase font-bold text-primary tracking-wider">
-                              Lớp {item.grade} • {isQuiz ? "Quiz Trắc Nghiệm" : "Exam PDF"}
+                              Lớp {item.grade} •{" "}
+                              {isQuiz ? "Quiz Trắc Nghiệm" : "Exam PDF"}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${badgeClass}`}>
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-bold ${badgeClass}`}
+                            >
                               {statusLabel}
                             </span>
                           </div>
@@ -271,13 +330,22 @@ export default function StudentAssessmentsPage() {
                           {/* Context info (Course & Lesson) */}
                           <div className="mt-3 space-y-1 text-caption text-muted-text border-t border-outline-variant/10 pt-3">
                             <div className="flex items-center gap-1.5 truncate">
-                              <BookOpen size={12} className="text-muted-text/70" />
+                              <BookOpen
+                                size={12}
+                                className="text-muted-text/70"
+                              />
                               <span>Khóa: {item.course.title}</span>
                             </div>
                             {item.lesson && (
                               <div className="flex items-center gap-1.5 truncate">
-                                <BookOpenCheck size={12} className="text-muted-text/70" />
-                                <span>Bài: {item.lesson.title} ({item.lesson.chapterTitle})</span>
+                                <BookOpenCheck
+                                  size={12}
+                                  className="text-muted-text/70"
+                                />
+                                <span>
+                                  Bài: {item.lesson.title} (
+                                  {item.lesson.chapterTitle})
+                                </span>
                               </div>
                             )}
                           </div>
@@ -286,11 +354,20 @@ export default function StudentAssessmentsPage() {
                           <div className="mt-4 grid grid-cols-2 gap-2 text-caption bg-surface-container/40 p-2.5 rounded-lg border border-outline-variant/15">
                             <div className="flex items-center gap-1">
                               <Clock size={11} className="text-muted-text" />
-                              <span>{item.timeLimitMinutes ? `${item.timeLimitMinutes} phút` : "Tự do"}</span>
+                              <span>
+                                {item.timeLimitMinutes
+                                  ? `${item.timeLimitMinutes} phút`
+                                  : "Tự do"}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1 justify-end">
-                              <PlayCircle size={11} className="text-muted-text" />
-                              <span>Lượt: {used}/{max ?? "∞"}</span>
+                              <PlayCircle
+                                size={11}
+                                className="text-muted-text"
+                              />
+                              <span>
+                                Lượt: {used}/{max ?? "∞"}
+                              </span>
                             </div>
                           </div>
 
@@ -298,7 +375,12 @@ export default function StudentAssessmentsPage() {
                           {item.closeTime && (
                             <div className="mt-3 flex items-center gap-1 text-xs text-muted-text">
                               <Calendar size={11} className="text-muted-text" />
-                              <span className="truncate">Hạn: {new Date(item.closeTime).toLocaleDateString("vi-VN")}</span>
+                              <span className="truncate">
+                                Hạn:{" "}
+                                {new Date(item.closeTime).toLocaleDateString(
+                                  "vi-VN",
+                                )}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -339,7 +421,9 @@ export default function StudentAssessmentsPage() {
                               href={`/student/assessments/${item.placementId}`}
                               className="w-full bg-primary-container text-white hover:brightness-115 font-bold py-2 rounded-xl flex items-center justify-center gap-1 text-label-md transition-all transform active:scale-95 shadow-md shadow-primary/10"
                             >
-                              {used > 0 ? `Làm lại (Lượt #${used + 1})` : "Vào làm bài"}
+                              {used > 0
+                                ? `Làm lại (Lượt #${used + 1})`
+                                : "Vào làm bài"}
                               <ChevronRight size={14} />
                             </Link>
                           )}

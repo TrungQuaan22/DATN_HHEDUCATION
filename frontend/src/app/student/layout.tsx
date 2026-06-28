@@ -49,12 +49,15 @@ export default function StudentLayout({
     }
   }, [hasHydrated, isAuthenticated, user?.role, router]);
 
-  if (!hasHydrated || !isAuthenticated || user?.role === "admin" || user?.role === "teacher") {
+  if (
+    !hasHydrated ||
+    !isAuthenticated ||
+    user?.role === "admin" ||
+    user?.role === "teacher"
+  ) {
     return (
       <div className="min-h-screen bg-brand-dark flex items-center justify-center">
-        <p className="text-muted-text animate-pulse">
-          Đang chuyển hướng...
-        </p>
+        <p className="text-muted-text animate-pulse">Đang chuyển hướng...</p>
       </div>
     );
   }
@@ -63,12 +66,10 @@ export default function StudentLayout({
   const getBreadcrumbName = () => {
     if (pathname === "/student" || pathname === "/student/overview")
       return "Tổng quan";
-    if (pathname.startsWith("/student/courses"))
-      return "Khóa học của tôi";
-    if (pathname.startsWith("/student/assessments"))
-      return "Bài kiểm tra";
-    if (pathname.startsWith("/student/practice"))
-      return "Phòng luyện tập";
+    if (pathname.startsWith("/student/courses")) return "Khóa học của tôi";
+    if (pathname.startsWith("/student/assessments")) return "Bài kiểm tra";
+    if (pathname.startsWith("/student/practice")) return "Phòng luyện tập";
+    if (pathname.startsWith("/student/profile")) return "Thông tin cá nhân";
     return "Tổng quan";
   };
 
@@ -90,13 +91,17 @@ export default function StudentLayout({
       />
 
       {/* -------------------- MAIN PAGE WRAPPER -------------------- */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-        isSidebarCollapsed ? "md:ml-20" : "md:ml-[260px]"
-      }`}>
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+          isSidebarCollapsed ? "md:ml-20" : "md:ml-[260px]"
+        }`}
+      >
         {/* -------------------- TOPNAVBAR -------------------- */}
-        <header className={`fixed top-0 right-0 h-[64px] left-0 bg-brand-dark/95 backdrop-blur-md z-20 border-b border-border-dark/60 px-6 flex items-center justify-between transition-all duration-300 ${
-          isSidebarCollapsed ? "md:left-20" : "md:left-[260px]"
-        }`}>
+        <header
+          className={`fixed top-0 right-0 h-[64px] left-0 bg-brand-dark/95 backdrop-blur-md z-20 border-b border-border-dark/60 px-6 flex items-center justify-between transition-all duration-300 ${
+            isSidebarCollapsed ? "md:left-20" : "md:left-[260px]"
+          }`}
+        >
           {/* Mobile Sidebar Toggle & Breadcrumb */}
           <div className="flex items-center gap-3">
             <button

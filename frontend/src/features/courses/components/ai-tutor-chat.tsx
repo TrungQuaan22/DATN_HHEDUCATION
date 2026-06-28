@@ -119,7 +119,7 @@ export function CitationBadge({ rank, citation }: { rank: number; citation: Cita
           {/* Quote Excerpt */}
           {quote && (
             <p className="text-[10px] text-muted-text leading-relaxed line-clamp-3 bg-surface-input/40 p-1.5 rounded border border-border-dark/30 italic">
-              "{quote.length > 150 ? `${quote.substring(0, 150)}...` : quote}"
+              &quot;{quote.length > 150 ? `${quote.substring(0, 150)}...` : quote}&quot;
             </p>
           )}
 

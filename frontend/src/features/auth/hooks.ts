@@ -74,10 +74,24 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export function useMeQuery() {
   const accessToken = useAuthStore((state) => state.accessToken);
   return useQuery({
-    queryKey: ['users', 'me'],
+    queryKey: ["users", "me"],
     queryFn: () => authApi.getMe(),
     enabled: !!accessToken,
     staleTime: Infinity, // Low frequency of changes
+  });
+}
+
+export function useUpdateMeMutation() {
+  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return useMutation({
+    mutationFn: (data: { fullName?: string; avatarMediaId?: string | null }) =>
+      authApi.updateMe(data),
+    onSuccess: (user) => {
+      queryClient.setQueryData(["users", "me"], user);
+      setUser(user);
+    },
   });
 }
 
@@ -106,11 +120,11 @@ export function useLoginMutation() {
         role: data.user.role,
       });
       // Ingest user details into TanStack Query Cache directly
-      queryClient.setQueryData(['users', 'me'], data.user);
-      
+      queryClient.setQueryData(["users", "me"], data.user);
+
       if (safeCallbackUrl) {
         router.push(safeCallbackUrl);
-      } else if (data.user.role === 'admin') {
+      } else if (data.user.role === "admin") {
         router.push("/admin/courses");
       } else {
         router.push("/");
@@ -158,11 +172,11 @@ export function useRegisterMutation() {
           refreshToken: result.loginData.refreshToken,
           role: result.loginData.user.role,
         });
-        queryClient.setQueryData(['users', 'me'], result.loginData.user);
-        
+        queryClient.setQueryData(["users", "me"], result.loginData.user);
+
         if (safeCallbackUrl) {
           router.push(safeCallbackUrl);
-        } else if (result.loginData.user.role === 'admin') {
+        } else if (result.loginData.user.role === "admin") {
           router.push("/admin/courses");
         } else {
           router.push("/");

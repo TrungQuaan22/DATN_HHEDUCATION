@@ -38,7 +38,9 @@ export default function SiteMobileMenu({
         href="/courses"
         onClick={onClose}
         className={`text-sm font-medium transition-colors ${
-          isActive("/courses") ? "text-brand-pink" : "text-cream hover:text-brand-pink"
+          isActive("/courses")
+            ? "text-brand-pink"
+            : "text-cream hover:text-brand-pink"
         }`}
       >
         Courses
@@ -47,7 +49,9 @@ export default function SiteMobileMenu({
         href="/practice"
         onClick={onClose}
         className={`text-sm font-medium transition-colors ${
-          isActive("/practice") ? "text-brand-pink" : "text-cream hover:text-brand-pink"
+          isActive("/practice")
+            ? "text-brand-pink"
+            : "text-cream hover:text-brand-pink"
         }`}
       >
         Thi Thử
@@ -63,7 +67,9 @@ export default function SiteMobileMenu({
         href="/blog"
         onClick={onClose}
         className={`text-sm font-medium transition-colors ${
-          isActive("/blog") ? "text-brand-pink" : "text-cream hover:text-brand-pink"
+          isActive("/blog")
+            ? "text-brand-pink"
+            : "text-cream hover:text-brand-pink"
         }`}
       >
         Blog
@@ -98,7 +104,7 @@ export default function SiteMobileMenu({
               Vào học
             </Link>
             <Link
-              href="/profile"
+              href="/student/profile"
               onClick={onClose}
               className="text-cream text-center py-1.5 text-sm font-semibold flex items-center justify-center gap-1.5 hover:text-brand-pink transition-colors"
             >

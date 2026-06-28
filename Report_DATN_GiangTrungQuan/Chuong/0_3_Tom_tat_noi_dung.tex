@@ -1,0 +1,24 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}\\
+\end{center}
+\vspace{1cm}
+
+Sự phát triển mạnh mẽ của giáo dục trực tuyến tạo điều kiện cho nhiều giáo viên cá nhân và trung tâm luyện thi quy mô nhỏ chuyển đổi số hoạt động giảng dạy. Tuy nhiên, việc vận hành dựa trên các công cụ rời rạc như mạng xã hội, ứng dụng nhắn tin hay phần mềm họp trực tuyến bộc lộ nhiều hạn chế lớn về quản lý học sinh, phân tán tài liệu học tập và tăng khối lượng công việc thủ công. Hiện nay, các giải pháp như Google Classroom, Moodle hay Udemy tuy giải quyết tốt các lớp học cơ bản nhưng lại gây khó khăn trong việc đóng gói khóa học có tính thương mại, có quy trình cài đặt vận hành phức tạp đối với đơn vị nhỏ, và đặc biệt là thiếu công cụ trợ lý trí tuệ nhân tạo (AI) cá nhân hóa để hỗ trợ học sinh tự học ngoài giờ giảng.
+
+Để khắc phục các hạn chế trên, đồ án lựa chọn hướng tiếp cận xây dựng một hệ thống quản lý học tập (LMS) tinh gọn, tập trung theo mô hình Client-Server, kết hợp kỹ thuật Sinh tăng cường truy xuất (Retrieval-Augmented Generation - RAG). Hướng tiếp cận này giúp tách biệt rõ ràng phần giao diện tương tác, phần điều phối nghiệp vụ và dữ liệu hệ thống, đồng thời tận dụng các mô hình ngôn ngữ lớn sẵn có để cung cấp câu trả lời bám sát theo học liệu nội bộ mà không yêu cầu nguồn lực quá lớn để huấn luyện mô hình từ đầu.
+
+Giải pháp tổng thể của đồ án là thiết kế và phát triển nền tảng học tập trực tuyến tích hợp AI, tối ưu cho cả quy trình quản trị của giáo viên và lộ trình học tập cá nhân hóa của học sinh. Hệ thống được phát triển dựa trên hệ sinh thái TypeScript hoàn chỉnh với Next.js/React ở frontend, Node.js/Express ở backend, cùng hệ quản trị cơ sở dữ liệu PostgreSQL kết hợp mở rộng pgvector. Hệ thống bao phủ toàn bộ các nghiệp vụ cốt lõi từ tổ chức bài giảng, xử lý video truyền phát trực tuyến HLS, quản lý ngân hàng đề và kiểm soát phòng thi bảo mật, đến luồng tự động hóa ghi danh sau thanh toán trực tuyến qua cổng webhook.
+
+Đóng góp chính của đồ án nằm ở việc tích hợp thành công pipeline RAG với chiến lược cộng điểm ưu tiên ngữ cảnh (Context Boosting) cho trợ lý AI Tutor, cho phép mô hình sinh câu trả lời tự động bằng tiếng Việt có kèm nguồn trích dẫn học liệu chính xác. Kết quả đạt được là một hệ thống LMS hoàn chỉnh có tính thực tiễn cao, giúp đơn vị giáo dục tự chủ hoàn toàn dữ liệu học viên, giảm thiểu tối đa chi phí vận hành thủ công và nâng cao hiệu quả tự học của người học.
+
+\begin{flushright}
+Sinh viên thực hiện\\
+\begin{tabular}{@{}c@{}}
+\textit{(Giang Trung Quân)}\\
+\end{tabular}
+\end{flushright}
+
+\end{document}

@@ -1,5 +1,5 @@
-import AdminPlaceholder from '@/components/layout/admin-placeholder';
+import { redirect } from "next/navigation";
 
 export default function AdminDashboardPage() {
-  return <AdminPlaceholder title="Tổng quan hệ thống" />;
+  redirect("/admin/courses");
 }

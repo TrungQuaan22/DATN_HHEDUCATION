@@ -36,7 +36,6 @@ type UsersTableProps = {
   onLimitChange: (limit: number) => void;
   onToggleStatus: (userId: string, currentStatus: UserStatus) => Promise<void>;
   onEnrollClick: (user: AdminUserItem) => void;
-  onProgressClick: (user: AdminUserItem) => void;
 };
 
 export default function UsersTable({
@@ -52,7 +51,6 @@ export default function UsersTable({
   onLimitChange,
   onToggleStatus,
   onEnrollClick,
-  onProgressClick,
 }: UsersTableProps) {
   const emptyRowsCount = limit - usersList.length;
 
@@ -67,7 +65,8 @@ export default function UsersTable({
             Không tìm thấy người dùng nào
           </h3>
           <p className="text-admin-muted text-sm mt-1 max-w-sm">
-            Không có kết quả khớp với bộ lọc tìm kiếm hoặc hệ thống chưa có dữ liệu.
+            Không có kết quả khớp với bộ lọc tìm kiếm hoặc hệ thống chưa có dữ
+            liệu.
           </p>
         </div>
       ) : (
@@ -96,7 +95,6 @@ export default function UsersTable({
                   isActionPending={isActionPending}
                   onToggleStatus={onToggleStatus}
                   onEnrollClick={onEnrollClick}
-                  onProgressClick={onProgressClick}
                 />
               ))}
               {emptyRowsCount > 0 &&
@@ -126,8 +124,13 @@ export default function UsersTable({
         <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-admin-border/30 bg-admin-surface-low/30">
           <div className="flex items-center gap-4 text-xs text-admin-muted">
             <p>
-              Hiển thị <span className="font-bold text-admin-cream">{usersList.length}</span> trên{" "}
-              <span className="font-bold text-admin-cream">{totalItems}</span> người dùng
+              Hiển thị{" "}
+              <span className="font-bold text-admin-cream">
+                {usersList.length}
+              </span>{" "}
+              trên{" "}
+              <span className="font-bold text-admin-cream">{totalItems}</span>{" "}
+              người dùng
             </p>
             <div className="h-4 w-px bg-admin-border/20" />
             <div className="flex items-center gap-2">
@@ -177,7 +180,9 @@ export default function UsersTable({
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  onPageChange(Math.min(totalPages, currentPage + 1))
+                }
                 className="p-2 border border-admin-border/30 rounded-lg text-admin-muted hover:bg-admin-surface-low hover:text-admin-cream disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
               >
                 <ChevronRight size={16} />

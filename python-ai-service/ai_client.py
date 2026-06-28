@@ -2,17 +2,21 @@ from __future__ import annotations
 
 from typing import Generator
 
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 from config import (
     CHAT_MODEL,
+    CHAT_API_BASE_URL,
+    CHAT_API_KEY,
+    CHAT_TEMPERATURE,
+    EMBEDDING_API_BASE_URL,
+    EMBEDDING_API_KEY,
     EMBEDDING_DIMENSIONS,
     EMBEDDING_MODEL,
-    GOOGLE_API_KEY,
 )
 
-client = genai.Client(api_key=GOOGLE_API_KEY)
+embedding_client = OpenAI(api_key=EMBEDDING_API_KEY, base_url=EMBEDDING_API_BASE_URL)
+chat_client = OpenAI(api_key=CHAT_API_KEY, base_url=CHAT_API_BASE_URL)
 
 
 def format_document_for_retrieval(text: str, title: str | None) -> str:
@@ -33,75 +37,36 @@ def embed_query(question: str) -> list[float]:
 
 
 def embed_text(text: str) -> list[float]:
-    result = client.models.embed_content(
+    result = embedding_client.embeddings.create(
         model=EMBEDDING_MODEL,
-        contents=text,
-        config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSIONS),
+        input=text,
+        dimensions=EMBEDDING_DIMENSIONS,
     )
-    if not result.embeddings:
+    if not result.data:
         raise RuntimeError("Embedding provider returned no embeddings")
-    return list(result.embeddings[0].values)
+    return list(result.data[0].embedding)
 
 
 def generate_answer(messages: list[dict[str, str]]) -> str:
-    contents: list[types.Content] = []
-    system_instruction = ""
-
-    for message in messages:
-        role = message["role"]
-        content = message["content"]
-        if role == "system":
-            system_instruction = content
-            continue
-
-        gemini_role = "model" if role == "assistant" else "user"
-        contents.append(
-            types.Content(
-                role=gemini_role,
-                parts=[types.Part.from_text(text=content)],
-            )
-        )
-
-    result = client.models.generate_content(
+    response = chat_client.chat.completions.create(
         model=CHAT_MODEL,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            system_instruction=system_instruction or None,
-        ),
+        messages=messages,
+        temperature=CHAT_TEMPERATURE,
     )
-    if not result.text:
+    content = response.choices[0].message.content if response.choices else None
+    if not content:
         raise RuntimeError("Chat provider returned an empty answer")
-    return result.text
+    return content
 
 
 def generate_answer_stream(messages: list[dict[str, str]]) -> Generator[str, None, None]:
-    contents: list[types.Content] = []
-    system_instruction = ""
-
-    for message in messages:
-        role = message["role"]
-        content = message["content"]
-        if role == "system":
-            system_instruction = content
-            continue
-
-        gemini_role = "model" if role == "assistant" else "user"
-        contents.append(
-            types.Content(
-                role=gemini_role,
-                parts=[types.Part.from_text(text=content)],
-            )
-        )
-
-    response_stream = client.models.generate_content_stream(
+    response_stream = chat_client.chat.completions.create(
         model=CHAT_MODEL,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            system_instruction=system_instruction or None,
-        ),
+        messages=messages,
+        temperature=CHAT_TEMPERATURE,
+        stream=True,
     )
     for chunk in response_stream:
-        if chunk.text:
-            yield chunk.text
+        delta = chunk.choices[0].delta.content if chunk.choices else None
+        if delta:
+            yield delta
