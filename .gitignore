@@ -15,11 +15,15 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .vscode/
-.agents
-skills-lock.json
+.agents/
+.codex/
+.impeccable/
 .stitch/
+skills-lock.json
+Rules_Skills/
 *.md
-!deployment/DEPLOYMENT.md
+!/README.md
+!/deployment/DEPLOYMENT.md
 .venv/
 __pycache__/
 *.py[cod]
@@ -28,3 +32,17 @@ __pycache__/
 temp_ponytail/
 Report_DATN_GiangTrungQuan/
 backend/temp/
+
+# LaTeX build artefacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
