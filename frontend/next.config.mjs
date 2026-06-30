@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   transpilePackages: ["@vidstack/react", "vidstack", "maverick.js"],
   devIndicators: false,
   images: {
@@ -24,6 +25,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "api.dicebear.com",
       },
+      ...(process.env.NEXT_PUBLIC_MEDIA_HOSTNAME
+        ? [
+            {
+              protocol: "https",
+              hostname: process.env.NEXT_PUBLIC_MEDIA_HOSTNAME,
+            },
+          ]
+        : []),
     ],
   },
 };

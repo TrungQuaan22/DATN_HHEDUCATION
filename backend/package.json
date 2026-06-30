@@ -8,6 +8,8 @@
     "dev": "npx nodemon",
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start": "node dist/index.js",
+    "prisma:migrate:deploy": "prisma migrate deploy --schema=prisma/schema",
+    "prisma:seed:production": "tsx prisma/seed-production.ts",
     "media:cleanup-orphans": "tsx src/scripts/cleanup-orphan-media.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -51,5 +53,8 @@
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.9.0",
     "zod": "^3.25.76"
+  },
+  "overrides": {
+    "qs": "6.15.3"
   }
 }

@@ -1,30 +1,30 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
-Chương 4 đã trình bày quá trình phân tích, thiết kế, xây dựng và kiểm thử hệ thống. Trên cơ sở đó, chương này tập trung vào các giải pháp kỹ thuật có ý nghĩa nổi bật trong đồ án. Các nội dung được lựa chọn không lặp lại phần mô tả chức năng, mà đi vào những bài toán có tính triển khai cao hơn: xây dựng trợ lý AI dựa trên học liệu nội bộ, kiểm soát quá trình làm bài kiểm tra, xử lý video bài giảng dung lượng lớn và tự động hóa ghi danh sau thanh toán. Mỗi giải pháp được trình bày theo ba phần: bài toán và vấn đề, giải pháp đã triển khai, kết quả đạt được và cách đánh giá.
+Chương 4 đã trình bày quá trình phân tích, thiết kế, xây dựng và kiểm thử hệ thống. Giá trị chính của đồ án nằm ở việc kết nối các nghiệp vụ vốn phân tán thành một quy trình thống nhất từ bán khóa học, cấp quyền, tổ chức học tập đến theo dõi và đánh giá học sinh. Trên cơ sở đó, chương này chọn bốn bài toán triển khai tiêu biểu để phân tích sâu: hỏi đáp theo học liệu nội bộ, kiểm soát quá trình làm bài, xử lý video dung lượng lớn và tự động hóa ghi danh sau thanh toán. Bốn nội dung này cùng hỗ trợ giải pháp hệ thống, không đại diện cho những chức năng tách rời hoặc một kỹ thuật duy nhất. Mỗi nội dung được trình bày theo ba phần: bài toán, giải pháp đã triển khai, kết quả và giới hạn đánh giá.
 
 \section{Trợ lý AI hỏi đáp theo học liệu nội bộ}
 \label{section:5.1}
 
-Trợ lý AI là điểm khác biệt quan trọng của hệ thống so với một LMS thông thường. Tuy nhiên, trong phạm vi đồ án, mục tiêu không phải là tự huấn luyện mô hình ngôn ngữ từ đầu, mà là xây dựng một luồng hỏi đáp có khả năng bám vào học liệu do giáo viên cung cấp. Phần này trình bày toàn bộ quy trình vận hành của tính năng, từ lúc giáo viên tải học liệu lên hệ thống cho đến khi học sinh nhận được câu trả lời có nguồn dẫn.
+Trợ lý AI là một chức năng hỗ trợ trong không gian học tập, giúp học sinh tra cứu lại nội dung khi giáo viên chưa thể phản hồi ngay. Trong phạm vi đồ án, mục tiêu không phải nghiên cứu hoặc huấn luyện mô hình ngôn ngữ mới, mà là tích hợp một luồng hỏi đáp bám vào học liệu do giáo viên cung cấp. Quy trình bắt đầu khi học liệu được tải lên và kết thúc khi học sinh nhận câu trả lời có nguồn dẫn.
 
 \subsection{Bài toán và vấn đề}
 \label{section:5.1.1}
 
-Trong lớp học trực tuyến, học sinh thường xem lại bài giảng vào thời điểm giáo viên không thể trả lời ngay. Một trợ lý AI đặt trực tiếp trong màn hình học bài có thể giúp học sinh giải đáp nhanh các thắc mắc cơ bản. Tuy nhiên, nếu hệ thống chỉ gửi câu hỏi của học sinh tới một mô hình ngôn ngữ lớn, mô hình có thể trả lời dựa trên tri thức tổng quát, trong khi câu hỏi của học sinh lại phụ thuộc vào nội dung bài giảng cụ thể. Ví dụ, câu hỏi ``phần này cần nhớ gì'' chỉ có ý nghĩa khi hệ thống biết học sinh đang học bài nào và bài đó có tài liệu gì.
+Trong lớp học trực tuyến, học sinh thường xem lại bài giảng vào thời điểm giáo viên không thể trả lời ngay. Một trợ lý AI đặt trực tiếp trong màn hình học bài có thể hỗ trợ các thắc mắc cơ bản. Tuy nhiên, nếu hệ thống chỉ gửi câu hỏi tới một mô hình ngôn ngữ lớn, câu trả lời có thể dựa trên tri thức tổng quát thay vì nội dung bài giảng. RAG khắc phục hạn chế này bằng cách truy xuất tài liệu liên quan làm ngữ cảnh trước khi sinh câu trả lời \cite{lewis2020rag}. Ví dụ, câu hỏi ``phần này cần nhớ gì'' chỉ có ý nghĩa khi hệ thống biết học sinh đang học bài nào và bài đó có tài liệu gì.
 
-Bài toán đặt ra gồm ba thách thức kỹ thuật. Thách thức thứ nhất là học liệu trong hệ thống có nhiều dạng khác nhau, gồm mô tả bài học, nội dung nhập trực tiếp, tài liệu PDF, DOCX hoặc PPTX. Các dữ liệu này không thể đưa nguyên vẹn vào prompt vì có thể dài, không đồng nhất định dạng và vượt giới hạn ngữ cảnh của mô hình. Thách thức thứ hai là truy xuất phải ưu tiên bài học hiện tại, nhưng vẫn có khả năng dùng kiến thức liên quan trong cùng khóa học khi bài hiện tại thiếu ngữ cảnh. Thách thức thứ ba là hệ thống phải xử lý trường hợp không có tài liệu phù hợp. Với một hệ thống giáo dục, câu trả lời ``có vẻ đúng'' nhưng không dựa trên học liệu là rủi ro nghiêm trọng hơn so với việc trả lời rằng chưa đủ thông tin.
+Bài toán đặt ra gồm ba thách thức kỹ thuật: (i) học liệu có nhiều dạng như mô tả bài học, nội dung nhập trực tiếp, PDF, DOCX và PPTX nên cần được chuẩn hóa trước khi lập chỉ mục; (ii) kết quả truy xuất phải được giới hạn đúng bài học học sinh đang mở để tránh trộn kiến thức giữa các bài; (iii) hệ thống cần từ chối trả lời khi không tìm thấy tài liệu phù hợp. Trong bối cảnh giáo dục, một câu trả lời có vẻ hợp lý nhưng không dựa trên học liệu tiềm ẩn nhiều rủi ro hơn việc thông báo chưa đủ thông tin.
 
-Do đó, đóng góp của phần này không nằm ở việc gọi API mô hình ngôn ngữ, mà nằm ở việc thiết kế một quy trình RAG đủ kiểm soát cho bối cảnh LMS. Quy trình này cần biến học liệu thành dữ liệu truy xuất được, chọn đúng đoạn liên quan, đưa ngữ cảnh vào prompt, bắt buộc câu trả lời có nguồn dẫn và ghi lại nguồn đã sử dụng để kiểm tra sau này.
+Do đó, trọng tâm triển khai của phần này không nằm ở thao tác gọi API mô hình ngôn ngữ, mà ở việc kiểm soát dữ liệu đầu vào và liên kết câu trả lời với đúng ngữ cảnh học tập. Quy trình cần biến học liệu thành dữ liệu truy xuất được, chọn đoạn liên quan, đưa ngữ cảnh vào prompt, yêu cầu nguồn dẫn và lưu lại nguồn đã sử dụng để kiểm tra sau này.
 
 \subsection{Giải pháp}
 \label{section:5.1.2}
 
-Luồng vận hành của tính năng gồm hai giai đoạn lớn. Giai đoạn thứ nhất là chuẩn bị tri thức, diễn ra khi giáo viên thêm hoặc cập nhật học liệu. Giai đoạn thứ hai là hỏi đáp, diễn ra khi học sinh đặt câu hỏi trong màn hình học bài.
+Luồng vận hành của tính năng được chia thành hai giai đoạn: chuẩn bị tri thức khi giáo viên thêm hoặc cập nhật học liệu, và hỏi đáp khi học sinh tương tác tại màn hình học bài.
 
-\textbf{a, Chuẩn bị tri thức từ học liệu}. Khi giáo viên thêm học liệu, backend lưu bản ghi \texttt{lesson\_materials} với trạng thái xử lý. Nếu học liệu là nội dung văn bản nhập trực tiếp, hệ thống có thể đưa nội dung này vào bước đánh chỉ mục. Nếu học liệu là tệp PDF, DOCX hoặc PPTX, dịch vụ AI tải tệp về thư mục tạm và trích xuất văn bản.
+\textbf{a, Chuẩn bị tri thức từ học liệu}. Khi giáo viên thêm học liệu, phía máy chủ lưu bản ghi \texttt{lesson\_materials} cùng trạng thái xử lý. Nội dung văn bản nhập trực tiếp có thể được đưa ngay vào bước đánh chỉ mục; với tệp PDF, DOCX hoặc PPTX, dịch vụ AI tải tệp về thư mục tạm để trích xuất văn bản.
 
-Trong bước trích xuất, hệ thống ưu tiên sử dụng MarkItDown. Đây là thư viện chuyển đổi tài liệu sang văn bản/Markdown, giúp giữ lại nội dung chính của nhiều định dạng tài liệu phổ biến theo một đầu ra thống nhất. Việc dùng MarkItDown giúp giảm số lượng bộ xử lý riêng lẻ cần tự viết, đồng thời tạo văn bản đầu vào sạch hơn cho bước chunking. Tuy nhiên, không phải tệp nào cũng được MarkItDown xử lý tốt. Vì vậy, hệ thống có cơ chế dự phòng: dùng pypdf để đọc PDF, python-docx để đọc DOCX và python-pptx để đọc PPTX. Với PDF, nội dung được gắn chỉ số trang; với PPTX, nội dung được gắn chỉ số slide. Nhờ đó, khi một đoạn được truy xuất, hệ thống vẫn có thể lần ngược về nguồn ban đầu của đoạn kiến thức.
+Trong bước trích xuất, hệ thống ưu tiên MarkItDown để chuyển nhiều định dạng tài liệu về văn bản/Markdown thống nhất. Cách này giảm số bộ xử lý riêng lẻ và tạo đầu vào sạch hơn cho bước chia đoạn. Với các tệp MarkItDown không xử lý được, hệ thống dùng pypdf cho PDF, python-docx cho DOCX và python-pptx cho PPTX. Nội dung PDF được gắn số trang, còn PPTX được gắn số slide, nhờ đó kết quả truy xuất vẫn có thể lần ngược về nguồn ban đầu.
 
 Sau khi trích xuất thành công, hệ thống cập nhật \texttt{extracted\_text}, chuyển trạng thái học liệu sang \texttt{ready} và xóa lỗi xử lý cũ nếu có. Nếu không trích xuất được nội dung hoặc tệp không hợp lệ, trạng thái chuyển sang \texttt{failed} và hệ thống lưu thông báo lỗi rút gọn. Cách tổ chức này giúp giáo viên biết học liệu nào đã sẵn sàng cho AI Tutor, học liệu nào cần tải lại hoặc chỉnh sửa.
 
@@ -32,13 +32,13 @@ Sau khi trích xuất thành công, hệ thống cập nhật \texttt{extracted\
 
 Phần chồng lấn có vai trò giữ lại ngữ cảnh ở ranh giới giữa hai đoạn. Ví dụ, nếu một định nghĩa nằm cuối chunk trước và ví dụ minh họa nằm đầu chunk sau, overlap giúp hai đoạn vẫn giữ được một phần liên hệ. Mỗi chunk được tính mã băm SHA-256 từ nội dung. Khi một học liệu được xử lý lại, hệ thống xóa các chunk cũ theo \texttt{material\_id} rồi ghi lại các chunk mới, tránh tình trạng cơ sở tri thức còn chứa phiên bản cũ của tài liệu.
 
-\textbf{c, Embedding và lưu trữ vector}. Mỗi chunk được chuyển thành vector embedding bằng provider OpenAI-compatible. Trong cấu hình hiện tại của đồ án, mô hình embedding là \texttt{text-embedding-3-small}, số chiều vector là 1536. Trước khi lưu, hệ thống kiểm tra số chiều vector trả về có khớp với cấu hình hay không. Nếu số chiều không đúng, quá trình xử lý bị dừng và học liệu được đánh dấu lỗi. Đây là kiểm tra cần thiết vì cơ sở dữ liệu vector yêu cầu số chiều nhất quán; nếu bỏ qua, truy vấn pgvector có thể lỗi hoặc trả kết quả không đáng tin cậy.
+\textbf{c, Tạo và lưu trữ vector}. Mỗi đoạn văn bản được chuyển thành vector bằng mô hình \textit{embedding} tương thích OpenAI. Cấu hình hiện tại sử dụng \texttt{text-embedding-3-small} với 1536 chiều. Trước khi lưu, hệ thống đối chiếu số chiều vector với cấu hình; giá trị không khớp sẽ dừng quá trình xử lý và đánh dấu học liệu lỗi. Pgvector yêu cầu các vector có số chiều nhất quán, nếu không truy vấn có thể thất bại hoặc cho kết quả không đáng tin cậy.
 
-Các chunk được lưu vào bảng \texttt{knowledge\_chunks}. Bảng này không chỉ lưu nội dung và vector, mà còn lưu khóa học, bài học, tài liệu gốc, loại nguồn, thứ tự chunk, tên provider, tên mô hình embedding và thời điểm đánh chỉ mục. Nhờ đó, mỗi kết quả truy xuất đều có thể truy ngược về bài học hoặc tài liệu cụ thể.
+Các đoạn được lưu vào bảng \texttt{knowledge\_chunks} cùng khóa học, bài học, tài liệu gốc, loại nguồn, thứ tự, mô hình \textit{embedding} và thời điểm đánh chỉ mục. Nhờ đó, mỗi kết quả truy xuất đều có thể truy ngược về bài học hoặc tài liệu cụ thể.
 
-\textbf{d, Hỏi đáp theo luồng RAG}. Khi học sinh đặt câu hỏi trong bài học, frontend gửi câu hỏi kèm \texttt{course\_id} và \texttt{lesson\_id}. Dịch vụ AI tạo embedding cho câu hỏi bằng cùng mô hình embedding đã dùng khi đánh chỉ mục học liệu. Sau đó, hệ thống truy vấn các chunk thuộc cùng khóa học bằng pgvector. Độ tương đồng cơ sở được tính từ khoảng cách vector; điểm càng cao thì chunk càng gần câu hỏi về mặt ngữ nghĩa.
+\textbf{d, Hỏi đáp theo luồng RAG}. Khi học sinh đặt câu hỏi, giao diện gửi nội dung kèm \texttt{course\_id} và \texttt{lesson\_id}. Dịch vụ AI tạo vector cho câu hỏi bằng chính mô hình đã dùng khi đánh chỉ mục. Truy vấn pgvector chỉ xét các đoạn thuộc đúng khóa học và bài học hiện tại. Độ tương đồng được tính từ khoảng cách vector; điểm càng cao thì đoạn văn càng gần câu hỏi về mặt ngữ nghĩa.
 
-Ở mức triển khai, backend nhận câu hỏi của học sinh qua API gửi tin nhắn trong phiên chat, lưu tin nhắn người dùng vào bảng \texttt{tutor\_chat\_messages}, sau đó gọi dịch vụ AI nội bộ. Payload gửi sang dịch vụ AI có cấu trúc rút gọn như sau:
+Ở mức triển khai, phía máy chủ nhận câu hỏi qua API, lưu tin nhắn vào bảng \texttt{tutor\_chat\_messages}, sau đó gọi dịch vụ AI nội bộ. Dữ liệu gửi sang dịch vụ AI có cấu trúc rút gọn như sau:
 
 \begin{verbatim}
 {
@@ -52,7 +52,7 @@ Các chunk được lưu vào bảng \texttt{knowledge\_chunks}. Bảng này kh�
 }
 \end{verbatim}
 
-Trong đó, \texttt{course\_id} giới hạn phạm vi truy xuất trong một khóa học, \texttt{lesson\_id} giúp ưu tiên bài học hiện tại, \texttt{question} là câu hỏi mới của học sinh, còn \texttt{chat\_history} chứa tối đa các lượt trao đổi gần nhất để giữ mạch hội thoại. Dịch vụ AI trả về câu trả lời cùng danh sách nguồn dẫn:
+Trong đó, \texttt{course\_id} và \texttt{lesson\_id} tạo thành phạm vi truy xuất của bài học hiện tại, \texttt{question} là câu hỏi mới của học sinh, còn \texttt{chat\_history} chứa tối đa các lượt trao đổi gần nhất để giữ mạch hội thoại. Dịch vụ AI trả về câu trả lời cùng danh sách nguồn dẫn:
 
 \begin{verbatim}
 {
@@ -68,17 +68,17 @@ Trong đó, \texttt{course\_id} giới hạn phạm vi truy xuất trong một k
 }
 \end{verbatim}
 
-Cấu trúc này làm rõ ranh giới giữa backend LMS và dịch vụ AI. Backend chịu trách nhiệm xác thực học sinh, quản lý phiên chat và lưu citation; dịch vụ AI chịu trách nhiệm truy xuất chunk, dựng prompt và sinh câu trả lời.
+Cấu trúc này làm rõ ranh giới giữa máy chủ LMS và dịch vụ AI. Máy chủ chịu trách nhiệm xác thực học sinh, quản lý phiên trò chuyện và lưu nguồn dẫn; dịch vụ AI truy xuất các đoạn liên quan, tạo \textit{prompt} và sinh câu trả lời.
 
-Điểm khác biệt của hệ thống là truy xuất có ưu tiên bài học hiện tại. Với mỗi chunk \(c\), câu hỏi \(q\) và bài học hiện tại \(l\), điểm xếp hạng được tính như sau:
+Với câu hỏi \(q\) và bài học hiện tại \(l\), tập ứng viên trước hết được giới hạn như sau:
 
 \begin{equation}
-\mathrm{score}(c, q, l) = \mathrm{sim}(c, q) + \mathrm{boost}(c, l)
+\mathcal{C}_{l} = \{c \mid c.courseId = q.courseId \land c.lessonId = l\}
 \end{equation}
 
-Trong đó \(\mathrm{sim}(c, q)\) là độ tương đồng cơ sở giữa chunk và câu hỏi. Thành phần \(\mathrm{boost}(c, l)\) bằng 0.05 nếu chunk thuộc bài học hiện tại và bằng 0 trong trường hợp còn lại. Sau khi sắp xếp theo điểm đã cộng boost, hệ thống vẫn kiểm tra ngưỡng tương đồng cơ sở 0.55. Điều này giúp các đoạn trong bài học hiện tại được ưu tiên, nhưng một đoạn kém liên quan không được chọn chỉ vì nó thuộc cùng bài. Hệ thống lấy tối đa 6 đoạn ngữ cảnh cho mỗi câu hỏi.
+Với mỗi chunk \(c\) trong \(\mathcal{C}_{l}\), hệ thống dùng độ tương đồng cosine \(\mathrm{sim}(c,q)\) làm điểm xếp hạng. Các chunk có điểm nhỏ hơn 0,45 bị loại; hệ thống lấy tối đa 6 đoạn còn lại. Cách lọc cứng theo \texttt{lesson\_id} phù hợp với giao diện hỏi đáp gắn trong từng bài học và tránh việc một transcript ở bài khác được dùng để trả lời thay cho bài hiện tại.
 
-\textbf{e, Prompt và sinh câu trả lời}. Sau khi truy xuất, hệ thống xây dựng prompt theo hai nhánh. Nếu tìm được ngữ cảnh phù hợp, prompt chứa tên khóa học, tên bài học, mô tả bài học, số lượng tài liệu của bài và các đoạn ngữ cảnh đã truy xuất. Mô hình chat được cấu hình theo provider OpenAI-compatible, trong môi trường hiện tại sử dụng \texttt{deepseek-v4-flash}. Tham số \texttt{temperature} được đặt ở mức 0.2, tức là mô hình được định hướng tạo câu trả lời ít ngẫu nhiên hơn, phù hợp với bài toán hỏi đáp theo học liệu nội bộ. Prompt yêu cầu mô hình chỉ dùng ngữ cảnh được cung cấp để trả lời câu hỏi chuyên môn và bắt buộc trích dẫn nguồn bằng ký hiệu như \texttt{[1]}, \texttt{[2]}.
+\textbf{e, Tạo \textit{prompt} và sinh câu trả lời}. Nếu tìm được ngữ cảnh phù hợp, \textit{prompt} chứa tên khóa học, tên bài học, mô tả bài học và các đoạn đã truy xuất. Môi trường đánh giá sử dụng mô hình \texttt{gpt-4.1-mini} với tham số \texttt{temperature} bằng 0,2. Nội dung \textit{prompt} yêu cầu mô hình chỉ dùng ngữ cảnh của bài học, không suy diễn từ đoạn văn chỉ gần chủ đề và phải ghi nguồn bằng ký hiệu \texttt{[1]}, \texttt{[2]}.
 
 Nếu không tìm thấy đoạn tài liệu đủ liên quan, hệ thống không gửi một prompt mở để mô hình tự suy diễn. Prompt trong trường hợp này yêu cầu mô hình nói rõ rằng tài liệu hiện tại chưa cung cấp đủ thông tin và gợi ý học sinh hỏi lại cụ thể hơn hoặc kiểm tra tài liệu bài học. Nếu bài học hiện tại chưa có tài liệu, prompt cũng nhắc mô hình không được dùng tài liệu của bài khác để giả vờ trả lời cho bài hiện tại.
 
@@ -105,28 +105,32 @@ Trong đó \(N\) là số câu hỏi kiểm thử và \(\mathrm{rank}_i\) là v�
 
 Ngoài truy xuất, hệ thống còn đánh giá tỷ lệ câu trả lời có citation bằng cách tách câu và kiểm tra ký hiệu trích dẫn. Nếu câu trả lời có nhiều mệnh đề kiến thức nhưng không gắn nguồn, kết quả này cho thấy prompt chưa đủ chặt hoặc mô hình chưa tuân thủ tốt yêu cầu trích dẫn. Công cụ đánh giá RAG của dịch vụ AI đã hiện thực các phép đo này, gồm recall truy xuất, MRR, tỷ lệ câu có citation, độ trễ trung bình, số đoạn ngữ cảnh trung bình và số lần sinh câu trả lời thất bại. Nhờ đó, việc đánh giá AI Tutor không chỉ dựa trên cảm nhận khi đọc câu trả lời, mà có các chỉ số kiểm tra được.
 
+Để các chỉ số trên có ý nghĩa, tập đánh giá phải phản ánh đúng cách hệ thống được sử dụng. Corpus thực nghiệm gồm 4 tài liệu thuộc 2 bài học của khóa HSG ``HẠT'', trong đó có slide, tài liệu đọc và transcript bài giảng; sau bước xử lý, corpus có 85 chunk. Bộ đánh giá gồm 25 câu được xây dựng sau khi chốt corpus: 15 câu truy xuất trực tiếp từ một tài liệu, 5 câu tổng hợp nhiều tài liệu nhưng trong cùng bài học và 5 câu không có đáp án. Với 20 câu có đáp án, các chunk và tài liệu liên quan được gán nhãn thủ công trước khi chạy đánh giá; lịch sử hội thoại được để rỗng để các mẫu không ảnh hưởng lẫn nhau.
+
+Kết quả chi tiết được trình bày tại Mục \ref{subsection:rag_quantitative_evaluation}. Trên bộ đánh giá nội bộ, hệ thống đạt Recall@6 bằng 0,771, MRR bằng 0,746 và Source Recall@6 bằng 0,875. Hệ thống trả lời 17/20 câu có đáp án và từ chối đúng 5/5 câu không có thông tin, với thời gian phản hồi trung bình khoảng 3,99 giây. Nhóm câu hỏi một tài liệu đạt Source Recall@6 bằng 0,933, trong khi nhóm cần nhiều tài liệu chỉ đạt 0,700. Chênh lệch này cho thấy giới hạn chính nằm ở khả năng lấy đủ nguồn trong top-K; ngoài ra, tỷ lệ câu có citation mới đạt 0,323. Do bộ đánh giá chỉ thuộc một khóa học và hai bài học, các số liệu này là kết quả thực nghiệm nội bộ, không được dùng để suy rộng thành chất lượng chung cho mọi môn học hoặc mọi loại tài liệu.
+
 \section{Kiểm soát quá trình làm bài kiểm tra}
 \label{section:5.2}
 
-Hệ thống bài kiểm tra là một phần quan trọng của LMS vì nó liên quan trực tiếp đến đánh giá kết quả học tập. Trong đồ án, bài kiểm tra không chỉ là một biểu mẫu câu hỏi đơn giản, mà được thiết kế để phục vụ nhiều bối cảnh học tập khác nhau: làm thử công khai, kiểm tra định kỳ trong khóa học và quiz tự luyện sau bài giảng. Phần này trình bày cách hệ thống tổ chức vị trí sử dụng bài kiểm tra, kiểm soát lượt làm và bảo toàn bài làm của học sinh trong các tình huống thực tế như thoát trang, mất mạng hoặc quay lại làm tiếp.
+Phân hệ bài kiểm tra phục vụ ba bối cảnh: làm thử công khai, kiểm tra định kỳ trong khóa học và quiz tự luyện sau bài giảng. Thiết kế phải kiểm soát đúng vị trí sử dụng, số lượt làm và trạng thái bài nộp, đồng thời bảo toàn dữ liệu khi học sinh thoát trang, mất mạng hoặc quay lại làm tiếp.
 
 \subsection{Bài toán và vấn đề}
 \label{section:5.2.1}
 
-Trong thực tế vận hành một lớp học trực tuyến, giáo viên thường dùng bài kiểm tra ở ba vị trí khác nhau. Thứ nhất là bài luyện tập công khai, cho phép học sinh chưa mua khóa học làm thử một số đề để tự đánh giá năng lực. Thứ hai là bài kiểm tra gắn với khóa học, được dùng như bài thi định kỳ hoặc bài tập giao thêm cho cả lớp. Thứ ba là quiz gắn với một bài học cụ thể, giúp học sinh tự luyện ngay sau khi học xong một phần kiến thức. Ba trường hợp này có cùng nội dung lõi là đề kiểm tra, câu hỏi, đáp án và bài làm, nhưng khác nhau về quyền truy cập, thời gian mở, số lượt làm và vị trí hiển thị trong trải nghiệm học tập.
+Trong thực tế vận hành, bài kiểm tra xuất hiện ở ba vị trí: (i) khu vực luyện tập công khai cho học sinh làm thử; (ii) phạm vi khóa học cho bài thi định kỳ hoặc bài tập chung; (iii) bài học dạng quiz để tự luyện ngay sau nội dung vừa học. Cả ba trường hợp cùng sử dụng cấu trúc đề, câu hỏi, đáp án và bài làm, nhưng khác nhau về quyền truy cập, thời gian mở, số lượt làm và vị trí hiển thị.
 
 Nếu tách ba trường hợp trên thành ba mô hình dữ liệu riêng, hệ thống sẽ bị lặp logic tạo đề, lưu đáp án, chấm điểm và thống kê kết quả. Ngược lại, nếu gom tất cả vào một loại bài kiểm tra duy nhất mà không biểu diễn rõ vị trí sử dụng, hệ thống khó kiểm soát quyền truy cập và khó mở rộng. Ngoài ra, bài làm của học sinh phải được bảo toàn trong các tình huống không lý tưởng. Khi đang làm bài, học sinh có thể mất kết nối mạng, đóng nhầm trình duyệt hoặc quay lại sau một khoảng thời gian. Hệ thống cần cho phép tiếp tục lượt làm đang dở nếu lượt làm đó vẫn hợp lệ, đồng thời không được tạo thêm lượt làm mới ngoài số lần cho phép.
 
 \subsection{Giải pháp}
 \label{section:5.2.2}
 
-Giải pháp được thiết kế quanh ba khái niệm chính: \texttt{assessment}, \texttt{assessment\_placement} và \texttt{submission}. \texttt{Assessment} lưu nội dung gốc của bài kiểm tra, gồm tiêu đề, môn học, khối lớp, loại bài, hình thức chấm điểm, thời gian làm bài, các phần và các câu hỏi. \texttt{Assessment\_placement} mô tả vị trí sử dụng của bài kiểm tra. \texttt{Submission} lưu một lượt làm bài cụ thể của học sinh. Cách tách này cho phép một đề kiểm tra được tái sử dụng ở nhiều bối cảnh, trong khi quyền truy cập và quy tắc mở bài được kiểm soát tại placement.
+Giải pháp được thiết kế quanh ba khái niệm chính: \texttt{assessment}, \texttt{assessment\_placement} và \texttt{submission}. \texttt{Assessment} lưu nội dung của một bài kiểm tra; \texttt{assessment\_placement} lưu đúng một vị trí sử dụng và các quy tắc mở bài; \texttt{submission} lưu một lượt làm cụ thể. Trong phạm vi sản phẩm, một assessment chỉ được dùng cho một placement. Khi cần dùng lại đề ở đợt hoặc bối cảnh khác, giáo viên clone assessment để dữ liệu vận hành và submission của từng đợt độc lập, đồng thời vẫn tái sử dụng được quy trình biên soạn.
 
 \textbf{a, Tách dữ liệu xem trước và dữ liệu phòng làm bài}. API xem trước chỉ trả về metadata của bài kiểm tra như tiêu đề, thời gian làm bài, số lượt tối đa, trạng thái mở và thông tin vị trí sử dụng. Nội dung câu hỏi không được trả về ở bước này. Chỉ khi học sinh bắt đầu hoặc tiếp tục một lượt làm hợp lệ, hệ thống mới trả về workspace gồm section, item, đáp án đã lưu và thời gian còn lại. Cách tách này giúp giảm nguy cơ lộ đề trước khi học sinh thật sự vào bài.
 
 \textbf{b, Kiểm soát ba vị trí sử dụng}. Placement công khai được dùng cho bài luyện tập mở, không gắn với khóa học hoặc bài học và cần có slug để học sinh truy cập từ khu vực công khai. Placement theo khóa học được dùng cho bài kiểm tra định kỳ hoặc bài tập giao thêm, bắt buộc gắn với một khóa học cụ thể và yêu cầu học sinh đã ghi danh. Placement theo bài học được dùng cho quiz tự luyện sau bài giảng, bắt buộc gắn với một bài học có kiểu \texttt{quiz}; khóa học được suy ra từ bài học để tránh gắn nhầm quiz sang khóa khác.
 
-Khi giáo viên hoặc quản trị viên xuất bản bài kiểm tra, hệ thống kiểm tra tính hợp lệ của placement. Với placement theo khóa học và theo bài học, môn học và khối lớp của bài kiểm tra phải khớp với khóa học. Thiết kế này giúp giáo viên tạo một đề kiểm tra độc lập trước, sau đó quyết định sử dụng đề đó ở đâu mà không phải sao chép lại toàn bộ câu hỏi.
+Khi giáo viên hoặc quản trị viên xuất bản bài kiểm tra, hệ thống kiểm tra tính hợp lệ của placement. Với placement theo khóa học và theo bài học, môn học và khối lớp của bài kiểm tra phải khớp với khóa học. Sau khi assessment đã có submission, các thay đổi có thể làm sai lệch lịch sử bài làm bị hạn chế. Nếu cần tổ chức một đợt mới, thao tác clone tạo bản sao câu hỏi và cấu hình cơ sở để người dùng chỉnh placement mà không trộn kết quả cũ.
 
 Hệ thống cũng phân biệt quyền của quản trị viên và giáo viên. Quản trị viên có thể thao tác ở phạm vi toàn hệ thống, còn giáo viên chỉ được gắn bài kiểm tra vào các khóa học hoặc bài học do mình quản lý. Điều này giữ được sự đơn giản của mô hình vai trò hiện tại, nhưng vẫn tránh việc giáo viên can thiệp vào nội dung của người khác.
 
@@ -150,7 +154,7 @@ Cách tính này xử lý được tình huống học sinh bắt đầu làm b�
 
 Với trường hợp mất mạng hoặc đóng nhầm trình duyệt, hệ thống xử lý theo nguyên tắc rõ ràng: dữ liệu đã lưu vào submission thì được khôi phục khi học sinh quay lại, còn dữ liệu vừa nhập nhưng chưa gửi lên server thì không được coi là đã lưu. Vì vậy, giao diện có cảnh báo khi học sinh rời trang trong lúc còn thay đổi chưa lưu. Cách làm này không che giấu rủi ro mạng, nhưng giúp trạng thái bài làm nhất quán và dễ giải thích: muốn bảo toàn đáp án, học sinh cần lưu nháp hoặc nộp bài thành công.
 
-Việc kiểm tra ở backend là cần thiết vì frontend không phải biên giới bảo mật. Một request có thể bị sửa bằng công cụ bên ngoài trình duyệt. Nếu backend không kiểm tra item và option, học sinh có thể gửi đáp án cho câu hỏi không thuộc bài kiểm tra hiện tại hoặc tạo dữ liệu bài làm không nhất quán.
+Việc kiểm tra ở phía máy chủ là bắt buộc vì giao diện trình duyệt không phải chốt chặn bảo mật cuối cùng. Người dùng có thể sửa yêu cầu HTTP bằng công cụ bên ngoài giao diện. Nếu máy chủ không đối chiếu câu hỏi và phương án, học sinh có thể gửi đáp án không thuộc bài kiểm tra hiện tại hoặc tạo dữ liệu bài làm không nhất quán.
 
 Các API chính trong luồng làm bài được tách theo đúng trạng thái nghiệp vụ:
 
@@ -168,7 +172,7 @@ POST /learning/assessment-submissions/
      :submissionId/submit
 \end{verbatim}
 
-API xem trước chỉ trả về thông tin tổng quan, API tạo lượt làm trả về submission đang làm hoặc submission mới, API workspace trả về dữ liệu phòng làm bài, còn hai API cuối phục vụ lưu nháp và nộp bài. Payload lưu đáp án được thiết kế dưới dạng union theo loại câu hỏi:
+API xem trước chỉ trả về thông tin tổng quan; API tạo lượt làm trả về bài đang thực hiện hoặc bài mới; API phòng thi trả về dữ liệu câu hỏi; hai API còn lại phục vụ lưu nháp và nộp bài. Dữ liệu lưu đáp án được phân biệt theo từng loại câu hỏi:
 
 \begin{verbatim}
 {
@@ -199,31 +203,31 @@ API xem trước chỉ trả về thông tin tổng quan, API tạo lượt làm
 }
 \end{verbatim}
 
-Nhờ payload có trường \texttt{type}, backend biết chính xác cần kiểm tra dữ liệu theo luật nào. Ví dụ, câu trắc nghiệm dùng \texttt{selectedOptionIds}, câu đúng sai dùng danh sách \texttt{selections}, câu số học dùng \texttt{answerValue}, còn câu tự luận dùng \texttt{answer}. Đây là phần triển khai quan trọng vì nó tránh việc gom mọi loại câu trả lời vào một trường văn bản chung rồi xử lý thủ công về sau.
+Trường \texttt{type} xác định quy tắc kiểm tra cho từng loại dữ liệu: câu trắc nghiệm dùng \texttt{selectedOptionIds}, câu đúng sai dùng \texttt{selections}, câu số học dùng \texttt{answerValue}, còn câu tự luận dùng \texttt{answer}. Cấu trúc này tránh việc gom mọi loại câu trả lời vào một trường văn bản chung rồi xử lý thủ công về sau.
 
-\textbf{e, Hết giờ, nộp bài và chấm điểm}. Workspace luôn nhận thời gian còn lại từ backend. Khi hết giờ, giao diện tự gửi bài làm hiện tại lên hệ thống và gọi thao tác nộp bài. Backend vẫn kiểm tra lại thời hạn tại thời điểm xử lý request, do đó học sinh không thể chỉ sửa đồng hồ phía trình duyệt để kéo dài thời gian làm bài. Ngoài ra, giao diện phòng làm bài còn ghi nhận một số hành vi rời khỏi môi trường làm bài như thoát toàn màn hình hoặc chuyển tab nhiều lần; khi số lần vi phạm vượt ngưỡng, hệ thống tự động nộp bài để giảm gian lận trong các bài kiểm tra nghiêm túc.
+\textbf{e, Hết giờ, nộp bài và chấm điểm}. Phòng thi luôn nhận thời gian còn lại từ máy chủ. Khi hết giờ, giao diện yêu cầu nộp bài để phản hồi ngay; đồng thời máy chủ quét các bài ở trạng thái \texttt{doing} đã quá hạn và tự động thu bài ngay cả khi trình duyệt đã đóng. Hạn được tính theo mốc sớm hơn giữa giới hạn cá nhân và giờ đóng bài. Hệ thống cũng ghi nhận vi phạm phòng thi; ở lần vi phạm thứ năm, bài làm được tự nộp. Do quy tắc được thực thi tại máy chủ, việc sửa đồng hồ hoặc tắt JavaScript không kéo dài được thời gian làm bài.
 
-Khi học sinh nộp bài, hệ thống tự chấm các loại câu khách quan. Với trắc nghiệm, hệ thống so sánh tập option học sinh chọn với tập option đúng. Với câu đúng sai, điểm được tính theo tỷ lệ số mệnh đề trả lời đúng:
+Khi học sinh nộp bài, hệ thống tự chấm các câu có đáp án xác định. Với trắc nghiệm, hệ thống so sánh tập option học sinh chọn với tập option đúng. Với câu đúng sai, điểm được tính theo tỷ lệ số mệnh đề trả lời đúng:
 
 \begin{equation}
 \mathrm{point} = \mathrm{maxScore} \times \frac{\mathrm{correctCount}}{\mathrm{totalStatements}}
 \end{equation}
 
-Với câu số học, hệ thống so sánh giá trị số học của học sinh với đáp án đúng bằng phép so sánh số thập phân, tránh lỗi cộng điểm do biểu diễn số thực. Tổng điểm tự động được cộng từ điểm của các item khách quan. Nếu bài kiểm tra có câu tự luận, submission chuyển sang trạng thái \texttt{submitted} và chờ giáo viên chấm. Nếu không có câu tự luận, submission chuyển sang \texttt{completed} và điểm cuối cùng bằng điểm tự động.
+Với câu số học, hệ thống so sánh giá trị của học sinh với đáp án bằng phép toán số thập phân, tránh sai số do biểu diễn số thực. Tổng điểm tự động được cộng từ các item có đáp án xác định. Nếu bài kiểm tra có câu tự luận, submission đã nộp hoặc tự nộp nhưng chưa có điểm cuối cùng được xếp vào hàng chờ chấm; hệ thống vẫn tạo câu trả lời rỗng cho câu bị bỏ qua để giáo viên nhìn thấy đầy đủ đề. Nếu không có câu tự luận, điểm cuối cùng được hoàn tất tự động. Sau khi chấm xong, học sinh nhận thông báo và mới có thể xem đáp án đúng cùng phần giải thích do giáo viên nhập.
 
 \subsection{Kết quả đạt được và đánh giá}
 \label{section:5.2.3}
 
-Giải pháp giúp hệ thống bài kiểm tra bao phủ được ba bối cảnh sử dụng mà vẫn dùng chung một mô hình thiết kế. Bài luyện tập công khai, bài kiểm tra trong khóa học và quiz trong bài học khác nhau ở placement, không khác nhau ở lõi lưu đề và lưu bài làm. Nhờ đó, giáo viên có thể tái sử dụng luồng tạo đề, còn học sinh có trải nghiệm nhất quán khi làm bài ở nhiều vị trí khác nhau trong hệ thống.
+Giải pháp giúp hệ thống bao phủ ba bối cảnh sử dụng bằng cùng một mô hình dữ liệu và luồng nghiệp vụ, nhưng mỗi assessment có placement và tập submission riêng. Quy tắc clone khi dùng lại đề đánh đổi một phần dung lượng lưu trữ để đổi lấy lịch sử kết quả rõ ràng, dễ thống kê theo \texttt{assessmentId} và tránh tác động chéo giữa các đợt kiểm tra.
 
-Về trải nghiệm thực tế, hệ thống cho phép học sinh quay lại lượt làm đang dở nếu submission vẫn còn hiệu lực. Các đáp án đã lưu được khôi phục từ server; các thay đổi chưa lưu được giao diện cảnh báo trước khi rời trang. Đây là điểm quan trọng đối với học sinh phổ thông vì lỗi mạng, đóng nhầm trình duyệt hoặc chuyển thiết bị là tình huống dễ xảy ra khi làm bài trực tuyến.
+Hệ thống cho phép học sinh quay lại lượt làm đang dở nếu submission vẫn còn hiệu lực. Các đáp án đã lưu được khôi phục từ máy chủ, còn thay đổi chưa lưu được cảnh báo trước khi rời trang. Cơ chế này bảo toàn bài làm khi mạng gián đoạn, trình duyệt bị đóng nhầm hoặc học sinh chuyển thiết bị.
 
-Các nhóm test case quan trọng để đánh giá giải pháp gồm: học sinh chưa ghi danh không mở được bài kiểm tra trong khóa học; học sinh không thể làm quá số lượt tối đa; mở lại bài đang làm trả về submission cũ; bài đã nộp không được lưu tiếp; câu trả lời gửi lên phải thuộc đúng item trong đề; option được chọn phải thuộc đúng câu hỏi; hết giờ thì bài được nộp theo trạng thái hiện tại; bài có tự luận chuyển sang trạng thái chờ chấm; bài chỉ có câu khách quan được hoàn tất và có điểm tự động. Các test case này phản ánh đúng các rủi ro nghiệp vụ của hệ thống bài kiểm tra, thay vì chỉ kiểm tra luồng làm bài thành công.
+Các nhóm test case đánh giá giải pháp gồm: học sinh chưa ghi danh không mở được bài kiểm tra trong khóa học; không thể làm quá số lượt tối đa; mở lại bài đang làm trả về submission cũ; bài đã nộp không được lưu tiếp; item và option phải thuộc đúng đề; hết giờ thì bài được tự động thu; bài có tự luận chuyển sang chờ chấm; bài không có tự luận được hoàn tất và tính điểm tự động. Các trường hợp này bao phủ cả luồng thành công và những rủi ro nghiệp vụ của quá trình làm bài.
 
 \section{Xử lý video bài giảng bằng HLS và lưu trữ đối tượng}
 \label{section:5.3}
 
-Video bài giảng là loại dữ liệu có ảnh hưởng trực tiếp tới trải nghiệm học tập và khả năng vận hành thương mại của hệ thống. Nếu học sinh mua khóa học nhưng video tải chậm, khó tua hoặc hay gián đoạn, chất lượng khóa học sẽ bị đánh giá thấp dù nội dung chuyên môn tốt. Phần này trình bày giải pháp xử lý video bằng HLS kết hợp Cloudflare R2, giúp hệ thống giảm tải cho backend, chuẩn hóa định dạng phát và chuẩn bị tốt hơn cho tình huống nhiều học sinh xem cùng lúc.
+Video bài giảng ảnh hưởng trực tiếp tới trải nghiệm học tập và khả năng vận hành của hệ thống. HLS chia nội dung thành playlist và các đoạn media nhỏ để trình phát tải theo nhu cầu \cite{pantos2017hls}. Đồ án kết hợp HLS với Cloudflare R2 nhằm tách tệp dung lượng lớn khỏi máy chủ ứng dụng, chuẩn hóa định dạng phát và hỗ trợ nhiều học sinh xem cùng lúc.
 
 \subsection{Bài toán và vấn đề}
 \label{section:5.3.1}
@@ -269,31 +273,31 @@ Các tiêu chí đánh giá giải pháp gồm: video upload chuyển sang trạ
 \section{Tự động hóa ghi danh sau thanh toán qua webhook}
 \label{section:5.4}
 
-Một mục tiêu thực tế của hệ thống là giảm thao tác vận hành thủ công khi bán khóa học. Trong mô hình cũ, giáo viên hoặc trợ lý phải kiểm tra chuyển khoản, đối chiếu nội dung chuyển khoản rồi thêm học sinh vào nhóm học. Phần này trình bày giải pháp tự động hóa ghi danh sau thanh toán bằng đơn hàng, VietQR, webhook, cơ chế chống request trùng và đối soát giao dịch.
+Hệ thống cần giảm thao tác kiểm tra chuyển khoản và cấp quyền thủ công khi bán khóa học. SePay cung cấp \textit{webhook} để chuyển thông tin giao dịch tới ứng dụng ngay khi phát sinh, đồng thời hỗ trợ HMAC-SHA256 và API Key \cite{sepay_webhook_docs}. Trên nền cơ chế này, đồ án tổ chức luồng đơn hàng, VietQR, chống yêu cầu trùng, đối soát giao dịch và tự động ghi danh.
 
 \subsection{Bài toán và vấn đề}
 \label{section:5.4.1}
 
-Thanh toán chuyển khoản trong bối cảnh lớp học trực tuyến không chỉ có trường hợp thành công đơn giản. Học sinh có thể bấm mua nhiều lần do mạng chậm, làm mới trang trong lúc tạo thanh toán, chuyển khoản thiếu tiền, chuyển sau khi đơn hàng hết hạn, nhập thiếu mã hóa đơn hoặc chuyển nhầm nội dung. Ở phía provider, webhook có thể được gửi lặp lại nếu lần gửi trước chưa nhận được phản hồi thành công. Nếu hệ thống tự động cấp quyền học cho mọi webhook có trạng thái thành công, khóa học có thể bị cấp sai. Ngược lại, nếu hệ thống chỉ dựa vào kiểm tra thủ công, mục tiêu giảm vận hành không đạt được.
+Thanh toán chuyển khoản trong lớp học trực tuyến phát sinh nhiều sai lệch. Học sinh có thể bấm mua nhiều lần do mạng chậm, chuyển thiếu tiền, chuyển sau khi đơn hết hạn hoặc nhập sai mã hóa đơn. Nhà cung cấp cũng có thể gửi lại \textit{webhook} khi lần gửi trước chưa nhận được phản hồi. Nếu hệ thống cấp quyền cho mọi sự kiện có trạng thái thành công, khóa học có thể bị cấp sai; nếu chỉ kiểm tra thủ công, mục tiêu tự động hóa không đạt được.
 
-Bài toán cần giải quyết là thiết kế một luồng tự động hóa nhưng vẫn có kiểm soát. Hệ thống phải hạn chế request trùng từ phía người dùng, tự động ghi danh khi giao dịch khớp chính xác, đồng thời giữ lại dữ liệu để quản trị viên xử lý các giao dịch bất thường. Ngoài ra, quá trình cập nhật thanh toán, hoàn tất đơn hàng và tạo enrollment phải nhất quán; không được xảy ra tình trạng đơn hàng đã hoàn thành nhưng chưa có quyền học, hoặc có quyền học khi payment chưa hợp lệ.
+Bài toán cần giải quyết là tự động hóa nhưng vẫn kiểm soát được sai lệch. Hệ thống phải hạn chế yêu cầu trùng, chỉ ghi danh khi giao dịch khớp và giữ lại dữ liệu để quản trị viên xử lý trường hợp bất thường. Việc cập nhật thanh toán, hoàn tất đơn hàng và tạo bản ghi ghi danh phải nhất quán; không được xảy ra tình trạng đơn hàng đã hoàn thành nhưng chưa có quyền học hoặc ngược lại.
 
 \subsection{Giải pháp}
 \label{section:5.4.2}
 
 Giải pháp được triển khai theo mô hình đơn hàng trước, thanh toán sau. Mọi giao dịch thanh toán đều được đối chiếu với một đơn hàng đã tồn tại trong hệ thống.
 
-\textbf{a, Chống request trùng bằng idempotency key}. Các thao tác nhạy cảm như tạo đơn hàng, tạo thanh toán và hủy đơn đều yêu cầu \texttt{Idempotency-Key}. Khi request đầu tiên đến, hệ thống lưu key cùng hash của method, đường dẫn và body request. Nếu cùng key và cùng nội dung request được gửi lại sau khi xử lý xong, hệ thống trả lại response đã lưu thay vì thực hiện nghiệp vụ lần nữa. Nếu cùng key nhưng nội dung request khác, hệ thống từ chối vì đây không còn là retry hợp lệ. Nếu request cũ vẫn đang xử lý, hệ thống trả lỗi đang xử lý để tránh hai tiến trình cùng tạo dữ liệu.
+\textbf{a, Chống yêu cầu trùng bằng khóa bất biến}. Các thao tác tạo thanh toán và hủy đơn đều yêu cầu trường \texttt{Idempotency-Key}. Ở lần gọi đầu, hệ thống lưu khóa cùng giá trị băm của phương thức, đường dẫn và nội dung yêu cầu. Nếu cùng khóa và nội dung được gửi lại sau khi xử lý xong, kết quả đã lưu sẽ được trả về thay vì thực hiện nghiệp vụ lần nữa. Hệ thống từ chối trường hợp cùng khóa nhưng khác nội dung; yêu cầu đang xử lý cũng không được chạy đồng thời lần thứ hai.
 
-Cơ chế này quan trọng trong luồng mua khóa học vì người dùng có thể bấm nút thanh toán nhiều lần khi mạng chậm. Nếu chỉ dựa vào ràng buộc duy nhất ở CSDL, hệ thống vẫn phải để nhiều request đi sâu vào logic nghiệp vụ rồi mới bị chặn ở tầng cuối. Idempotency giúp chặn sớm hơn, làm rõ ý nghĩa của request lặp và trả về kết quả ổn định cho frontend.
+Cơ chế này cần thiết trong luồng mua khóa học vì người dùng có thể bấm nút thanh toán nhiều lần khi mạng chậm. Nếu chỉ dựa vào ràng buộc duy nhất ở CSDL, các yêu cầu trùng vẫn đi qua nhiều bước nghiệp vụ trước khi bị chặn. Khóa bất biến giúp phát hiện sớm và trả về kết quả ổn định cho giao diện.
 
 \textbf{b, Tạo đơn hàng và mã hóa đơn}. Khi học sinh mua khóa học, hệ thống loại bỏ các khóa học trùng trong request, kiểm tra khóa học đã xuất bản, kiểm tra học sinh chưa ghi danh các khóa học đó và tính tổng tiền. Trước khi tạo đơn mới, hệ thống làm hết hạn các đơn chờ quá thời gian và kiểm tra xem học sinh có đơn pending còn hiệu lực hay không. Nếu có, hệ thống trả về đơn đang chờ thay vì tạo thêm đơn mới. Cách làm này tránh việc một học sinh tạo nhiều đơn chờ song song cho cùng một nhu cầu mua.
 
 Mỗi đơn hàng có mã hóa đơn duy nhất \texttt{order\_invoice\_number}. Khi tạo thanh toán qua SePay, backend sinh mã VietQR gồm số tài khoản, ngân hàng, số tiền và nội dung chuyển khoản là mã hóa đơn. Mã hóa đơn là dữ liệu quan trọng để webhook ngân hàng có thể ghép giao dịch với đơn hàng.
 
-\textbf{c, Xác thực và chuẩn hóa webhook}. Khi SePay gửi webhook, provider adapter kiểm tra request theo cấu hình của hệ thống. Hệ thống hỗ trợ xác thực bằng API key hoặc chữ ký HMAC. Với HMAC, adapter kiểm tra timestamp để tránh replay trong khoảng thời gian quá xa, sau đó so sánh chữ ký bằng \texttt{timingSafeEqual}. Sau khi request hợp lệ, payload được chuẩn hóa thành sự kiện thanh toán nội bộ gồm provider, event id, mã giao dịch, mã hóa đơn, số tiền, đơn vị tiền tệ, hướng giao dịch, trạng thái, thời điểm thanh toán và raw payload.
+\textbf{c, Xác thực và chuẩn hóa \textit{webhook}}. Khi SePay gửi sự kiện, bộ chuyển đổi của nhà cung cấp kiểm tra API key hoặc chữ ký HMAC. Với HMAC, thời điểm gửi được đối chiếu để hạn chế phát lại sự kiện cũ, sau đó chữ ký được so sánh bằng \texttt{timingSafeEqual}. Dữ liệu hợp lệ được chuẩn hóa thành sự kiện thanh toán nội bộ gồm mã sự kiện, mã giao dịch, mã hóa đơn, số tiền, đơn vị tiền tệ, hướng giao dịch, trạng thái và thời điểm thanh toán.
 
-Payload webhook từ SePay có nhiều trường gắn với giao dịch ngân hàng như mã sự kiện, ngân hàng, thời gian giao dịch, số tài khoản, mã đơn hàng, hướng chuyển tiền, số tiền và mã tham chiếu. Trong hệ thống, provider adapter không để các service nghiệp vụ phụ thuộc trực tiếp vào payload thô này, mà chuẩn hóa thành cấu trúc sự kiện nội bộ:
+Dữ liệu \textit{webhook} từ SePay chứa các trường gắn với giao dịch ngân hàng như mã sự kiện, ngân hàng, thời gian, số tài khoản, mã đơn hàng, hướng chuyển tiền, số tiền và mã tham chiếu. Bộ chuyển đổi tách các dịch vụ nghiệp vụ khỏi cấu trúc dữ liệu gốc bằng cách chuẩn hóa về sự kiện nội bộ:
 
 \begin{verbatim}
 {
@@ -309,13 +313,13 @@ Payload webhook từ SePay có nhiều trường gắn với giao dịch ngân h
 }
 \end{verbatim}
 
-Trong đó, \texttt{orderInvoiceNumber} được lấy từ trường \texttt{code} của SePay và dùng để ghép giao dịch với đơn hàng. Việc chuẩn hóa này giúp service xử lý webhook chỉ làm việc với một dạng dữ liệu ổn định, kể cả khi provider thay đổi tên trường hoặc hệ thống bổ sung provider thanh toán khác trong tương lai.
+Trong đó, \texttt{orderInvoiceNumber} được lấy từ trường \texttt{code} của SePay và dùng để ghép giao dịch với đơn hàng. Nhờ bước chuẩn hóa, dịch vụ đối soát chỉ làm việc với một cấu trúc ổn định, ngay cả khi nhà cung cấp thay đổi tên trường hoặc hệ thống bổ sung kênh thanh toán khác.
 
-\textbf{d, Lưu webhook event và payment transaction}. Trước khi đối chiếu, hệ thống lưu webhook event và tạo bản ghi payment transaction. Hai nhóm dữ liệu này có vai trò khác nhau. Webhook event lưu sự kiện do provider gửi, phục vụ chống xử lý lặp và theo dõi trạng thái xử lý webhook. Payment transaction lưu giao dịch tiền thực tế, phục vụ đối soát, tìm kiếm và xử lý thủ công. Việc tách hai loại dữ liệu giúp hệ thống không mất dấu các giao dịch bất thường.
+\textbf{d, Lưu sự kiện \textit{webhook} và giao dịch thanh toán}. Trước khi đối chiếu, hệ thống lưu sự kiện do nhà cung cấp gửi và tạo bản ghi giao dịch thanh toán. Dữ liệu sự kiện được dùng để chống xử lý lặp và theo dõi trạng thái tiếp nhận \textit{webhook}; bản ghi giao dịch lưu thông tin dòng tiền để đối soát, tìm kiếm và xử lý thủ công. Việc tách hai loại dữ liệu giúp hệ thống không mất dấu các giao dịch bất thường.
 
-\textbf{e, Đối soát giao dịch}. Sau khi tạo bản ghi giao dịch, hệ thống phân loại theo điều kiện nghiệp vụ. Nếu webhook không phải giao dịch tiền vào hoặc không có trạng thái thành công, giao dịch được đánh dấu \texttt{ignored}. Nếu thiếu mã hóa đơn hoặc không tìm thấy đơn hàng, giao dịch được đánh dấu \texttt{unmatched}. Nếu đơn hàng tồn tại nhưng đơn vị tiền tệ không khớp, giao dịch được đưa vào diện cần kiểm tra thủ công.
+\textbf{e, Đối soát giao dịch}. Sau khi tạo bản ghi, hệ thống phân loại giao dịch theo điều kiện nghiệp vụ. Sự kiện không phải giao dịch tiền vào hoặc không có trạng thái thành công được đánh dấu \texttt{ignored}. Trường hợp thiếu mã hóa đơn hoặc không tìm thấy đơn hàng nhận trạng thái \texttt{unmatched}; sai lệch đơn vị tiền tệ được chuyển sang diện kiểm tra thủ công.
 
-Với đơn hàng tìm thấy, hệ thống tiếp tục đánh giá trạng thái payment. Nếu payment không còn \texttt{pending}, giao dịch được đưa vào \texttt{manual\_review} với lý do \texttt{payment\_not\_pending}. Nếu số tiền nhận được nhỏ hơn tổng tiền đơn hàng, giao dịch được đưa vào \texttt{manual\_review} với lý do \texttt{under\_paid}. Nếu đơn hàng đã hết hạn hoặc không còn ở trạng thái \texttt{pending}, giao dịch được ghi nhận là \texttt{late\_success}. Chỉ khi payment đang chờ, số tiền đủ, đơn chưa hết hạn và đơn còn pending, hệ thống mới coi giao dịch là hợp lệ.
+Với đơn hàng tìm thấy, hệ thống tiếp tục kiểm tra trạng thái thanh toán. Nếu khoản thanh toán không còn ở trạng thái chờ (\texttt{pending}), giao dịch được chuyển sang diện kiểm tra thủ công (\texttt{manual\_review}) với mã lý do \texttt{payment\_not\_pending}. Trường hợp số tiền nhận được nhỏ hơn tổng tiền đơn hàng cũng được chuyển sang diện này với mã \texttt{under\_paid}. Giao dịch đến sau khi đơn hàng hết hạn hoặc không còn chờ xử lý được ghi nhận bằng trạng thái \texttt{late\_success}. Hệ thống chỉ xác nhận giao dịch khi khoản thanh toán đang chờ, số tiền đã đủ và đơn hàng còn hiệu lực.
 
 \begin{table}[H]
 \centering
@@ -338,7 +342,7 @@ Với đơn hàng tìm thấy, hệ thống tiếp tục đánh giá trạng th�
 
 \textbf{f, Hoàn tất đơn hàng trong transaction}. Khi giao dịch hợp lệ, hệ thống cập nhật payment sang \texttt{success}, cập nhật payment transaction sang \texttt{matched}, hoàn tất đơn hàng và tạo các bản ghi \texttt{enrollments} cho các khóa học trong đơn. Toàn bộ thao tác được thực hiện trong transaction CSDL. Nếu một bước lỗi, transaction rollback, tránh tình trạng dữ liệu thanh toán và quyền học lệch nhau.
 
-Hệ thống cũng xử lý webhook gửi lặp bằng ràng buộc duy nhất theo provider và event id. Nếu provider gửi lại một webhook đã xử lý, hệ thống nhận ra sự kiện cũ và không tạo thêm enrollment. Đây là điểm quan trọng vì webhook từ bên thứ ba thường có cơ chế retry khi không nhận được phản hồi thành công.
+Hệ thống xử lý \textit{webhook} gửi lặp bằng ràng buộc duy nhất theo nhà cung cấp và mã sự kiện. Nếu một sự kiện đã xử lý được gửi lại, máy chủ trả về kết quả cũ và không tạo thêm bản ghi ghi danh.
 
 \subsection{Kết quả đạt được và đánh giá}
 \label{section:5.4.3}
@@ -347,10 +351,10 @@ Giải pháp giúp tự động hóa phần lớn luồng ghi danh sau thanh to�
 
 Giải pháp cũng cải thiện tính nhất quán dữ liệu. Cấp quyền học không phải một thao tác rời rạc, mà gắn với trạng thái đơn hàng và payment trong cùng transaction. Điều này phù hợp với yêu cầu thực tế của hệ thống thương mại hóa khóa học: học sinh chỉ được ghi danh khi đơn hàng đã hoàn tất hợp lệ.
 
-Về phía người dùng, idempotency key giúp thao tác mua khóa học ổn định hơn trong các tình huống bấm lặp hoặc retry do mạng chậm. Về phía quản trị, webhook event và payment transaction tạo thành dữ liệu đối soát: quản trị viên có thể biết giao dịch nào khớp, giao dịch nào thiếu mã hóa đơn, giao dịch nào đến muộn hoặc thiếu tiền. Đây là điểm quan trọng vì hệ thống bán khóa học không chỉ cần cấp quyền nhanh, mà còn cần tránh cấp quyền sai.
+Khóa bất biến giữ thao tác mua khóa học nhất quán khi người dùng bấm lặp hoặc trình duyệt gửi lại yêu cầu do mạng chậm. Dữ liệu sự kiện và bản ghi giao dịch cho phép quản trị viên phân biệt giao dịch khớp, thiếu mã hóa đơn, đến muộn hoặc thiếu tiền. Quyền học chỉ được cấp khi giao dịch thỏa mãn đầy đủ điều kiện nghiệp vụ.
 
-Các test case quan trọng gồm: gửi lặp request tạo đơn với cùng idempotency key trả lại cùng kết quả; cùng key nhưng body khác bị từ chối; không tạo đơn mới nếu còn đơn pending hiệu lực; tạo QR với mã hóa đơn; webhook hợp lệ tạo enrollment; webhook gửi lặp không tạo enrollment trùng; giao dịch thiếu mã hóa đơn được đánh dấu unmatched; giao dịch thiếu tiền được đưa vào manual review; giao dịch đến sau khi đơn hết hạn không tự động cấp quyền; giao dịch tiền ra bị ignored. Các trường hợp này cho thấy hệ thống không chỉ xử lý luồng thành công, mà còn bao phủ các lỗi thường gặp của thanh toán chuyển khoản tự động.
+Các trường hợp kiểm thử gồm: (i) gửi lặp yêu cầu tạo đơn với cùng khóa trả lại cùng kết quả; (ii) dùng cùng khóa cho nội dung khác bị từ chối; (iii) không tạo đơn mới khi còn đơn chờ hiệu lực; (iv) \textit{webhook} hợp lệ tạo bản ghi ghi danh; (v) sự kiện gửi lặp không tạo dữ liệu trùng; và (vi) giao dịch thiếu mã, thiếu tiền, đến muộn hoặc chi tiền không tự động cấp quyền. Nhóm kiểm thử này bao phủ cả luồng thành công và các sai lệch thường gặp khi xác nhận chuyển khoản.
 
-Chương này đã trình bày bốn đóng góp kỹ thuật nổi bật của đồ án: trợ lý AI hỏi đáp theo học liệu nội bộ có nguồn dẫn, kiểm soát quá trình làm bài kiểm tra, xử lý video bài giảng bằng HLS kết hợp lưu trữ đối tượng và tự động hóa ghi danh sau thanh toán qua webhook. Các giải pháp này trực tiếp giải quyết các vấn đề đã nêu ở Chương 1 và Chương 2, đồng thời thể hiện cách áp dụng các công nghệ ở Chương 3 vào các bài toán triển khai cụ thể. Chương tiếp theo sẽ tổng kết kết quả đạt được, các hạn chế còn tồn tại và hướng phát triển của hệ thống.
+Chương này đã phân tích bốn bài toán kỹ thuật tiêu biểu trong quá trình hiện thực sản phẩm: hỏi đáp theo học liệu có nguồn dẫn, kiểm soát quá trình làm bài, xử lý video HLS kết hợp lưu trữ đối tượng và tự động hóa ghi danh qua webhook. Giá trị của các giải pháp không nằm ở từng công nghệ riêng lẻ, mà ở việc chúng cùng phục vụ một quy trình LMS thống nhất và xử lý các trạng thái lỗi thường gặp trong vận hành thực tế. Chương tiếp theo tổng kết phạm vi sản phẩm đã hoàn thành, các hạn chế còn tồn tại và hướng phát triển của hệ thống.
 
 \end{document}

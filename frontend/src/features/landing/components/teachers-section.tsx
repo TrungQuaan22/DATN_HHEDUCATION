@@ -28,7 +28,7 @@ const teachers: Teacher[] = [
     quote:
       '"Giáo dục không phải là việc đổ đầy một chiếc bình, mà là việc thắp sáng một ngọn lửa."',
     avatarUrl:
-      "https://lh3.googleusercontent.com/aida/ADBb0uipGD9YTcedf9TvwqfWUdXUVv_JPcxYj981ljzVDnNxdRswLnWip7Fwo05-KOZIwm-mAAg5SA7aD_k0J8GUZdn5eZiaCYGzY_2NoRM_3nv_x7FZ3PmdbJ-pnvdVBunYiXrfacfkjga_QgO8E8uTmgKXvqw0HbyAPLHX2x9ecQAoAKnomXV4CoDildwIDGMx_YkcDMo6Spn8QJIVtmCBm67HL6aQBe8YpNGt9ZyQTdP3u9QWLJlJNw9aU0CIBW6R5POz6pIVFB7IgQ",
+      "https://scontent.fhan18-1.fna.fbcdn.net/v/t39.30808-6/626027687_934967042325550_3654724351854008020_n.jpg?stp=dst-jpg_tt6&cstp=mx1152x1152&ctp=s1152x1152&_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=KKlPZDJzrcAQ7kNvwEaFtMo&_nc_oc=AdrZyCsRUmGxkOAwPREoKkMBMFsi4Lec4DuWzwB-lHp09ujWjdUCaCiUcTNfh92TsXc&_nc_zt=23&_nc_ht=scontent.fhan18-1.fna&_nc_gid=fg_QCfrw8dtEQgu7yN6cvQ&_nc_ss=7b2a8&oh=00_AQBUjqKEMAiYAjEgnoF60CgXVZfX66_lODUq67QK2dsR7Q&oe=6A4965B2",
     timeline: [
       {
         stage: "Hiện tại",
@@ -65,7 +65,7 @@ const teachers: Teacher[] = [
         stage: "Kinh nghiệm",
         stageColorClass: "text-sky-blue",
         nodeColorClass: "bg-sky-blue",
-        title: "Giảng viên tại ĐH Bách Khoa",
+        title: "GV Toán khối A, A1",
         desc: "Hơn 10 năm kinh nghiệm luyện thi đại học môn Toán khối A, A1.",
       },
       {

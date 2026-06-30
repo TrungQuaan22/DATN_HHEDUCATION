@@ -10,7 +10,7 @@ export default function ReviewsSection() {
       badge: "9.2 Ngữ Văn - THPTQG 2024",
       badgeColorClass: "bg-brand-pink/10 text-brand-pink border-brand-pink/30",
       avatarUrl:
-        "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY",
+        "https://scontent.fhan18-1.fna.fbcdn.net/v/t39.30808-6/626027687_934967042325550_3654724351854008020_n.jpg?stp=dst-jpg_tt6&cstp=mx1152x1152&ctp=s1152x1152&_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=KKlPZDJzrcAQ7kNvwEaFtMo&_nc_oc=AdrZyCsRUmGxkOAwPREoKkMBMFsi4Lec4DuWzwB-lHp09ujWjdUCaCiUcTNfh92TsXc&_nc_zt=23&_nc_ht=scontent.fhan18-1.fna&_nc_gid=fg_QCfrw8dtEQgu7yN6cvQ&_nc_ss=7b2a8&oh=00_AQBUjqKEMAiYAjEgnoF60CgXVZfX66_lODUq67QK2dsR7Q&oe=6A4965B2",
       quote:
         '"Nhờ phương pháp dạy của cô Hà, em đã bứt phá từ 6 điểm lên 9.2 điểm Ngữ Văn trong kỳ thi vừa rồi. Cách giảng bài rất truyền cảm hứng!"',
       rating: 5,
@@ -21,7 +21,7 @@ export default function ReviewsSection() {
       badge: "9.8 Toán - THPTQG 2024",
       badgeColorClass: "bg-sky-blue/10 text-sky-blue border-sky-blue/30",
       avatarUrl:
-        "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY",
+        "https://scontent.fhan18-1.fna.fbcdn.net/v/t39.30808-6/626027687_934967042325550_3654724351854008020_n.jpg?stp=dst-jpg_tt6&cstp=mx1152x1152&ctp=s1152x1152&_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=KKlPZDJzrcAQ7kNvwEaFtMo&_nc_oc=AdrZyCsRUmGxkOAwPREoKkMBMFsi4Lec4DuWzwB-lHp09ujWjdUCaCiUcTNfh92TsXc&_nc_zt=23&_nc_ht=scontent.fhan18-1.fna&_nc_gid=fg_QCfrw8dtEQgu7yN6cvQ&_nc_ss=7b2a8&oh=00_AQBUjqKEMAiYAjEgnoF60CgXVZfX66_lODUq67QK2dsR7Q&oe=6A4965B2",
       quote:
         '"Kho đề luyện tập cực kỳ sát với đề thi thật. Lời giải chi tiết giúp em hiểu rõ bản chất vấn đề chứ không chỉ là học vẹt."',
       rating: 5,
@@ -32,7 +32,7 @@ export default function ReviewsSection() {
       badge: "9.0 Tiếng Anh - THPTQG 2024",
       badgeColorClass: "bg-brand-pink/10 text-brand-pink border-brand-pink/30",
       avatarUrl:
-        "https://lh3.googleusercontent.com/aida/ADBb0uiIek7P62jjJQjU84PIV6GsfsuyN4KmS9fL8kB6kpryaM4TkPT2F2LhGKwuC3hvfNQf_zY87X2K48fs4HvQljJNxRMwZ0xpYwr6hQldNlJiBXSZp2yCTCYv_id9QoLVARzshzEmPSCMWPAx8CKPpdvEPKzvbSJ8ma_FqeGFH5P-fWBGMyad5cxcucjCmlBAFqfbFcgGPrdQvqFI1VOucL5mtyjpHhjgUZVyiTybciyZyXUfQcNa1aVypgY",
+        "https://scontent.fhan18-1.fna.fbcdn.net/v/t39.30808-6/626027687_934967042325550_3654724351854008020_n.jpg?stp=dst-jpg_tt6&cstp=mx1152x1152&ctp=s1152x1152&_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=KKlPZDJzrcAQ7kNvwEaFtMo&_nc_oc=AdrZyCsRUmGxkOAwPREoKkMBMFsi4Lec4DuWzwB-lHp09ujWjdUCaCiUcTNfh92TsXc&_nc_zt=23&_nc_ht=scontent.fhan18-1.fna&_nc_gid=fg_QCfrw8dtEQgu7yN6cvQ&_nc_ss=7b2a8&oh=00_AQBUjqKEMAiYAjEgnoF60CgXVZfX66_lODUq67QK2dsR7Q&oe=6A4965B2",
       quote:
         '"Giao diện học tập hiện đại, mượt mà. Em có thể học mọi lúc mọi nơi trên điện thoại, rất tiện lợi cho học sinh cuối cấp."',
       rating: 4.5,

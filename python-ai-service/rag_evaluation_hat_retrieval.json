@@ -1,0 +1,543 @@
+{
+  "samples": 25,
+  "answerable_samples": 20,
+  "unanswerable_samples": 5,
+  "retrieval_recall_at_k": 0.7708333333333334,
+  "retrieval_hit_rate": 0.9,
+  "mrr": 0.7458333333333333,
+  "source_recall_at_k": 0.875,
+  "full_source_retrieval_rate": 0.8,
+  "citation_sentence_coverage": null,
+  "answer_token_f1": null,
+  "answerable_response_rate": null,
+  "refusal_accuracy": null,
+  "avg_latency_ms": null,
+  "avg_context_count": 4.12,
+  "generation_failures": 0,
+  "answer_modes": [],
+  "generate_answer": false,
+  "categories": {
+    "direct_single_source": {
+      "samples": 15,
+      "retrieval_recall_at_k": 0.8111111111111111,
+      "source_recall_at_k": 0.9333333333333333,
+      "refusal_accuracy": null
+    },
+    "multi_source_same_lesson": {
+      "samples": 5,
+      "retrieval_recall_at_k": 0.65,
+      "source_recall_at_k": 0.7,
+      "refusal_accuracy": null
+    },
+    "unanswerable": {
+      "samples": 5,
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "refusal_accuracy": null
+    }
+  },
+  "per_sample": [
+    {
+      "sample_id": "HAT-D01",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "2de74391-030c-4d08-b25c-d1635ba959f5",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D02",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "509bb8b2-70e5-415a-8517-8b6f24635d4f",
+        "efece553-e4b3-406e-b53d-ecbeb30200e8",
+        "371310d6-85a3-4244-89f2-af90b22a71ea"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D03",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "e4235de0-bf27-4f65-87e6-fb3dad41c4d1",
+        "2de74391-030c-4d08-b25c-d1635ba959f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "371310d6-85a3-4244-89f2-af90b22a71ea"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D04",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "6d7e491a-2fca-443a-83c6-f94b8e594157",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "18befa6e-3d04-456b-bb1b-742930f14219"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D05",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "61a59183-e056-4fb9-9fc7-472c952a82c0",
+        "72c74410-3a02-4c37-a74c-88857b288006",
+        "74c67ea4-3c5e-4b49-9702-a05e48a5fc41"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D06",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "99e8a3f5-15d5-43f7-b37a-a38e4db0ffd6",
+        "7d7818d2-ab51-4a6e-b19a-40d259ecd373"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 2,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D07",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": 0.0,
+      "source_recall_at_k": 0.0,
+      "reciprocal_rank": 0.0,
+      "context_count": 0,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D08",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "61a59183-e056-4fb9-9fc7-472c952a82c0",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "387d5195-17b5-4035-95bb-f1b5b3c3b3ea",
+        "23f14089-39af-417f-8cbc-0ff6d9ddfd82",
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.6666666666666666,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D09",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "a15e4b69-b17d-4c41-bb23-ce70ebd6c7ba",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D10",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "08d1e769-8e06-459d-b9f2-8f34d43792ae",
+        "babf0693-d553-436e-a2b5-767f65938be5"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 2,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D11",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b",
+        "babf0693-d553-436e-a2b5-767f65938be5",
+        "4c53e628-d488-4b9f-ba6e-bef789da5501",
+        "c2231a0b-361c-4905-b827-0632914b3259",
+        "464f592a-0854-45be-85ba-023c874925b4"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D12",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "87b45506-1fb8-4f7d-a406-4e53279a13d8",
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "74f3e64b-7d2f-4582-9f80-2cb5b116a029",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b",
+        "e7aea8f1-230c-443f-9356-94adf0c62081"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D13",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "8793f9ed-cded-428c-9273-76f46b861b0f",
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "c2231a0b-361c-4905-b827-0632914b3259",
+        "7396b02c-b61e-45cd-a96d-6012cba9683e",
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "e7aea8f1-230c-443f-9356-94adf0c62081"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D14",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "74f3e64b-7d2f-4582-9f80-2cb5b116a029",
+        "b961a76a-946a-4bbc-9edf-f6c01272c51a"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-D15",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "e524a348-4813-45b9-9a93-213765e59dd0",
+        "a766fc01-26d6-47cc-8ab4-c4ff817649cd",
+        "b1f6c5ce-b948-4419-9e63-f3b520c018c8",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "3723502c-da14-489f-a929-172dd087138e"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-M01",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "a766fc01-26d6-47cc-8ab4-c4ff817649cd",
+        "b1f6c5ce-b948-4419-9e63-f3b520c018c8",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "418c6691-997d-43ec-9cdf-cc6ffa3d7107",
+        "e524a348-4813-45b9-9a93-213765e59dd0"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 0.5,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-M02",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "a15e4b69-b17d-4c41-bb23-ce70ebd6c7ba",
+        "e524a348-4813-45b9-9a93-213765e59dd0",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "b59f6e1d-0298-4ccc-9cc1-e9a76d4572b1",
+        "b4cfcf35-de74-4d05-8ae9-16f8898bee18"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-M03",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "f8d457d8-ac5c-4e4d-8656-8f89df8872d2",
+        "309bb574-be2e-4213-984e-477db7e2162f",
+        "1b4d9142-190f-42fa-b28a-0eb4a14b5b34",
+        "b4cfcf35-de74-4d05-8ae9-16f8898bee18",
+        "3723502c-da14-489f-a929-172dd087138e",
+        "babf0693-d553-436e-a2b5-767f65938be5"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-M04",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "509bb8b2-70e5-415a-8517-8b6f24635d4f",
+        "e4235de0-bf27-4f65-87e6-fb3dad41c4d1",
+        "7d529629-b8ef-43ae-9a94-e4aa8a6c0a42",
+        "efece553-e4b3-406e-b53d-ecbeb30200e8",
+        "371310d6-85a3-4244-89f2-af90b22a71ea",
+        "caa288ae-3aa0-4f10-9283-280a121eec3e"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-M05",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "aa20a37b-1e6e-430f-8603-5ce2a4c24201",
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "74c67ea4-3c5e-4b49-9702-a05e48a5fc41"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.25,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 0.25,
+      "context_count": 6,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-N01",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-N02",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-N03",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-N04",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [
+        "aa20a37b-1e6e-430f-8603-5ce2a4c24201",
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "ed2d4d9f-c320-43d7-8d9a-bd9ab678f57a",
+        "2de74391-030c-4d08-b25c-d1635ba959f5"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a",
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0"
+      ],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 5,
+      "answer": null,
+      "refused": null
+    },
+    {
+      "sample_id": "HAT-N05",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [
+        "c2231a0b-361c-4905-b827-0632914b3259"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 1,
+      "answer": null,
+      "refused": null
+    }
+  ]
+}

@@ -44,7 +44,7 @@ export const UI_MESSAGES = {
     youtubeUrlRequired: 'Vui lòng nhập đường dẫn YouTube URL.',
     videoFileRequired: 'Vui lòng tải lên tệp video bài học.',
     videoFileInvalid: 'Vui lòng chỉ tải lên tệp video (.mp4, .webm).',
-    videoFileTooLarge: 'Dung lượng video vượt quá giới hạn cho phép (Tối đa 500MB).',
+    videoFileTooLarge: 'Dung lượng video vượt quá giới hạn cho phép (Tối đa 1 GB).',
     saveFailed: 'Có lỗi xảy ra khi lưu bài học.',
     reorderSuccess: 'Sắp xếp bài học thành công.',
     reorderFailed: 'Sắp xếp bài học thất bại. Hệ thống đã tự động hoàn tác.',

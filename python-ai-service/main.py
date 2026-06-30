@@ -4,10 +4,11 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from config import AI_SERVICE_INTERNAL_TOKEN
+from database import db_connection
 from ingest_service import run_ingestion
 from rag_service import run_rag_tutor, run_rag_tutor_stream
 
@@ -43,8 +44,17 @@ class ChatRequest(BaseModel):
 
 
 @app.get("/health")
-def health() -> dict:
-    return {"ok": True}
+def health():
+    try:
+        with db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        return {"ok": True, "service": "ai-service", "database": "ready"}
+    except Exception:
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "service": "ai-service", "database": "unavailable"},
+        )
 
 
 @app.post("/api/v1/ingest", dependencies=[Depends(verify_internal_token)])

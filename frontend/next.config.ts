@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@vidstack/react", "vidstack", "maverick.js"],
+  output: "standalone",
   devIndicators: false,
   images: {
     remotePatterns: [
@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "api.dicebear.com",
       },
+      ...(process.env.NEXT_PUBLIC_MEDIA_HOSTNAME
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: process.env.NEXT_PUBLIC_MEDIA_HOSTNAME,
+            },
+          ]
+        : []),
     ],
   },
 };

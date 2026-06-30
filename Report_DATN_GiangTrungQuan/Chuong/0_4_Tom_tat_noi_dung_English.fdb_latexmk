@@ -1,21 +1,19 @@
 # Fdb version 4
-["bibtex 0_4_Tom_tat_noi_dung_English"] 0 "0_4_Tom_tat_noi_dung_English.aux" "0_4_Tom_tat_noi_dung_English.bbl" "0_4_Tom_tat_noi_dung_English" 0 0
-  "./0_4_Tom_tat_noi_dung_English-blx.bib" 1782465794 343 eecd58be191eac03682f8fda492bb690 ""
-  "0_4_Tom_tat_noi_dung_English.aux" 0 -1 0 "pdflatex"
-  "C:/Users/giang/AppData/Local/Programs/MiKTeX/bibtex/bst/biblatex/biblatex.bst" 1752408733 65510 9a2a51799b543ff279b8ea2dd91ec499 ""
+["biber 0_4_Tom_tat_noi_dung_English"] 0 "0_4_Tom_tat_noi_dung_English.bcf" "0_4_Tom_tat_noi_dung_English.bbl" "0_4_Tom_tat_noi_dung_English" 0 0
+  "0_4_Tom_tat_noi_dung_English.bcf" 0 -1 0 "pdflatex"
   "Danh_sach_tai_lieu_tham_khao.bib" 0 -1 0 ""
   (generated)
   "0_4_Tom_tat_noi_dung_English.bbl"
   "0_4_Tom_tat_noi_dung_English.blg"
   (rewritten before read)
-["pdflatex"] 1782465798.68817 "e:/DATN/Report_DATN_GiangTrungQuan/Chuong/0_4_Tom_tat_noi_dung_English.tex" "0_4_Tom_tat_noi_dung_English.pdf" "0_4_Tom_tat_noi_dung_English" 1782465801.45279 0
-  "../DoAn.tex" 1782463069 9967 508526433c62aa054204e3fd2df2d359 ""
-  "../Tu_viet_tat.tex" 1782412905 2931 cff7d0b13a3bf7065b64629614b1c45c ""
-  "0_4_Tom_tat_noi_dung_English.aux" 1782465800 607 bb237095dfe2afe53c827c6867efa9e0 "pdflatex"
-  "0_4_Tom_tat_noi_dung_English.bbl" 0 -1 0 "bibtex 0_4_Tom_tat_noi_dung_English"
-  "0_4_Tom_tat_noi_dung_English.out" 1782465800 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
-  "0_4_Tom_tat_noi_dung_English.run.xml" 1782465800 2853 bf3487b659991e746c9b29fca7767510 "pdflatex"
-  "0_4_Tom_tat_noi_dung_English.tex" 1782465794 2620 0c8715b24c59f2e36bd3566f942c0292 ""
+["pdflatex"] 1782832966.4672 "e:/DATN/Report_DATN_GiangTrungQuan/Chuong/0_4_Tom_tat_noi_dung_English.tex" "0_4_Tom_tat_noi_dung_English.pdf" "0_4_Tom_tat_noi_dung_English" 1782832968.64064 0
+  "../DoAn.tex" 1782746258 10062 0b4525cfcee01e01e2793e6cd18a6180 ""
+  "../Tu_viet_tat.tex" 1782481609 5416 b4a46c8f3d1345c6a9eefa2bcc8093a6 ""
+  "0_4_Tom_tat_noi_dung_English.aux" 1782832968 487 2c41e463d9b23f4b7265435822999a72 "pdflatex"
+  "0_4_Tom_tat_noi_dung_English.bbl" 0 -1 0 "biber 0_4_Tom_tat_noi_dung_English"
+  "0_4_Tom_tat_noi_dung_English.out" 1782832968 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "0_4_Tom_tat_noi_dung_English.run.xml" 1782832968 2588 c31aeea4f0d07792a2115c59856e710b "pdflatex"
+  "0_4_Tom_tat_noi_dung_English.tex" 1782832967 2216 6f34c33a899a65d4cc6035188a1382a0 ""
   "C:/Users/giang/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1782398230 89969 e95579120a3aa0ebc21d2737ca2ba701 ""
   "C:/Users/giang/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1782349675 13333487 ded341e8a4cc0fb49e7870438fbcd136 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/vntex/t5.enc" 1368738347 7824 21ade6c3c7fd67cb4ace8dbc91c53118 ""
@@ -58,7 +56,7 @@
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/base/inputenc.sty" 1761900684 5048 0270515b828149155424600fd2d58ac5 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/base/latexsym.sty" 1761900684 2853 45a98f589f86476fadff19a8edda5ea9 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/base/report.cls" 1761900684 23203 f495085ac76be4e20c5e1e88646a241e ""
-  "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/base/size10.clo" 1761900684 8448 686612a86f0e04f41ea577f5ec7e83d8 ""
+  "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/base/size12.clo" 1761900684 8449 8dc66c6c313c8eb2d774af83bca435dd ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex-ieee/ieee.bbx" 1754069656 20724 b6fe1d4a6a9abd895dabda304162c02a ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex-ieee/ieee.cbx" 1754069656 1656 f13f40d44286a2c06b106fc5fb5a9901 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/bbx/numeric-comp.bbx" 1752408733 92 7cdbb04a1e32fba0fbb91b6e6d123497 ""
@@ -67,7 +65,6 @@
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/biblatex.cfg" 1752408733 69 249fa6df04d948e51b6d5c67bea30c42 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/biblatex.def" 1752408733 96838 ffbc2c4ed45b0b76660254a85df40e90 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/biblatex.sty" 1752408733 537439 2a9e171c3538c29f9ba74ff3cff6f014 ""
-  "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-bibtex.def" 1752408733 24631 789de012232a8f2f0db747532fee5960 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-case-expl3.sty" 1752408733 9961 107fdb78f652fccae7bce0d23bdc19cd ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-compat.def" 1752408733 13919 5426dbe90e723f089052b4e908b56ef9 ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/biblatex/blx-dm.def" 1752408733 32761 18d14e3b502c120f79b2184de4e21d14 ""
@@ -167,11 +164,10 @@
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/xfor/xfor.sty" 1233849756 2689 44855b72da58344b1c1d9b3087bce6ca ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/xkeyval/xkeyval.sty" 1656236919 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
   "C:/Users/giang/AppData/Local/Programs/MiKTeX/tex/latex/xurl/xurl.sty" 1641733940 4675 e4b8c405820368c2dfb03526e16d725a ""
-  "e:/DATN/Report_DATN_GiangTrungQuan/Chuong/0_4_Tom_tat_noi_dung_English.tex" 1782465794 2620 0c8715b24c59f2e36bd3566f942c0292 ""
-  "lstlisting" 0 -1 0 ""
+  "e:/DATN/Report_DATN_GiangTrungQuan/Chuong/0_4_Tom_tat_noi_dung_English.tex" 1782832967 2216 6f34c33a899a65d4cc6035188a1382a0 ""
   (generated)
-  "0_4_Tom_tat_noi_dung_English-blx.bib"
   "0_4_Tom_tat_noi_dung_English.aux"
+  "0_4_Tom_tat_noi_dung_English.bcf"
   "0_4_Tom_tat_noi_dung_English.log"
   "0_4_Tom_tat_noi_dung_English.out"
   "0_4_Tom_tat_noi_dung_English.pdf"

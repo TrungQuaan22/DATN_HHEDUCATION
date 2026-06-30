@@ -1,0 +1,650 @@
+{
+  "samples": 25,
+  "answerable_samples": 20,
+  "unanswerable_samples": 5,
+  "retrieval_recall_at_k": 0.7708333333333334,
+  "retrieval_hit_rate": 0.9,
+  "mrr": 0.7458333333333333,
+  "source_recall_at_k": 0.875,
+  "full_source_retrieval_rate": 0.8,
+  "citation_sentence_coverage": 0.3225595238095238,
+  "answer_token_f1": 0.5324718275983488,
+  "answerable_response_rate": 0.85,
+  "refusal_accuracy": 1.0,
+  "avg_latency_ms": 3984.76,
+  "avg_context_count": 4.12,
+  "generation_failures": 0,
+  "providers": [
+    "openai-compatible"
+  ],
+  "models": [
+    "gpt-4.1-mini"
+  ],
+  "answer_modes": [
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm",
+    "llm"
+  ],
+  "generate_answer": true,
+  "categories": {
+    "direct_single_source": {
+      "samples": 15,
+      "retrieval_recall_at_k": 0.8111111111111111,
+      "source_recall_at_k": 0.9333333333333333,
+      "refusal_accuracy": null
+    },
+    "multi_source_same_lesson": {
+      "samples": 5,
+      "retrieval_recall_at_k": 0.65,
+      "source_recall_at_k": 0.7,
+      "refusal_accuracy": null
+    },
+    "unanswerable": {
+      "samples": 5,
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "refusal_accuracy": 1.0
+    }
+  },
+  "per_sample": [
+    {
+      "sample_id": "HAT-D01",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "2de74391-030c-4d08-b25c-d1635ba959f5",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "context_count": 6,
+      "answer": "Khái niệm về thơ theo Từ điển thuật ngữ văn học được định nghĩa là hình thức sáng tác văn học phản ánh cuộc sống, thể hiện những tâm trạng, những cảm xúc mạnh mẽ bằng ngôn ngữ hàm súc, giàu hình ảnh và nhất là có nhịp điệu [3].",
+      "refused": false,
+      "citation_sentence_coverage": 1.0,
+      "answer_token_f1": 0.8157894736842105,
+      "latency_ms": 4732
+    },
+    {
+      "sample_id": "HAT-D02",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "509bb8b2-70e5-415a-8517-8b6f24635d4f",
+        "efece553-e4b3-406e-b53d-ecbeb30200e8",
+        "371310d6-85a3-4244-89f2-af90b22a71ea"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": "Tình cảm trong thơ không thể là tình cảm tầm thường vì thơ cần thể hiện tình cảm lớn, đẹp đẽ, cao thượng, thấm nhuần bản chất nhân văn, chính nghĩa. Tình cảm tầm thường không làm nên thơ vì nó không có sức vang động trong tâm hồn người đọc. Plekhanov dùng ví dụ một cô gái có thể hát ca về tình yêu đã mất của mình, còn một kẻ keo kiệt thì không thể hát ca về món tiền đã mất để giải thích rằng tình yêu của cô gái là tình yêu cao thượng, có thể khiến mọi người cảm động, còn tình cảm bị mất tiền thì tầm thường, chỉ gây sự buồn cười. Do đó, tình cảm trong thơ phải gắn với tình cảm của nhân dân, nhân loại mới có sức lan tỏa và giá trị sâu sắc[1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.25,
+      "answer_token_f1": 0.592,
+      "latency_ms": 5355
+    },
+    {
+      "sample_id": "HAT-D03",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "e4235de0-bf27-4f65-87e6-fb3dad41c4d1",
+        "2de74391-030c-4d08-b25c-d1635ba959f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "371310d6-85a3-4244-89f2-af90b22a71ea"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Tính \"diệu tại hàm hồ\" do Tạ Trăn đề xuất có nghĩa là trong thơ, việc tả cảnh, thuật sự không nên giống như thực mà phải mang tính hư ảo, mơ hồ, bí ẩn. Điều này tạo ra những \"khoảng trống\", \"khoảng lặng ngôn từ\" giúp người đọc khi tiếp xúc với tác phẩm có thể tự do cắt nghĩa, đối thoại, từ đó cảm nhận được sự diệu kỳ, huyền ảo trong thơ ca. Nói cách khác, thơ không cần phải giải thích rõ ràng mà để lại chỗ cho sự tưởng tượng và cảm nhận riêng của mỗi người đọc [1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.3333333333333333,
+      "answer_token_f1": 0.540983606557377,
+      "latency_ms": 3671
+    },
+    {
+      "sample_id": "HAT-D04",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "6d7e491a-2fca-443a-83c6-f94b8e594157",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "18befa6e-3d04-456b-bb1b-742930f14219"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Tính lạ hóa của ngôn ngữ thơ cho phép nhà văn không chỉ nương theo những chuẩn mực của ngôn ngữ thông thường mà còn dám làm xô lệch những quy phạm đó, tạo ra những cách nói khác biệt, cách nói chưa từng có; từ đó sáng tạo nên những điều chưa từng có, những cách nói mới mẻ trong thơ ca [1].",
+      "refused": false,
+      "citation_sentence_coverage": 1.0,
+      "answer_token_f1": 0.6666666666666667,
+      "latency_ms": 5249
+    },
+    {
+      "sample_id": "HAT-D05",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "61a59183-e056-4fb9-9fc7-472c952a82c0",
+        "72c74410-3a02-4c37-a74c-88857b288006",
+        "74c67ea4-3c5e-4b49-9702-a05e48a5fc41"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Đối tượng nghiên cứu của ba lĩnh vực này có sự khác biệt như sau:\n\n- Lịch sử văn học nghiên cứu những hiện tượng văn học cụ thể theo từng giai đoạn lịch sử, ví dụ như văn học dân gian, văn học trung đại, văn học hiện đại... Nó xét toàn bộ quá trình phát triển của văn học qua các thời kỳ.\n\n- Phê bình văn học tập trung vào nghiên cứu, đánh giá các hiện tượng văn học cụ thể như phong trào thơ mới, các cá nhân xuất sắc trong các thể loại, hoặc các tác phẩm cụ thể. Ví dụ như phê bình về Nam Cao, Nguyễn Minh Châu, hoặc về hiện tượng chuyện ngắn giả cổ tích.\n\n- Lí luận văn học nghiên cứu các luật chung, các quy luật phổ quát của văn học, có tính khái quát và hệ thống, trình bày dưới dạng các lý thuyết. Nó không chỉ tập trung vào hiện tượng cụ thể mà còn nghiên cứu các nguyên tắc, đặc trưng chung của văn học.\n\nTóm lại, lịch sử văn học và phê bình văn học nghiên cứu các hiện tượng cụ thể ở các mức độ khác nhau, còn lí luận văn học nghiên cứu các quy luật chung, có tính hệ thống của văn học [1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.125,
+      "answer_token_f1": 0.41666666666666663,
+      "latency_ms": 5404
+    },
+    {
+      "sample_id": "HAT-D06",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "99e8a3f5-15d5-43f7-b37a-a38e4db0ffd6",
+        "7d7818d2-ab51-4a6e-b19a-40d259ecd373"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 2,
+      "answer": "Thời tòng ngũ ở miền Nam nước Nga đã để lại cho nhà văn Lép Xuân Tôi (Lev Tolstoy) những ấn tượng sâu sắc và không bao giờ phai mờ. Những trải nghiệm này giúp ông xây dựng các cảnh chiến trận trong tác phẩm Chiến tranh và Hòa bình một cách chân thực và sống động. Tác phẩm này được coi là một trong những bộ tiểu thuyết đồ sộ nhất thế giới, và Tolstoy đã mất đến 15 năm để hoàn thành, bám sát với cuộc chiến vệ quốc vĩ đại của nhân dân Nga. Điều này cho thấy ông phản ánh hiện thực rất kỹ lưỡng và chi tiết trong tác phẩm của mình nhờ những trải nghiệm thời gian tòng ngũ đó [1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.25,
+      "answer_token_f1": 0.4193548387096774,
+      "latency_ms": 4325
+    },
+    {
+      "sample_id": "HAT-D07",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": 0.0,
+      "source_recall_at_k": 0.0,
+      "reciprocal_rank": 0.0,
+      "context_count": 0,
+      "answer": "Tài liệu hiện tại trong bài học Lí luận về thơ chưa cung cấp đủ thông tin cụ thể về nguyên nhân học sinh mắc lỗi chép sách nhận định và cách cô giáo đề xuất để khắc phục lỗi này. \n\nBạn có thể hỏi lại cụ thể hơn hoặc kiểm tra lại phần tài liệu bài học để xem có nội dung liên quan đến lỗi làm bài và cách khắc phục không nhé! Nếu bạn có đoạn trích hoặc phần nội dung cụ thể, mình sẽ giúp bạn phân tích rõ hơn.",
+      "refused": true,
+      "citation_sentence_coverage": 0.0,
+      "answer_token_f1": 0.368421052631579,
+      "latency_ms": 2255
+    },
+    {
+      "sample_id": "HAT-D08",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "61a59183-e056-4fb9-9fc7-472c952a82c0",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "387d5195-17b5-4035-95bb-f1b5b3c3b3ea",
+        "23f14089-39af-417f-8cbc-0ff6d9ddfd82",
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.6666666666666666,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "context_count": 6,
+      "answer": "Khái niệm văn học trong Từ điển thuật ngữ văn học chỉ ra bốn đặc trưng cơ bản của văn học gồm: đặc trưng nội dung, đặc trưng đối tượng, đặc trưng phương tiện và đặc trưng chất liệu. Cụ thể, văn học là bộ môn nghệ thuật thuộc kiến trúc thượng tầng, lấy con người làm đối tượng nhận thức trung tâm, lấy hình tượng làm phương thức biểu đạt nội dung và lấy ngôn từ làm chất liệu xây dựng hình tượng [2][5].",
+      "refused": false,
+      "citation_sentence_coverage": 0.5,
+      "answer_token_f1": 0.5822784810126582,
+      "latency_ms": 3731
+    },
+    {
+      "sample_id": "HAT-D09",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "a15e4b69-b17d-4c41-bb23-ce70ebd6c7ba",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": "Kiến trúc thượng tầng theo mỹ học và triết học Marxist được giải thích là hệ thống các thuộc thể tinh thần của xã hội, bao gồm nghệ thuật, khoa học, tôn giáo, triết học, pháp luật và các lĩnh vực tương tự khác [1][2][3].",
+      "refused": false,
+      "citation_sentence_coverage": 1.0,
+      "answer_token_f1": 0.6756756756756757,
+      "latency_ms": 2451
+    },
+    {
+      "sample_id": "HAT-D10",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "08d1e769-8e06-459d-b9f2-8f34d43792ae",
+        "babf0693-d553-436e-a2b5-767f65938be5"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 2,
+      "answer": "Solzhenitsyn cho rằng: “Văn chương không phải là hơi thở của xã hội đương thời, không dám nói lên nỗi đau và sợ hãi của xã hội, không cảnh báo kịp những mối nguy hại đe dọa đạo đức và xã hội - thứ văn chương đó không xứng đáng với cái tên văn chương”[1]. Điều này có nghĩa là văn chương phải trung thực phản ánh xã hội và lên tiếng trước những vấn đề, nguy cơ của thời đại. Nếu văn chương không làm được điều đó thì không xứng đáng được gọi là văn chương.",
+      "refused": false,
+      "citation_sentence_coverage": 0.3333333333333333,
+      "answer_token_f1": 0.6451612903225806,
+      "latency_ms": 3401
+    },
+    {
+      "sample_id": "HAT-D11",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b",
+        "babf0693-d553-436e-a2b5-767f65938be5",
+        "4c53e628-d488-4b9f-ba6e-bef789da5501",
+        "c2231a0b-361c-4905-b827-0632914b3259",
+        "464f592a-0854-45be-85ba-023c874925b4"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "context_count": 6,
+      "answer": "Phản ánh nghệ thuật khác với phản ánh của khoa học, lịch sử hay triết học ở chỗ nghệ thuật không đòi hỏi sự chính xác, chi tiết tuyệt đối mà thuộc lĩnh vực của cái độc đáo, sáng tạo. Trong nghệ thuật, nhà văn phải “khơi những nguồn chưa ai khơi, sáng tạo những gì chưa ai sáng tạo”, tức là nhìn hiện thực bằng “con mắt mới” và có cách cảm nhận, cách nghĩ riêng biệt. Cùng một đề tài, mỗi nghệ sĩ có thể có cách thể hiện khác nhau, mở rộng biên độ hiện thực văn học bằng cách viết về những điều người khác không dám viết, đi sâu vào số phận bé nhỏ, bên lề. Trong khi đó, phản ánh của khoa học, lịch sử, triết học đòi hỏi sự chính xác và chi tiết cụ thể hơn nhiều[4][2].",
+      "refused": false,
+      "citation_sentence_coverage": 0.25,
+      "answer_token_f1": 0.5970149253731343,
+      "latency_ms": 4397
+    },
+    {
+      "sample_id": "HAT-D12",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "87b45506-1fb8-4f7d-a406-4e53279a13d8",
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "74f3e64b-7d2f-4582-9f80-2cb5b116a029",
+        "5a1dd324-2067-4e03-b60d-0cde518e160b",
+        "e7aea8f1-230c-443f-9356-94adf0c62081"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8",
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 0.0,
+      "context_count": 6,
+      "answer": "Tài liệu học tập trong bài \"TỔNG QUAN VỀ LÍ LUẬN VĂN HỌC\" hiện tại không cung cấp thông tin về tác phẩm \"Tội ác và trừng phạt\" cũng như không đề cập đến việc tác phẩm này chứng minh khía cạnh hướng thiện nào của văn học. Vì vậy, mình chưa thể trả lời câu hỏi này dựa trên tài liệu của bài học hiện tại. Nếu bạn cần, mình có thể giúp giải thích các nội dung khác trong bài học hoặc hỗ trợ khi có thêm tài liệu liên quan nhé!",
+      "refused": true,
+      "citation_sentence_coverage": 0.0,
+      "answer_token_f1": 0.20754716981132076,
+      "latency_ms": 3682
+    },
+    {
+      "sample_id": "HAT-D13",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "8793f9ed-cded-428c-9273-76f46b861b0f",
+        "fde6ca08-62f4-45f3-acfe-fe14a952f7f8",
+        "c2231a0b-361c-4905-b827-0632914b3259",
+        "7396b02c-b61e-45cd-a96d-6012cba9683e",
+        "3a5dab69-b66f-4b13-a0ba-13d74928e469",
+        "e7aea8f1-230c-443f-9356-94adf0c62081"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Khi nghiên cứu tác phẩm \"Chữ người tử tù\" dưới góc độ lí luận văn học, người ta không chỉ dừng lại ở nhân vật Huấn Cao mà còn đặt ra những câu hỏi trừu tượng hơn về hình tượng nghệ thuật như sau:\n\n- Hình tượng nghệ thuật là gì?\n\n- Hình tượng được tạo ra bằng những phương thức nào?\n\n- Quan hệ giữa hình tượng và tư tưởng nghệ thuật là gì?\n\nNhững câu hỏi này nhằm khái quát, trừu tượng hóa hiện tượng nghệ thuật vượt ra ngoài phạm vi tác phẩm cụ thể, giúp nghiên cứu quy luật chung của văn học [1][2][3].",
+      "refused": false,
+      "citation_sentence_coverage": 0.2,
+      "answer_token_f1": 0.4583333333333333,
+      "latency_ms": 3820
+    },
+    {
+      "sample_id": "HAT-D14",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "74f3e64b-7d2f-4582-9f80-2cb5b116a029",
+        "b961a76a-946a-4bbc-9edf-f6c01272c51a"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 3,
+      "answer": "Lưu Trọng Lư trong bài \"Làm thế nào để có tác phẩm tốt?\" cho rằng: “Sự sống phải được chắt lọc, phải được trau chuốt, phải được nâng lên, phải được tập trung cao độ, nó mới biến thành nghệ thuật, cũng như dâu xanh phải biến thành kén vàng, gạo trắng phải bốc thành men rượu. Sự thực phải được sáng tạo, nâng cao lên đôi cánh của tư tưởng để lại tác động vào lòng người sâu mạnh hơn cả sự sống”[1]. Điều này nhấn mạnh rằng trong văn học, sự sống không chỉ được phản ánh nguyên vẹn mà cần được tinh luyện, sáng tạo để trở thành nghệ thuật có sức lan tỏa và tác động sâu sắc.",
+      "refused": false,
+      "citation_sentence_coverage": 0.3333333333333333,
+      "answer_token_f1": 0.5833333333333334,
+      "latency_ms": 4136
+    },
+    {
+      "sample_id": "HAT-D15",
+      "category": "direct_single_source",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "e524a348-4813-45b9-9a93-213765e59dd0",
+        "a766fc01-26d6-47cc-8ab4-c4ff817649cd",
+        "b1f6c5ce-b948-4419-9e63-f3b520c018c8",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "3723502c-da14-489f-a929-172dd087138e"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Nhận định của Goethe được dùng làm đề bài thảo luận cuối slide là câu: \n“Mọi lí thuyết đều là màu xám\nChỉ có cây đời là mãi mãi xanh tươi” [1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.3333333333333333,
+      "answer_token_f1": 0.6808510638297872,
+      "latency_ms": 1688
+    },
+    {
+      "sample_id": "HAT-M01",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "a766fc01-26d6-47cc-8ab4-c4ff817649cd",
+        "b1f6c5ce-b948-4419-9e63-f3b520c018c8",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "418c6691-997d-43ec-9cdf-cc6ffa3d7107",
+        "e524a348-4813-45b9-9a93-213765e59dd0"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 0.5,
+      "context_count": 6,
+      "answer": "Mối quan hệ giữa nhận định văn học và lí luận văn học rất chặt chẽ và không thể tách rời nhau. Lí luận văn học nghiên cứu các quy luật chung, tính khái quát và hệ thống của văn học, còn nhận định văn học là những ý kiến, đánh giá cụ thể về tác phẩm, mang tính cảm thụ và cá nhân.\n\nCụ thể, lí luận văn học là cơ sở khoa học để hình thành nhận định văn học, giúp người viết có hệ thống kiến thức để làm sáng tỏ nhận định, tránh phân tích lan man hoặc cảm tính. Ngược lại, nhận định văn học là chất liệu thực tiễn để xây dựng và phát triển lí luận văn học. Một nhận định thường tổng hợp nhiều vấn đề lí luận, còn một vấn đề lí luận có thể có nhiều nhận định khác nhau bàn về nó.\n\nDo đó, khi viết bài hoặc nghiên cứu, người học cần vừa bám vào nhận định để không lạc chủ đề, vừa dựa vào hệ thống lí luận để lập luận sâu sắc và thuyết phục. Nhận định là điểm xuất phát, còn lí luận là chìa khóa giải mã giúp hiểu và phân tích văn học một cách khoa học và toàn diện hơn [1][2].",
+      "refused": false,
+      "citation_sentence_coverage": 0.14285714285714285,
+      "answer_token_f1": 0.475,
+      "latency_ms": 4867
+    },
+    {
+      "sample_id": "HAT-M02",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "a15e4b69-b17d-4c41-bb23-ce70ebd6c7ba",
+        "e524a348-4813-45b9-9a93-213765e59dd0",
+        "e7aea8f1-230c-443f-9356-94adf0c62081",
+        "f97bed58-a810-4ffe-8421-4808ead963bd",
+        "b59f6e1d-0298-4ccc-9cc1-e9a76d4572b1",
+        "b4cfcf35-de74-4d05-8ae9-16f8898bee18"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16"
+      ],
+      "retrieval_recall_at_k": 0.5,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Khái niệm \"kiến trúc thượng tầng\" trong bài học giúp ta hiểu vị trí và quan hệ của văn học với đời sống xã hội như sau:\n\n\"Kiến trúc thượng tầng\" là hệ thống các thuộc thể tinh thần của xã hội, bao gồm nghệ thuật, khoa học, tôn giáo, triết học, pháp luật... Văn học thuộc kiến trúc thượng tầng, tức là một hoạt động tinh thần phản ánh đời sống xã hội thông qua lăng kính cảm xúc và tư tưởng của nghệ sĩ. Văn học không tách rời cơ sở hiện thực kinh tế xã hội mà phản ánh đời sống thực tế, đồng thời tác động ngược trở lại đời sống đó. Như vậy, văn học vừa là sản phẩm của xã hội vừa có vai trò phản ánh và ảnh hưởng đến xã hội thông qua hình tượng và ngôn từ nghệ thuật[1].",
+      "refused": false,
+      "citation_sentence_coverage": 0.2,
+      "answer_token_f1": 0.6013986013986014,
+      "latency_ms": 3686
+    },
+    {
+      "sample_id": "HAT-M03",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "f8d457d8-ac5c-4e4d-8656-8f89df8872d2",
+        "309bb574-be2e-4213-984e-477db7e2162f",
+        "1b4d9142-190f-42fa-b28a-0eb4a14b5b34",
+        "b4cfcf35-de74-4d05-8ae9-16f8898bee18",
+        "3723502c-da14-489f-a929-172dd087138e",
+        "babf0693-d553-436e-a2b5-767f65938be5"
+      ],
+      "retrieved_material_ids": [
+        "48daa828-8a8b-4252-9979-7fdae53d5b16",
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Những trải nghiệm nghề nghiệp của Lev Tolstoy và Gorky cho thấy nhà văn tích lũy vốn sống thông qua việc trải qua nhiều hoàn cảnh, công việc khác nhau để có những hiểu biết phong phú và toàn diện về cuộc sống.\n\nCụ thể, Lev Tolstoy từng có thời gian tòng ngũ ở miền nam nước Nga, những ấn tượng từ thời gian này đã trở thành cơ sở để ông xây dựng những cảnh chiến trận trong tác phẩm Chiến tranh và Hòa bình. Còn Gorky trải qua nhiều nghề mạt hạng như ký quèn ở ga xe lửa, nướng bánh mì, phụ bếp trên tàu… những nghề này đã giúp ông có vốn sống độc đáo, hiểu biết sâu sắc về cuộc sống của nhân dân. Tuy nhiên, cũng lưu ý rằng nghề phụ không phải lúc nào cũng cần thiết và đôi khi có thể cản trở nghề chính của nhà văn.\n\nNhư vậy, qua các nghề nghiệp và trải nghiệm thực tế, nhà văn tích lũy vốn sống để phản ánh hiện thực một cách chân thực và sáng tạo trong tác phẩm của mình [1][2][6].",
+      "refused": false,
+      "citation_sentence_coverage": 0.2,
+      "answer_token_f1": 0.5681818181818182,
+      "latency_ms": 5582
+    },
+    {
+      "sample_id": "HAT-M04",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "509bb8b2-70e5-415a-8517-8b6f24635d4f",
+        "e4235de0-bf27-4f65-87e6-fb3dad41c4d1",
+        "7d529629-b8ef-43ae-9a94-e4aa8a6c0a42",
+        "efece553-e4b3-406e-b53d-ecbeb30200e8",
+        "371310d6-85a3-4244-89f2-af90b22a71ea",
+        "caa288ae-3aa0-4f10-9283-280a121eec3e"
+      ],
+      "retrieved_material_ids": [
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0",
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 1.0,
+      "source_recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "context_count": 6,
+      "answer": "Tình cảm trong thơ phải vừa cao thượng vừa mang tính cá thể hóa cao độ và luôn ở thì hiện tại vì các lý do sau:\n\n- Tình cảm cao thượng trong thơ là tình cảm lớn, đẹp đẽ, thấm nhuần bản chất nhân văn, chính nghĩa, gắn với tình cảm của nhân dân, nhân loại, tạo sức vang động trong tâm hồn người đọc. Tình cảm tầm thường không làm nên thơ vì thơ cần thể hiện những giá trị tinh thần sâu sắc, có ý nghĩa lớn lao và cao đẹp [Context 1].\n\n- Đồng thời, tình cảm trong thơ mang tính cá thể hóa, thể hiện sự sáng tạo và phong cách riêng của người nghệ sĩ. Thơ luôn biểu hiện cái tôi tác giả, là nỗi niềm riêng của nhân vật trữ tình nên mãnh liệt, nồng cháy. Từ tình cảm riêng tư đó, thơ phải nói được nỗi niềm của số đông, tạo sự đồng điệu tâm hồn giữa người sáng tác và người đọc [Context 1, Context 4].\n\n- Tình cảm trong thơ luôn ở thì hiện tại vì nó xuất phát từ cái tôi của thi sĩ, phản ánh sự va đập trực tiếp của nhà thơ với hiện thực cuộc sống. Tình cảm đó không chỉ là những rung động thông thường mà còn thể hiện tư tưởng, triết lý, chiêm nghiệm sâu sắc về cuộc đời, con người, có ý nghĩa vượt thời gian, luôn mới mẻ và phù hợp với mọi thời đại [Context 3].\n\nTóm lại, tình cảm trong thơ vừa cao thượng để thể hiện giá trị nhân văn sâu sắc, vừa cá thể hóa để thể hiện cái tôi sáng tạo của nhà thơ, đồng thời luôn ở thì hiện tại vì nó là sự phản ánh trực tiếp, chân thực và sống động của cảm xúc trước cuộc sống hiện thực [Context 1, 3, 4].",
+      "refused": false,
+      "citation_sentence_coverage": 0.0,
+      "answer_token_f1": 0.482051282051282,
+      "latency_ms": 7763
+    },
+    {
+      "sample_id": "HAT-M05",
+      "category": "multi_source_same_lesson",
+      "expected_answerable": true,
+      "retrieved_chunk_ids": [
+        "2a3384ff-f802-4c56-814f-a807c41a1365",
+        "aa20a37b-1e6e-430f-8603-5ce2a4c24201",
+        "20910c9e-14eb-4c8c-b413-e28b8142f2ee",
+        "8bf6a5fd-d05d-46b9-934b-e292ada160f5",
+        "d6f18b8f-cf09-4546-b8a9-d762ad288f3d",
+        "74c67ea4-3c5e-4b49-9702-a05e48a5fc41"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a"
+      ],
+      "retrieval_recall_at_k": 0.25,
+      "source_recall_at_k": 0.5,
+      "reciprocal_rank": 0.25,
+      "context_count": 6,
+      "answer": "Tài liệu bài học hiện tại chưa cung cấp thông tin cụ thể về bốn đặc trưng của văn học và cách thơ cụ thể hóa các đặc trưng đó. Vì vậy, mình chưa thể trả lời câu hỏi này dựa trên nội dung đã có trong bài học Lí luận về thơ. Nếu bạn cần, mình có thể giúp bạn hiểu thêm về các phần khác trong bài học hoặc hỗ trợ khi tài liệu được cập nhật đầy đủ hơn nhé!",
+      "refused": true,
+      "citation_sentence_coverage": 0.0,
+      "answer_token_f1": 0.27272727272727276,
+      "latency_ms": 3098
+    },
+    {
+      "sample_id": "HAT-N01",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": "Tài liệu học tập hiện tại về Lí luận về thơ trong khóa HSG \"HẠT\" chưa cung cấp thông tin về năm sinh và quê quán của Lê Bá Hán, Trần Đình Sử và Nguyễn Khắc Phi. Bạn có thể hỏi lại cụ thể hơn hoặc kiểm tra lại tài liệu bài học để tìm thêm chi tiết nhé! Nếu bạn có tài liệu khác liên quan, hãy cung cấp để mình hỗ trợ tốt hơn.",
+      "refused": true,
+      "citation_sentence_coverage": null,
+      "answer_token_f1": null,
+      "latency_ms": 2994
+    },
+    {
+      "sample_id": "HAT-N02",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": "Tài liệu hiện tại trong bài học \"TỔNG QUAN VỀ LÍ LUẬN VĂN HỌC\" chưa cung cấp thông tin về doanh thu của tác phẩm \"Chiến tranh và Hòa bình\" trong năm năm đầu phát hành tại Nga. Bạn có thể hỏi lại cụ thể hơn hoặc kiểm tra lại tài liệu bài học để có thêm chi tiết nhé! Nếu bạn cần, mình sẽ giúp bạn tìm hiểu khi có thêm thông tin liên quan.",
+      "refused": true,
+      "citation_sentence_coverage": null,
+      "answer_token_f1": null,
+      "latency_ms": 2399
+    },
+    {
+      "sample_id": "HAT-N03",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [],
+      "retrieved_material_ids": [],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 0,
+      "answer": "Tài liệu hiện tại trong bài học Lí luận về thơ chưa cung cấp thông tin về việc đội ngũ UniScribe sử dụng những công cụ phần mềm cụ thể nào để chuyển audio bài giảng thành văn bản. Bạn có thể hỏi lại cụ thể hơn hoặc kiểm tra lại tài liệu bài học để tìm thông tin chi tiết nhé! Nếu bạn có thêm tài liệu liên quan, mình sẽ giúp bạn phân tích chính xác hơn.",
+      "refused": true,
+      "citation_sentence_coverage": null,
+      "answer_token_f1": null,
+      "latency_ms": 2559
+    },
+    {
+      "sample_id": "HAT-N04",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [
+        "aa20a37b-1e6e-430f-8603-5ce2a4c24201",
+        "105a8afd-d7ed-4daf-b35c-d26cf6158aea",
+        "d8d9e337-df09-4768-a435-d1d2887fe2d9",
+        "ed2d4d9f-c320-43d7-8d9a-bd9ab678f57a",
+        "2de74391-030c-4d08-b25c-d1635ba959f5"
+      ],
+      "retrieved_material_ids": [
+        "566d21e8-66b0-4bfe-bb88-652c8fc1968a",
+        "dfd54b8a-8342-4225-918c-2ccfd83affd0"
+      ],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 5,
+      "answer": "Tài liệu học tập trong bài học hiện tại về Lí luận về thơ không cung cấp thông tin cụ thể về việc bài thơ \"Bên kia sông Đuống\" tuân theo luật bằng trắc của thể thơ Đường luật như thế nào. Vì vậy, mình chưa thể trả lời câu hỏi này dựa trên tài liệu đang có. Nếu em cần, mình có thể giúp giải thích về đặc điểm chung của thể thơ Đường luật hoặc các kiến thức liên quan khác trong bài học hiện tại. Em muốn mình giải thích thêm không?",
+      "refused": true,
+      "citation_sentence_coverage": null,
+      "answer_token_f1": null,
+      "latency_ms": 2956
+    },
+    {
+      "sample_id": "HAT-N05",
+      "category": "unanswerable",
+      "expected_answerable": false,
+      "retrieved_chunk_ids": [
+        "c2231a0b-361c-4905-b827-0632914b3259"
+      ],
+      "retrieved_material_ids": [
+        "a0e8c028-abf8-4ed3-9625-973f34d521b8"
+      ],
+      "retrieval_recall_at_k": null,
+      "source_recall_at_k": null,
+      "reciprocal_rank": null,
+      "context_count": 1,
+      "answer": "Tài liệu của bài học hiện tại về \"TỔNG QUAN VỀ LÍ LUẬN VĂN HỌC\" không cung cấp thông tin về phương pháp tính điểm phẩy và quy chế thi học kì môn Ngữ văn của lớp cô Hiền Hiền. Vì vậy, mình không thể trả lời câu hỏi này dựa trên tài liệu hiện có. Nếu em cần, có thể hỏi giáo viên hoặc tìm tài liệu khác liên quan đến quy chế thi và cách tính điểm nhé.",
+      "refused": true,
+      "citation_sentence_coverage": null,
+      "answer_token_f1": null,
+      "latency_ms": 5418
+    }
+  ]
+}

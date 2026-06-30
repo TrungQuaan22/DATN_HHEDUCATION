@@ -32,6 +32,7 @@ import { paymentWebhookRoutes } from './modules/payments/routes/webhook.routes'
 import { tutorRoutes } from './modules/tutor/routes'
 import { adminUserRoutes } from './modules/users/routes/admin.routes'
 import { userRoutes } from './modules/users/routes/user.routes'
+import { prisma } from './config/db'
 
 const app = express()
 const openApiDocument = YAML.parse(
@@ -80,6 +81,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   req.requestId = requestId as string
   res.setHeader('X-Request-Id', requestId)
   next()
+})
+
+app.get('/health', async (_req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    res.status(200).json({ ok: true, service: 'backend', database: 'ready' })
+  } catch {
+    res.status(503).json({ ok: false, service: 'backend', database: 'unavailable' })
+  }
 })
 //Routes
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Quicksand, Be_Vietnam_Pro } from "next/font/google";
 import Providers from "./providers";
-import "vidstack/styles/base.css";
-import "vidstack/styles/defaults.css";
-import "vidstack/styles/community-skin/video.css";
 import "./globals.css";
 
 const quicksand = Quicksand({

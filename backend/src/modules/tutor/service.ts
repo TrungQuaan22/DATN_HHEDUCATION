@@ -309,6 +309,7 @@ export class TutorService {
       let accumulatedContent = ''
       let provider: string | null = null
       let modelName: string | null = null
+      let streamFailed = false
       let buffer = ''
       const collectEvent = (event: string, data: unknown) => {
         if (event === 'citations' && Array.isArray(data)) {
@@ -320,6 +321,9 @@ export class TutorService {
         if (event === 'done' && isRecord(data)) {
           provider = typeof data.provider === 'string' ? data.provider : null
           modelName = typeof data.model_name === 'string' ? data.model_name : null
+        }
+        if (event === 'error') {
+          streamFailed = true
         }
       }
 
@@ -343,6 +347,11 @@ export class TutorService {
 
       if (isAborted) {
         reader.cancel()
+        return
+      }
+
+      if (streamFailed) {
+        clientRes.end()
         return
       }
 

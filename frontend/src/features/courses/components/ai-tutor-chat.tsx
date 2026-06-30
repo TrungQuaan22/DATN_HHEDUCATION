@@ -435,6 +435,9 @@ export function AiTutorChat({ isQuiz, courseId, lessonId }: AiTutorChatProps) {
                   }
                   return copy;
                 });
+              } else if (event === "error") {
+                typewriterQueue.current +=
+                  "AI Tutor đang gặp sự cố. Vui lòng thử lại sau.";
               }
             } catch (err) {
               console.error("SSE parsing error:", err);

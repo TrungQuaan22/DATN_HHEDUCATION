@@ -11,9 +11,10 @@ INPUT ..\DoAn.tex
 INPUT ..\DoAn.tex
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size10.clo
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size10.clo
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size10.clo
+INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size12.clo
+INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size12.clo
+INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\size12.clo
+INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr12.tfm
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\koma-script\scrextend.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\koma-script\scrextend.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\koma-script\scrkbase.sty
@@ -29,7 +30,6 @@ INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\koma-script\scrlogo
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\graphics\keyval.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\graphics\keyval.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\footmisc\footmisc.sty
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr12.tfm
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\inputenc.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\base\inputenc.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\vntex\vietnam.sty
@@ -232,9 +232,6 @@ INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-dm.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-compat.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-compat.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-compat.def
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-bibtex.def
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-bibtex.def
-INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\blx-bibtex.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\biblatex.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\biblatex.def
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\biblatex.def
@@ -334,7 +331,7 @@ INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\00miktex\epstopdf-s
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\caption\ltcaption.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\caption\ltcaption.sty
 INPUT C:\Users\giang\AppData\Local\Programs\MiKTeX\tex\latex\biblatex\lbx\english.lbx
-OUTPUT 0_4_Tom_tat_noi_dung_English-blx.bib
+OUTPUT 0_4_Tom_tat_noi_dung_English.bcf
 INPUT .\0_4_Tom_tat_noi_dung_English.out
 INPUT .\0_4_Tom_tat_noi_dung_English.out
 INPUT 0_4_Tom_tat_noi_dung_English.out

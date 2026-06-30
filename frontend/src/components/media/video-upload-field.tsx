@@ -9,6 +9,8 @@ import {
 } from "@/features/media/api";
 import { toast } from "@/stores/toast-store";
 
+const MAX_VIDEO_SIZE_BYTES = 1024 * 1024 * 1024; // 1 GB
+
 interface VideoUploadFieldProps {
   value?: string | null;
   onChange: (value: string | null) => void;
@@ -55,8 +57,8 @@ export default function VideoUploadField({
       return;
     }
 
-    if (file.size > 500 * 1024 * 1024) {
-      setUploadError("Dung lượng video vượt quá giới hạn 500MB.");
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      setUploadError("Dung lượng video vượt quá giới hạn 1 GB.");
       return;
     }
 
@@ -159,7 +161,7 @@ export default function VideoUploadField({
             <span className="text-admin-pink">chọn từ máy tính</span>
           </p>
           <p className="text-xs text-admin-muted mt-1">
-            Hỗ trợ định dạng video MP4 (Tối đa 500MB)
+            Hỗ trợ định dạng video MP4 (Tối đa 1 GB)
           </p>
         </div>
       )}

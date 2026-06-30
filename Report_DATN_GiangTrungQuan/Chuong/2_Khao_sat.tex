@@ -36,13 +36,13 @@ Hoạt động kiểm tra và đánh giá cũng gặp vấn đề tương tự. 
 
 Để định vị giải pháp của đề tài, phần này khảo sát ba hệ thống đại diện cho ba hướng tiếp cận phổ biến trong lĩnh vực EdTech: quản lý lớp học trực tuyến, hệ quản trị học tập tổng quát và nền tảng thương mại hóa khóa học. Ba hệ thống được lựa chọn gồm Google Classroom, Moodle và Udemy.
 
-\textbf{Google Classroom} là công cụ quản lý lớp học trực tuyến hỗ trợ giáo viên tạo lớp, giao bài, đăng thông báo và phản hồi học sinh trong hệ sinh thái Google \cite{classroom_web}. Điểm mạnh của Google Classroom là giao diện đơn giản và phù hợp với các hoạt động lớp học cơ bản. Tuy nhiên, công cụ này chưa tập trung vào việc đóng gói học liệu thành cấu trúc khóa học có tính thương mại, chưa hỗ trợ luồng mua khóa học và không cung cấp cơ chế trợ lý AI dựa trên học liệu nội bộ của từng bài học.
+\textbf{Google Classroom} là công cụ quản lý lớp học trực tuyến hỗ trợ giáo viên tổ chức lớp, giao bài, phản hồi và theo dõi hoạt động học tập trong hệ sinh thái Google \cite{classroom_web}. Google cũng đã tích hợp Gemini vào Classroom với các chức năng hỗ trợ tạo học liệu và hỗ trợ học tập, tùy thuộc phiên bản, giấy phép và điều kiện sử dụng \cite{classroom_gemini}. Tuy nhiên, Classroom không tập trung vào quy trình bán khóa học và ghi danh tự động sau thanh toán của một đơn vị đào tạo nhỏ.
 
-\textbf{Moodle} là hệ quản trị học tập mã nguồn mở có phạm vi chức năng rộng, phù hợp với trường học hoặc tổ chức giáo dục có năng lực triển khai và quản trị hệ thống \cite{moodle_web}. Moodle có ưu điểm ở khả năng tùy biến và hệ sinh thái tính năng phong phú. Tuy nhiên, đối với giáo viên cá nhân hoặc trung tâm nhỏ, quy trình cài đặt, cấu hình, vận hành và tùy chỉnh Moodle gây ra nhiều khó khăn. Vì vậy, Moodle không phải lúc nào cũng phù hợp với nhu cầu triển khai tinh gọn, nhanh và tập trung vào nghiệp vụ luyện thi trực tuyến.
+\textbf{Moodle} là hệ quản trị học tập mã nguồn mở có phạm vi chức năng rộng và khả năng tự triển khai. Từ phiên bản 4.5, Moodle cung cấp AI subsystem để kết nối nhiều nhà cung cấp mô hình và hỗ trợ các tác vụ như sinh, tóm tắt hoặc giải thích nội dung \cite{moodle_web}. Đổi lại, đơn vị sử dụng phải tự lựa chọn hạ tầng, cấu hình nhà cung cấp AI và vận hành hệ thống; đây là khối lượng công việc đáng kể đối với giáo viên cá nhân hoặc trung tâm nhỏ.
 
-\textbf{Udemy} là nền tảng thương mại hóa khóa học theo mô hình marketplace, hỗ trợ giáo viên đóng gói video bài giảng và phân phối tới người học trên quy mô lớn \cite{udemy_web}. Ưu điểm của Udemy là hạ tầng bán khóa học và khả năng tiếp cận người học có sẵn. Tuy nhiên, giáo viên bị phụ thuộc vào nền tảng, khó làm chủ hoàn toàn dữ liệu học viên và thương hiệu riêng. Bên cạnh đó, Udemy không được thiết kế như một hệ thống vận hành lớp học luyện thi với nhu cầu tương tác thường xuyên, theo dõi tiến độ chi tiết và hỗ trợ hỏi đáp theo học liệu riêng của từng giáo viên.
+\textbf{Udemy} là nền tảng phân phối khóa học theo mô hình marketplace, có sẵn hạ tầng bán khóa học và tệp người học lớn. Udemy AI Assistant có thể giải thích, tóm tắt và trả lời dựa trên nội dung giảng viên đối với các khóa học, ngôn ngữ và chương trình được hỗ trợ \cite{udemy_web}. Tuy nhiên, giáo viên vận hành trong quy tắc của marketplace, không tự triển khai hệ thống và không kiểm soát toàn bộ mô hình dữ liệu hoặc quy trình nghiệp vụ riêng.
 
-Để đánh giá và so sánh các hệ thống, đồ án sử dụng các tiêu chí gắn trực tiếp với bài toán đã nêu ở Chương 1, bao gồm khả năng tổ chức học liệu theo cấu trúc khóa học, quản lý bài kiểm tra, hỗ trợ mua khóa học, mức độ dễ vận hành cho đơn vị nhỏ, khả năng làm chủ dữ liệu và khả năng tích hợp AI Tutor theo học liệu nội bộ. Kết quả so sánh được trình bày trong Bảng \ref{table:2.1}.
+Để hạn chế đánh giá cảm tính, Bảng \ref{table:2.1} sử dụng các tiêu chí chức năng có thể kiểm chứng từ tài liệu chính thức. Các giá trị ``Có điều kiện'' chỉ ra rằng năng lực phụ thuộc giấy phép, cấu hình nhà cung cấp hoặc phạm vi khóa học được hỗ trợ; chúng không đồng nghĩa với việc nền tảng không có chức năng đó.
 
 \begin{table}[H]
 \centering
@@ -59,13 +59,12 @@ Hoạt động kiểm tra và đánh giá cũng gặp vấn đề tương tự. 
 >{\centering\arraybackslash}p{2.45cm}|}
 \hline
 \textbf{Tiêu chí so sánh} & \textbf{Google Classroom} & \textbf{Moodle} & \textbf{Udemy} & \textbf{Hệ thống đề xuất} \\ \hline
-Cấu trúc Course - Chapter - Lesson & Hạn chế & Tốt & Rất tốt & Rất tốt \\ \hline
-Quản lý bài kiểm tra & Tốt & Rất tốt & Hạn chế & Tốt \\ \hline
-Mua khóa học và thanh toán & Không & Không & Rất tốt & Tốt \\ \hline
-Dễ vận hành cho đơn vị nhỏ & Rất tốt & Hạn chế & Khá & Rất tốt \\ \hline
-Làm chủ dữ liệu và thương hiệu & Hạn chế & Tốt & Hạn chế & Tốt \\ \hline
-AI Tutor theo học liệu nội bộ & Không & Không & Không & Có \\ \hline
-Phù hợp với mô hình luyện thi & Hạn chế & Hạn chế & Hạn chế & Rất tốt \\ \hline
+Cấu trúc khóa học và học liệu & Có & Có & Có & Có \\ \hline
+Giao bài/kiểm tra và theo dõi kết quả & Có & Có & Có giới hạn theo loại nội dung & Có \\ \hline
+Thanh toán gắn với ghi danh & Không phải chức năng lõi & Qua mở rộng/tích hợp & Có & Có \\ \hline
+Tự triển khai và kiểm soát mô hình dữ liệu & Không & Có & Không & Có \\ \hline
+AI hỗ trợ theo nội dung khóa học & Có điều kiện & Có điều kiện & Có điều kiện & Có, theo học liệu đã lập chỉ mục \\ \hline
+Quy trình riêng cho trung tâm nhỏ & Cần ghép thêm công cụ & Cần cấu hình & Theo quy trình marketplace & Là phạm vi thiết kế \\ \hline
 \end{tabular}
 \end{table}
 
@@ -99,7 +98,7 @@ Hình \ref{fig:usecase_tong_quan} trình bày biểu đồ use case tổng quát
     \label{fig:usecase_phan_ra_quan_ly_khoa_hoc}
 \end{figure}
 
-Hình \ref{fig:usecase_phan_ra_quan_ly_khoa_hoc} phân rã use case Quản lý khóa học của tác nhân Người quản lý nội dung. Nhóm chức năng này gồm tạo khóa học, cập nhật thông tin khóa học, quản lý chương, quản lý bài học, quản lý học liệu và xuất bản khóa học. Use case kiểm tra điều kiện xuất bản thể hiện ràng buộc cần thỏa mãn trước khi khóa học được công khai.
+Hình \ref{fig:usecase_phan_ra_quan_ly_khoa_hoc} tập trung phân rã nhánh quản lý nội dung của tác nhân Người quản lý nội dung, gồm tạo khóa học, cập nhật thông tin, quản lý chương, bài học, học liệu và xuất bản. Ngoài nhánh này, màn hình quản lý khóa học còn có nhánh quản lý học viên: xem danh sách ghi danh, tiến độ tổng quan và chi tiết từng bài học, bài kiểm tra của mỗi học sinh. Việc tách hai tab giúp giáo viên vừa biên soạn nội dung, vừa theo dõi các trường hợp chưa học hoặc chưa nộp bài để có biện pháp nhắc nhở.
 
 \subsection{Biểu đồ use case phân rã Học bài và xem học liệu}
 \label{subsection:2.2.3}
@@ -162,16 +161,16 @@ Sau khi được cấp quyền truy cập, Học sinh vào khóa học, chọn b
 \section{Đặc tả chức năng}
 \label{section:2.3}
 
-Phần này đặc tả chi tiết một số chức năng chính của hệ thống thông qua các use case quan trọng nhất. Do kích thước báo cáo có hạn, đồ án chỉ trình bày chi tiết 6 use case chính bao gồm: Quản lý khóa học, Quản lý bài kiểm tra, Mua khóa học, Học bài và xem học liệu, Hỏi AI Tutor, và Làm bài kiểm tra. Các use case này được lựa chọn vì chúng là các chức năng cốt lõi của hệ thống, có độ phức tạp cao, và thể hiện rõ các tương tác giữa các tác nhân khác nhau trong hệ thống.
+Phần này tập trung đặc tả 6 use case cốt lõi của hệ thống, gồm Quản lý khóa học, Quản lý bài kiểm tra, Mua khóa học, Học bài và xem học liệu, Hỏi AI Tutor và Làm bài kiểm tra. Các use case này có nhiều quy tắc nghiệp vụ và thể hiện rõ tương tác giữa các tác nhân trong hệ thống.
 
-Bảng \ref{table:danh_sach_use_case_he_thong} mô tả danh sách đầy đủ các use case của hệ thống, được nhóm theo các nhóm chức năng chính. Hệ thống có tổng cộng 20 use case được phân loại thành các nhóm như: Quản lý khóa học, Quản lý bài kiểm tra, Mua khóa học, Học bài và xem học liệu, Hỏi AI Tutor, Làm bài kiểm tra, Quản lý người dùng, Bài viết và Blog, và Quản trị hệ thống. Để người đọc tiện theo dõi, 6 use case được chọn để đặc tả chi tiết được ưu tiên đặt ở đầu bảng.
+Bảng \ref{table:danh_sach_use_case_he_thong} mô tả danh sách đầy đủ các use case của hệ thống, được nhóm theo các nhóm chức năng chính. Hệ thống có tổng cộng 21 use case, bao phủ quản lý khóa học, bài kiểm tra, mua và học khóa học, tài khoản, blog, thông báo và vận hành hệ thống. Để người đọc tiện theo dõi, 6 use case cốt lõi được ưu tiên đặt ở đầu bảng và đặc tả chi tiết.
 
 \begingroup
 \small
 \renewcommand{\arraystretch}{1.15}
 \setlength{\LTpre}{0pt}
 \setlength{\LTpost}{0pt}
-\begin{longtable}{|p{2.2cm}|p{5.2cm}|p{3.2cm}|p{3.6cm}|}
+\begin{longtable}{|p{1.7cm}|p{4.4cm}|p{2.7cm}|p{4.1cm}|}
 \caption{Danh sách tổng quan các use case của hệ thống}
 \label{table:danh_sach_use_case_he_thong} \\
 \hline
@@ -210,13 +209,14 @@ UC17 & Quản lý người dùng & Quản trị viên & Quản trị hệ thốn
 UC18 & Tạo và quản lý tài khoản giáo viên & Quản trị viên & Quản trị hệ thống \\ \hline
 UC19 & Quản lý đơn hàng & Quản trị viên & Quản lý đơn hàng \\ \hline
 UC20 & Quản lý giao dịch & Quản trị viên & Quản lý thanh toán \\ \hline
+UC21 & Xem và xử lý thông báo & Người dùng & Thông báo \\ \hline
 \end{longtable}
 \endgroup
 
 \subsection{Đặc tả use case Quản lý khóa học}
 \label{subsection:2.3.1}
 
-Use case Quản lý khóa học hỗ trợ Người quản lý nội dung trong việc thiết lập, cập nhật và xuất bản nội dung học tập. Luồng sự kiện bắt đầu khi Người quản lý nội dung tạo khóa học nháp, nhập các thông tin cơ bản, xây dựng cấu trúc chương và bài học, sau đó tải lên học liệu tương ứng. Khi Người quản lý nội dung yêu cầu xuất bản, hệ thống kiểm tra các điều kiện cần thiết như thông tin khóa học và trạng thái học liệu trước khi công khai khóa học cho học sinh.
+Use case Quản lý khóa học hỗ trợ Người quản lý nội dung ở hai phạm vi: biên soạn nội dung và theo dõi học viên. Ở tab Quản lý nội dung, người dùng tạo khóa học, xây dựng chương, bài học, học liệu và xuất bản. Tab Quản lý học viên là tab mặc định, hiển thị danh sách người đã ghi danh, phần trăm tiến độ và cho phép mở chi tiết từng học sinh để xem bài đã hoàn thành, bài chưa hoàn thành, trạng thái làm bài kiểm tra và điểm cao nhất.
 
 Đặc tả chi tiết use case Quản lý khóa học được trình bày trong Bảng \ref{table:uc01_quan_ly_khoa_hoc}.
 
@@ -247,7 +247,7 @@ Use case Quản lý khóa học hỗ trợ Người quản lý nội dung trong 
 Mã use case & UC01 \\ \hline
 Tên use case & Quản lý khóa học \\ \hline
 Các tác nhân & Người quản lý nội dung (Giáo viên hoặc Quản trị viên) \\ \hline
-Mục tiêu & Tạo lập, biên soạn và xuất bản khóa học cùng các chương, bài học và học liệu đi kèm. \\ \hline
+Mục tiêu & Tạo lập, biên soạn và xuất bản nội dung; đồng thời theo dõi danh sách học viên và tiến độ học tập trong khóa học. \\ \hline
 Tiền điều kiện & Người quản lý nội dung đã đăng nhập vào hệ thống. Nếu người dùng là Giáo viên, phạm vi thao tác bị giới hạn trong các khóa học được phân công; nếu là Quản trị viên, phạm vi thao tác là toàn hệ thống. \\ \hline
 Luồng sự kiện chính & 1. Người quản lý nội dung chọn chức năng quản lý khóa học. \\ \cline{2-2}
 & 2. Hệ thống hiển thị danh sách khóa học trong phạm vi quản lý. \\ \cline{2-2}
@@ -260,7 +260,8 @@ Luồng sự kiện chính & 1. Người quản lý nội dung chọn chức nă
 & 9. Người quản lý nội dung chọn yêu cầu xuất bản khóa học. \\ \cline{2-2}
 & 10. Hệ thống kiểm tra điều kiện xuất bản và thay đổi trạng thái khóa học sang công khai. \\ \hline
 Luồng thay thế & 5.a. Thông tin khóa học nhập vào không hợp lệ, ví dụ thiếu tiêu đề hoặc giá bán không hợp lệ: Hệ thống báo lỗi chi tiết trên biểu mẫu; Người quản lý nội dung chỉnh sửa thông tin và thực hiện lưu lại. \\ \cline{2-2}
-& 10.a. Hệ thống phát hiện các bài học dạng video của khóa học chưa có tệp video được tải lên hoàn tất hoặc chưa ở trạng thái sẵn sàng: Hệ thống thông báo lỗi điều kiện xuất bản và giữ khóa học ở trạng thái bản nháp; Người quản lý nội dung quay lại bước 8 để cập nhật học liệu. \\ \hline
+& 10.a. Hệ thống phát hiện các bài học dạng video của khóa học chưa có tệp video được tải lên hoàn tất hoặc chưa ở trạng thái sẵn sàng: Hệ thống thông báo lỗi điều kiện xuất bản và giữ khóa học ở trạng thái bản nháp; Người quản lý nội dung quay lại bước 8 để cập nhật học liệu. \\ \cline{2-2}
+& 2.a. Người quản lý nội dung mở tab Quản lý học viên: Hệ thống hiển thị danh sách ghi danh, tiến độ chung và trạng thái hoạt động; khi chọn một học sinh, hệ thống trình bày curriculum theo thứ tự chương-bài, mức hoàn thành từng bài và kết quả các bài kiểm tra gắn với khóa học. \\ \hline
 Hậu điều kiện & Khóa học và học liệu đi kèm được lưu trữ, cập nhật hoặc xuất bản thành công trên hệ thống. \\ \hline
 \end{longtable}
 \endgroup
@@ -314,7 +315,8 @@ Luồng sự kiện chính &
 10. Hệ thống xác thực nội dung, vị trí sử dụng và chuyển trạng thái bài kiểm tra sang xuất bản. \\ \hline
 Luồng thay thế & 
 7.a. Người quản lý nội dung nhập danh sách câu hỏi từ tệp theo định dạng không hợp lệ: Hệ thống báo lỗi chi tiết; Người quản lý nội dung chỉnh sửa dữ liệu và thực hiện nhập lại. \newline
-10.a. Hệ thống phát hiện bài kiểm tra chưa có câu hỏi hoặc chưa thiết lập vị trí sử dụng hợp lệ: Hệ thống hiển thị cảnh báo lỗi và giữ bài kiểm tra ở trạng thái nháp; Người quản lý nội dung quay lại bước 7 hoặc 8 để hiệu chỉnh thông tin. \\ \hline
+10.a. Hệ thống phát hiện bài kiểm tra chưa có câu hỏi hoặc chưa thiết lập vị trí sử dụng hợp lệ: Hệ thống hiển thị cảnh báo lỗi và giữ bài kiểm tra ở trạng thái nháp; Người quản lý nội dung quay lại bước 7 hoặc 8 để hiệu chỉnh thông tin. \newline
+2.a. Người quản lý nội dung mở danh sách bài làm: Hệ thống nhóm kết quả theo bài kiểm tra, phân biệt học sinh đã nộp, chưa nộp và đang chờ chấm; người quản lý có thể mở bài tự luận, cho điểm và hoàn tất kết quả. \\ \hline
 Hậu điều kiện & Bài kiểm tra được tạo lập, cấu hình thông số và hiển thị thành công tại vị trí được chỉ định. \\ \hline
 \end{longtable}
 \endgroup
@@ -476,7 +478,7 @@ Hậu điều kiện & Câu hỏi được ghi nhận trong phiên hội thoại
 \subsection{Đặc tả use case Làm bài kiểm tra}
 \label{subsection:2.3.6}
 
-Use case Làm bài kiểm tra mô tả tiến trình làm bài của Học sinh để tự đánh giá năng lực hoặc hoàn thành các yêu cầu trong khóa học. Luồng sự kiện bắt đầu khi Học sinh truy cập một bài kiểm tra hợp lệ, bắt đầu lượt làm bài, trả lời câu hỏi và nộp bài. Hệ thống ghi nhận bài làm, chấm điểm tự động đối với các câu hỏi khách quan và chuyển sang trạng thái chờ chấm nếu bài làm có câu hỏi tự luận.
+Use case Làm bài kiểm tra mô tả tiến trình làm bài của Học sinh để tự đánh giá năng lực hoặc hoàn thành các yêu cầu trong khóa học. Luồng sự kiện bắt đầu khi Học sinh truy cập một bài kiểm tra hợp lệ, bắt đầu lượt làm bài, trả lời câu hỏi và nộp bài. Hệ thống ghi nhận bài làm, tự chấm các câu có đáp án xác định và chuyển sang trạng thái chờ chấm nếu bài làm có câu tự luận.
 
 Đặc tả chi tiết use case Làm bài kiểm tra được trình bày trong Bảng \ref{table:uc06_lam_bai_kiem_tra}.
 
@@ -517,12 +519,12 @@ Luồng sự kiện chính &
 5. Học sinh thực hiện trả lời các câu hỏi và chọn lưu câu trả lời trên hệ thống. \newline
 6. Học sinh chọn nộp bài trước khi thời gian đếm ngược kết thúc. \newline
 7. Hệ thống ghi nhận bài làm, lưu đáp án của học sinh vào cơ sở dữ liệu. \newline
-8. Hệ thống thực hiện chấm điểm tự động đối với các câu hỏi khách quan có trong đề. \newline
-9. Hệ thống lưu kết quả điểm số tự động và cập nhật trạng thái bài làm thành đã chấm xong (nếu đề chỉ chứa câu hỏi khách quan) hoặc chờ chấm điểm (nếu có câu hỏi tự luận). \newline
-10. Học sinh xem kết quả bài kiểm tra (bao gồm bảng điểm và lời giải thích đáp án đối với bài đã chấm xong) hoặc xem trạng thái chờ chấm. \\ \hline
+8. Hệ thống tự chấm các câu trắc nghiệm, đúng sai và câu trả lời bằng số. \newline
+9. Hệ thống lưu điểm tự động và cập nhật bài làm thành đã chấm xong nếu đề không có câu tự luận; trường hợp còn lại được chuyển sang trạng thái chờ chấm. \newline
+10. Học sinh xem kết quả bài kiểm tra; đáp án đúng và phần giải thích chỉ được hiển thị sau khi bài đã chấm xong và chỉ khi giáo viên đã nhập dữ liệu giải thích. \\ \hline
 Luồng thay thế & 
 4.a. Học sinh đã sử dụng hết số lần làm bài cho phép: Hệ thống thông báo lỗi giới hạn lượt làm bài và chặn không cho mở lượt làm bài mới. \newline
-6.a. Hết thời gian làm bài quy định khi học sinh chưa nhấn nộp bài: Hệ thống tự động khóa giao diện làm bài, đóng gói câu trả lời đã lưu và gửi kết quả về máy chủ để chấm điểm. \newline
+6.a. Đến hạn sớm hơn giữa thời điểm bắt đầu cộng thời gian làm bài và thời điểm đóng bài: backend tự động thu bài dựa trên các câu trả lời đã lưu, kể cả khi trình duyệt đã đóng; các câu có đáp án xác định được chấm tự động, còn câu tự luận chuyển sang chờ chấm. \newline
 9.a. Bài làm chứa câu hỏi tự luận: Hệ thống cập nhật trạng thái bài làm là chờ chấm điểm; Giáo viên tiến hành xem xét bài làm tự luận và cho điểm thủ công trên trang quản trị; Hệ thống sau đó cập nhật điểm số cuối cùng và hiển thị kết quả cho học sinh. \\ \hline
 Hậu điều kiện & Phiên làm bài kiểm tra được ghi nhận, chấm điểm và lưu trữ lịch sử học tập thành công. \\ \hline
 \end{longtable}

@@ -5,7 +5,7 @@ export const ALLOWED_VIDEO_MIME_TYPES = ['video/mp4'] as const
 export const ALLOWED_DOCUMENT_MIME_TYPES = ['application/pdf'] as const
 
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
-export const MAX_VIDEO_SIZE_BYTES = 500 * 1024 * 1024 // 500 MB
+export const MAX_VIDEO_SIZE_BYTES = 1024 * 1024 * 1024 // 1 GB
 export const MAX_DOCUMENT_SIZE_BYTES = 50 * 1024 * 1024 // 50 MB
 
 export const ORPHAN_IMAGE_RETENTION_HOURS = 24

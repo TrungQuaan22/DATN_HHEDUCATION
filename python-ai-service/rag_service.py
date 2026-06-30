@@ -2,17 +2,19 @@ from __future__ import annotations
 
 from typing import Generator
 import json
+import logging
 import time
 
 from ai_client import embed_query, generate_answer, generate_answer_stream
 from config import (
     CHAT_MODEL,
     CHAT_PROVIDER,
-    LESSON_BOOST,
     RETRIEVAL_LIMIT,
     SIMILARITY_THRESHOLD,
 )
 from database import db_connection
+
+logger = logging.getLogger(__name__)
 
 
 def get_lesson_metadata(course_id: str, lesson_id: str | None) -> dict:
@@ -69,25 +71,20 @@ def retrieve_relevant_chunks(
                     kc."material_id",
                     kc."source_type",
                     lm."title" AS material_title,
-                    (1 - (kc."embedding_vector" <=> %s::vector)) AS base_similarity,
-                    (
-                        (1 - (kc."embedding_vector" <=> %s::vector)) +
-                        (CASE WHEN %s IS NOT NULL AND kc."lesson_id" = %s THEN %s ELSE 0 END)
-                    ) AS boosted_score
+                    (1 - (kc."embedding_vector" <=> %s::vector)) AS similarity
                 FROM "knowledge_chunks" kc
                 LEFT JOIN "lesson_materials" lm ON kc."material_id" = lm."id"
                 WHERE kc."course_id" = %s
+                  AND (%s::uuid IS NULL OR kc."lesson_id" = %s::uuid)
                   AND kc."embedding_vector" IS NOT NULL
-                ORDER BY boosted_score DESC
+                ORDER BY similarity DESC
                 LIMIT %s
                 """,
                 (
                     question_vector_literal,
-                    question_vector_literal,
-                    lesson_id,
-                    lesson_id,
-                    LESSON_BOOST,
                     course_id,
+                    lesson_id,
+                    lesson_id,
                     RETRIEVAL_LIMIT,
                 ),
             )
@@ -97,26 +94,25 @@ def retrieve_relevant_chunks(
     citations: list[dict] = []
 
     for index, row in enumerate(rows, start=1):
-        chunk_id, content, chunk_lesson_id, material_id, source_type, material_title, base_similarity, score = row
-        base_similarity = float(base_similarity)
-        score = float(score)
+        chunk_id, content, chunk_lesson_id, material_id, source_type, material_title, similarity = row
+        similarity = float(similarity)
 
-        if base_similarity < SIMILARITY_THRESHOLD:
+        if similarity < SIMILARITY_THRESHOLD:
             continue
 
         source_title = material_title or (
             "Mô tả bài học" if source_type == "lesson_description" else "Tài liệu khóa học"
         )
         context_parts.append(
-            f"[Context {index} | Nguồn: {source_title} | Similarity: {base_similarity:.4f}]\n{content}"
+            f"[Context {index} | Nguồn: {source_title} | Similarity: {similarity:.4f}]\n{content}"
         )
         citations.append(
             {
                 "chunk_id": str(chunk_id),
                 "material_id": str(material_id) if material_id else None,
                 "rank": index,
-                "score": score,
-                "base_similarity": base_similarity,
+                "score": similarity,
+                "base_similarity": similarity,
                 "quote": content[:300],
                 "source_title": source_title,
                 "lesson_id": str(chunk_lesson_id) if chunk_lesson_id else None,
@@ -130,7 +126,7 @@ def retrieve_relevant_chunks(
         "retrieval": {
             "limit": RETRIEVAL_LIMIT,
             "similarity_threshold": SIMILARITY_THRESHOLD,
-            "lesson_boost": LESSON_BOOST,
+            "scope": "lesson" if lesson_id else "course",
             "context_count": len(context_parts),
         },
     }
@@ -176,31 +172,38 @@ def run_rag_tutor_stream(
     question: str,
     chat_history: list[dict[str, str]],
 ) -> Generator[str, None, None]:
-    retrieval = retrieve_relevant_chunks(course_id=course_id, lesson_id=lesson_id, question=question)
-    context_parts = retrieval["context_parts"]
-    citations = retrieval["citations"]
+    try:
+        retrieval = retrieve_relevant_chunks(course_id=course_id, lesson_id=lesson_id, question=question)
+        context_parts = retrieval["context_parts"]
+        citations = retrieval["citations"]
 
-    # 1. Yield citations first
-    yield f"event: citations\ndata: {json.dumps(citations)}\n\n"
+        # 1. Yield citations first
+        yield f"event: citations\ndata: {json.dumps(citations)}\n\n"
 
-    # 2. Yield text chunks as they are generated
-    meta = get_lesson_metadata(course_id, lesson_id)
-    context_text = "\n\n".join(context_parts)
-    messages = build_prompt_messages(
-        question=question,
-        context_text=context_text,
-        chat_history=chat_history,
-        course_title=meta["course_title"],
-        current_lesson_title=meta["current_lesson_title"],
-        current_lesson_description=meta["current_lesson_description"],
-        current_lesson_materials_count=meta["current_lesson_materials_count"],
-    )
+        # 2. Yield text chunks as they are generated
+        meta = get_lesson_metadata(course_id, lesson_id)
+        context_text = "\n\n".join(context_parts)
+        messages = build_prompt_messages(
+            question=question,
+            context_text=context_text,
+            chat_history=chat_history,
+            course_title=meta["course_title"],
+            current_lesson_title=meta["current_lesson_title"],
+            current_lesson_description=meta["current_lesson_description"],
+            current_lesson_materials_count=meta["current_lesson_materials_count"],
+        )
 
-    for chunk_text in generate_answer_stream(messages):
-        yield f"event: content\ndata: {json.dumps({'text': chunk_text})}\n\n"
+        for chunk_text in generate_answer_stream(messages):
+            yield f"event: content\ndata: {json.dumps({'text': chunk_text})}\n\n"
 
-    # 3. Yield final metadata event
-    yield f"event: done\ndata: {json.dumps({'provider': CHAT_PROVIDER, 'model_name': CHAT_MODEL})}\n\n"
+        # 3. Yield final metadata event
+        yield f"event: done\ndata: {json.dumps({'provider': CHAT_PROVIDER, 'model_name': CHAT_MODEL})}\n\n"
+    except Exception:
+        logger.exception("AI Tutor streaming failed")
+        yield (
+            "event: error\n"
+            f"data: {json.dumps({'message': 'AI Tutor đang gặp sự cố. Vui lòng thử lại sau.'})}\n\n"
+        )
 
 
 def build_prompt_messages(
@@ -234,10 +237,12 @@ Thông tin bối cảnh hiện tại của học sinh:
 {lesson_context_info}
 
 Quy tắc trả lời:
-1. Chỉ dùng ngữ cảnh khóa học được cung cấp để trả lời các câu hỏi chuyên môn. Không tự bịa thêm thông tin ngoài tài liệu.
+1. Chỉ dùng ngữ cảnh của bài học hiện tại được cung cấp để trả lời các câu hỏi chuyên môn. Không dùng kiến thức bên ngoài và không tự bịa thêm thông tin.
 2. Trả lời tự nhiên như một gia sư đang giải thích cho học sinh. Không mở đầu bằng các cụm như "dựa vào tài liệu", "theo tài liệu", hoặc lặp lại cách nói tương tự trong mọi câu trả lời.
-3. Nếu học sinh hỏi về nội dung của bài học hiện tại (ví dụ: "bài này dạy về cái gì", "tài liệu bài này nói gì") nhưng bài học hiện tại CHƯA CÓ tài liệu học tập (materials count = 0), hãy giải thích lịch sự rằng bài học này chưa được tải lên tài liệu học tập, và nếu cần có thể tham khảo tài liệu của các bài học khác trong khóa học. Tránh dùng tài liệu của bài học khác để giả vờ trả lời cho bài học hiện tại.
-4. Khi sử dụng thông tin từ ngữ cảnh, bạn BẮT BUỘC phải trích dẫn nguồn bằng cách đặt ký hiệu trích dẫn dạng [index] (ví dụ: [1], [2]) ở ngay cuối câu hoặc mệnh đề chứa thông tin đó, tương ứng với số thứ tự [Context index] của tài liệu cung cấp. Không trích dẫn ở cuối cả bài nếu không cần thiết, hãy trích dẫn cụ thể ở cuối mỗi câu/mệnh đề liên quan. Ví dụ: "AI là ngành khoa học máy tính [1]. Nó giúp tự động hóa nhiều công việc [2]."
+3. Trước khi trả lời, phải kiểm tra ngữ cảnh có trực tiếp chứa thông tin mà câu hỏi yêu cầu hay không. Việc ngữ cảnh chỉ nhắc đến cùng tác giả, tác phẩm hoặc chủ đề không có nghĩa là đã chứa đáp án.
+4. Nếu thiếu thông tin chính được hỏi, hãy nói rõ tài liệu của bài học hiện tại chưa cung cấp thông tin đó. Không suy đoán, không hoàn thiện câu trả lời bằng kiến thức nền của mô hình.
+5. Nếu học sinh hỏi về nội dung của bài học hiện tại (ví dụ: "bài này dạy về cái gì", "tài liệu bài này nói gì") nhưng bài học hiện tại CHƯA CÓ tài liệu học tập (materials count = 0), hãy giải thích lịch sự rằng bài học này chưa được tải lên tài liệu học tập.
+6. Khi sử dụng thông tin từ ngữ cảnh, bạn BẮT BUỘC phải trích dẫn nguồn bằng cách đặt ký hiệu trích dẫn dạng [index] (ví dụ: [1], [2]) ở ngay cuối câu hoặc mệnh đề chứa thông tin đó, tương ứng với số thứ tự [Context index] của tài liệu cung cấp. Không trích dẫn ở cuối cả bài nếu không cần thiết, hãy trích dẫn cụ thể ở cuối mỗi câu/mệnh đề liên quan. Ví dụ: "AI là ngành khoa học máy tính [1]. Nó giúp tự động hóa nhiều công việc [2]."
 """.strip()
         user_content = f"Ngữ cảnh khóa học:\n{context_text}\n\nCâu hỏi học sinh:\n{question}"
     else:
