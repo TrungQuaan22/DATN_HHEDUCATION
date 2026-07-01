@@ -1,4 +1,5 @@
-\documentclass[a4paper,12pt,twoside]{report}
+\documentclass[a4paper,12pt,twoside,openany]{report}
+\let\cleardoublepage\clearpage
 \usepackage{scrextend}
 \changefontsizes{13pt}
 \usepackage[utf8]{inputenc}
@@ -40,8 +41,9 @@
 
 
 \usepackage[nonumberlist, nopostdot, nogroupskip, acronym]{glossaries}
-\usepackage{glossary-superragged}
-\setglossarystyle{superraggedheaderborder}
+\renewcommand*{\glsclearpage}{\clearpage}
+\usepackage{longtable}
+\setglossarystyle{longheaderborder}
 \usepackage{setspace}
 \usepackage{parskip}
 
@@ -252,6 +254,10 @@
 \renewcommand*{\acronymname}{DANH MỤC THUẬT NGỮ VÀ TỪ VIẾT TẮT}
 \renewcommand*{\entryname}{Thuật ngữ}
 \renewcommand*{\descriptionname}{Ý nghĩa}
+\renewcommand*{\glossarysection}[2][]{%
+  {\centering\bfseries\Large #2\par}
+  \vspace{20pt}
+}
 \printnoidxglossary[type=\acronymtype]
  %\phantomsection\addcontentsline{toc}{section}{\numberline {} DANH MỤC THUẬT NGỮ VÀ TỪ VIẾT TẮT}
 
