@@ -1,0 +1,32 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\section{Kết luận}
+
+Đồ án đã xuất phát từ bài toán vận hành dạy học trực tuyến còn phân tán ở các nhóm giáo viên và trung tâm nhỏ: livestream ở một nền tảng, tài liệu gửi qua kênh khác, video cũ khó tìm lại, đăng ký khóa học cần nhiều thao tác thủ công và giáo viên khó theo dõi quá trình học tập của học sinh. Trên cơ sở đó, đề tài đã xây dựng một hệ thống quản lý học tập trực tuyến tích hợp AI nhằm tập trung các hoạt động chính của một khóa học vào cùng một nền tảng.
+
+Về chức năng, hệ thống đã triển khai các nhóm nghiệp vụ gồm quản lý người dùng; khóa học theo cấu trúc khóa học-chương-bài; upload và xử lý media; học bài và xem tài liệu; theo dõi danh sách, tiến độ chi tiết của từng học sinh; tạo, tổ chức, làm và chấm bài kiểm tra; thông báo; blog; mua khóa học; xử lý thanh toán và cấp quyền học. Dịch vụ AI hỗ trợ hỏi đáp theo học liệu nội bộ bằng RAG, trong đó câu trả lời được tạo từ các đoạn tài liệu truy xuất và trả về nguồn tham chiếu.
+
+Về mặt kỹ thuật, đồ án đã áp dụng kiến trúc phân lớp để tách giao diện, xử lý nghiệp vụ, truy cập dữ liệu và các tích hợp hạ tầng. Backend được tổ chức theo các module nghiệp vụ, frontend được chia theo các nhóm chức năng và dịch vụ AI được tách riêng để xử lý ingest tài liệu, embedding, truy xuất ngữ cảnh và sinh câu trả lời. Cơ sở dữ liệu PostgreSQL kết hợp pgvector được sử dụng để lưu dữ liệu nghiệp vụ và dữ liệu vector, trong khi Cloudflare R2 được dùng để lưu trữ media dung lượng lớn. Các thành phần đã được đóng gói thành Docker image, triển khai trên VPS qua HTTPS và kiểm tra migration, healthcheck, đăng nhập cùng sao lưu-phục hồi CSDL. Benchmark RAG trên 25 câu của khóa HSG ``HẠT'' đạt Recall@6 bằng 0,771, MRR bằng 0,746 và từ chối đúng 5/5 câu ngoài tài liệu.
+
+So với các công cụ được khảo sát ở Chương 2, hệ thống không đặt mục tiêu thay thế những nền tảng lớn như Moodle, Google Classroom hoặc Udemy. Điểm khác biệt của đồ án nằm ở việc kết hợp các nhu cầu thường bị tách rời trong mô hình dạy học trực tuyến quy mô nhỏ: đóng gói học liệu thành khóa học có cấu trúc, tự động hóa mua khóa học và cấp quyền học, quản lý bài kiểm tra, theo dõi học tập và hỗ trợ hỏi đáp theo học liệu riêng. Cách tiếp cận này phù hợp với nhóm giáo viên tự do hoặc trung tâm nhỏ muốn tự chủ hơn về nội dung, dữ liệu học viên và quy trình vận hành.
+
+Đồ án còn bốn hạn chế chính: (i) môi trường public mới được kiểm tra ở mức triển khai và luồng chức năng, chưa đo tải, kiểm thử bảo mật chuyên sâu hoặc đánh giá với người dùng thật; (ii) benchmark RAG mới gồm 25 câu thuộc một khóa học và hai bài học, chưa có tập kiểm thử độc lập đủ đại diện cho nhiều môn học và dạng tài liệu; (iii) video HLS mới sử dụng một mức chất lượng và chưa có hàng đợi xử lý bền vững; (iv) mô hình phân quyền hiện phù hợp với một đơn vị vận hành, chưa hỗ trợ nhiều trung tâm và các vai trò chuyên biệt như trợ giảng hoặc kế toán.
+
+Qua quá trình thực hiện đồ án, sinh viên đã rút ra một số bài học quan trọng. Khi xây dựng một hệ thống có nhiều nghiệp vụ liên quan, việc thiết kế ranh giới giữa service, repository, dữ liệu và tích hợp bên ngoài cần được thực hiện sớm để tránh mã nguồn bị trộn trách nhiệm. Với các chức năng có yếu tố AI, chất lượng dữ liệu đầu vào, cách truy xuất ngữ cảnh và cơ chế từ chối khi thiếu thông tin quan trọng không kém việc gọi mô hình ngôn ngữ. Với các chức năng vận hành như thanh toán và media, hệ thống cần chú ý nhiều đến trạng thái lỗi, xử lý lặp và khả năng khôi phục, thay vì chỉ xử lý luồng thành công.
+
+\section{Hướng phát triển}
+
+Ưu tiên trước mắt là hoàn thiện môi trường triển khai thực tế với HTTPS, reverse proxy, sao lưu CSDL và giám sát tài nguyên. Khi hạ tầng ổn định, hệ thống cần được đo thời gian tải trang, thời gian phản hồi API, thời gian xử lý video, độ ổn định của webhook và khả năng phục vụ nhiều học sinh đồng thời.
+
+Trải nghiệm học tập có thể được mở rộng bằng lịch học, nhắc học theo lịch, phân tích kết quả theo chủ đề và gợi ý nội dung ôn tập dựa trên điểm yếu. Phân hệ bài kiểm tra cần bổ sung trộn đề, phân tích độ khó, độ phân biệt của câu hỏi và cơ chế giám sát phù hợp hơn thay vì chỉ dựa vào số lần rời màn hình.
+
+Đối với AI Tutor, bước tiếp theo là mở rộng benchmark sang nhiều khóa học và môn học, đồng thời tách tập dữ liệu dùng điều chỉnh cấu hình khỏi tập kiểm thử cuối. Kết quả hiện tại cho thấy cần ưu tiên truy xuất kết hợp vector và từ khóa, đa dạng hóa tài liệu trong top-K, bổ sung reranking và tăng mức tuân thủ citation. Các khả năng như gợi ý bài ôn tập, tóm tắt bài giảng, giải thích lỗi sai hoặc tạo câu hỏi nháp chỉ nên được bổ sung khi có cơ chế kiểm duyệt chuyên môn.
+
+Khi phục vụ nhiều trung tâm, kiến trúc phân quyền cần tách dữ liệu khóa học, học sinh, đơn hàng và báo cáo theo từng đơn vị. Mô hình này cũng cần các vai trò như trợ giảng, nhân viên vận hành, kế toán và quản lý trung tâm.
+
+Phần media cần hỗ trợ nhiều mức chất lượng HLS, CDN, đường dẫn truy cập có thời hạn, hàng đợi xử lý video và cơ chế chạy lại công việc thất bại. Với thanh toán, các chức năng còn thiếu gồm đối soát định kỳ, hoàn tiền và xử lý giao dịch bất thường.
+
+Đồ án đã hoàn thành các luồng cốt lõi của một LMS tích hợp bán khóa học, theo dõi học tập, đánh giá và hỏi đáp theo học liệu nội bộ. Kết quả được xác nhận ở mức mã nguồn, kiểm thử nội bộ và môi trường triển khai public; mức sẵn sàng sản phẩm ở quy mô lớn chỉ có thể được đánh giá sau khi đo tải, kiểm thử bảo mật và thử nghiệm với người dùng thật.
+
+\end{document}

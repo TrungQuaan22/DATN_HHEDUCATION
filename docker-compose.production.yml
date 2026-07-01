@@ -1,0 +1,192 @@
+name: hheducation-production
+
+x-backend-environment: &backend-environment
+  NODE_ENV: production
+  PORT: 4000
+  DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+  CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+  JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+  JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+  AUTH_PASSWORD_SALT_ROUNDS: ${AUTH_PASSWORD_SALT_ROUNDS:-12}
+  AUTH_REFRESH_TOKEN_RETRY_GRACE_SECONDS: ${AUTH_REFRESH_TOKEN_RETRY_GRACE_SECONDS:-10}
+  R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}
+  R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}
+  R2_ENDPOINT: ${R2_ENDPOINT:?R2_ENDPOINT is required}
+  R2_BUCKET_NAME: ${R2_BUCKET_NAME:?R2_BUCKET_NAME is required}
+  R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
+  R2_PRESIGNED_URL_EXPIRES_IN: ${R2_PRESIGNED_URL_EXPIRES_IN:-300}
+  AI_SERVICE_URL: http://ai-service:8000
+  AI_SERVICE_INTERNAL_TOKEN: ${AI_SERVICE_INTERNAL_TOKEN:?AI_SERVICE_INTERNAL_TOKEN is required}
+  AI_SERVICE_REQUEST_TIMEOUT_MS: ${AI_SERVICE_REQUEST_TIMEOUT_MS:-120000}
+  PAYMENT_DEFAULT_PROVIDER: ${PAYMENT_DEFAULT_PROVIDER:-sepay}
+  PAYMENT_PENDING_TTL_MINUTES: ${PAYMENT_PENDING_TTL_MINUTES:-15}
+  IDEMPOTENCY_KEY_TTL_HOURS: ${IDEMPOTENCY_KEY_TTL_HOURS:-24}
+  IDEMPOTENCY_KEY_STALE_MINUTES: ${IDEMPOTENCY_KEY_STALE_MINUTES:-5}
+  SEPAY_WEBHOOK_AUTH_MODE: ${SEPAY_WEBHOOK_AUTH_MODE:-hmac}
+  SEPAY_WEBHOOK_SECRET: ${SEPAY_WEBHOOK_SECRET:-}
+  SEPAY_API_KEY: ${SEPAY_API_KEY:-}
+  SEPAY_BANK_ACCOUNT_NUMBER: ${SEPAY_BANK_ACCOUNT_NUMBER:-}
+  SEPAY_BANK_CODE: ${SEPAY_BANK_CODE:-}
+  SEPAY_QR_BASE_URL: ${SEPAY_QR_BASE_URL:-https://qr.sepay.vn/img}
+  SEPAY_PAYMENT_CODE_PREFIX: ${SEPAY_PAYMENT_CODE_PREFIX:-HHE}
+  SEPAY_PAYMENT_CODE_SUFFIX_LENGTH: ${SEPAY_PAYMENT_CODE_SUFFIX_LENGTH:-12}
+  ASSESSMENT_DEADLINE_SWEEP_INTERVAL_MS: ${ASSESSMENT_DEADLINE_SWEEP_INTERVAL_MS:-30000}
+  ASSESSMENT_DEADLINE_SWEEP_BATCH_SIZE: ${ASSESSMENT_DEADLINE_SWEEP_BATCH_SIZE:-100}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [internal]
+
+  migrate:
+    build:
+      context: ./backend
+    image: hheducation-backend:${IMAGE_TAG:-latest}
+    command: ["npm", "run", "prisma:migrate:deploy"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks: [internal]
+
+  ai-service:
+    build:
+      context: ./python-ai-service
+    image: hheducation-ai-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      AI_SERVICE_INTERNAL_TOKEN: ${AI_SERVICE_INTERNAL_TOKEN:?AI_SERVICE_INTERNAL_TOKEN is required}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai-compatible}
+      EMBEDDING_API_BASE_URL: ${EMBEDDING_API_BASE_URL:?EMBEDDING_API_BASE_URL is required}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:?EMBEDDING_API_KEY is required}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1536}
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-openai-compatible}
+      CHAT_API_BASE_URL: ${CHAT_API_BASE_URL:?CHAT_API_BASE_URL is required}
+      CHAT_API_KEY: ${CHAT_API_KEY:?CHAT_API_KEY is required}
+      CHAT_MODEL: ${CHAT_MODEL:?CHAT_MODEL is required}
+      CHAT_TEMPERATURE: ${CHAT_TEMPERATURE:-0.2}
+      RAG_CHUNK_SIZE: ${RAG_CHUNK_SIZE:-1000}
+      RAG_CHUNK_OVERLAP: ${RAG_CHUNK_OVERLAP:-150}
+      RAG_RETRIEVAL_LIMIT: ${RAG_RETRIEVAL_LIMIT:-6}
+      RAG_SIMILARITY_THRESHOLD: ${RAG_SIMILARITY_THRESHOLD:-0.45}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [internal]
+
+  backend:
+    build:
+      context: ./backend
+    image: hheducation-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:?NEXT_PUBLIC_API_BASE_URL is required}
+        NEXT_PUBLIC_MEDIA_HOSTNAME: ${NEXT_PUBLIC_MEDIA_HOSTNAME:-}
+    image: hheducation-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:?NEXT_PUBLIC_API_BASE_URL is required}
+      NEXT_PUBLIC_MEDIA_HOSTNAME: ${NEXT_PUBLIC_MEDIA_HOSTNAME:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [internal]
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN is required}
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN is required}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deployment/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks: [internal]
+
+  seed-production:
+    profiles: [operations]
+    image: hheducation-backend:${IMAGE_TAG:-latest}
+    command: ["npm", "run", "prisma:seed:production"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      AUTH_PASSWORD_SALT_ROUNDS: ${AUTH_PASSWORD_SALT_ROUNDS:-12}
+      PRODUCTION_ADMIN_EMAIL: ${PRODUCTION_ADMIN_EMAIL:-}
+      PRODUCTION_ADMIN_PASSWORD: ${PRODUCTION_ADMIN_PASSWORD:-}
+      PRODUCTION_ADMIN_FULL_NAME: ${PRODUCTION_ADMIN_FULL_NAME:-System Administrator}
+      PRODUCTION_TEACHER_EMAIL: ${PRODUCTION_TEACHER_EMAIL:-}
+      PRODUCTION_TEACHER_PASSWORD: ${PRODUCTION_TEACHER_PASSWORD:-}
+      PRODUCTION_TEACHER_FULL_NAME: ${PRODUCTION_TEACHER_FULL_NAME:-Course Teacher}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+    networks: [internal]
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

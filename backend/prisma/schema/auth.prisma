@@ -11,20 +11,23 @@ enum UserStatus {
 }
 
 model User {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email        String     @unique @db.VarChar(255)
-  passwordHash String     @map("password_hash")
-  fullName     String     @map("full_name") @db.VarChar(255)
-  role         UserRole
-  status       UserStatus @default(pending_verification)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  deletedAt    DateTime?  @map("deleted_at")
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String     @unique @db.VarChar(255)
+  passwordHash    String     @map("password_hash")
+  fullName        String     @map("full_name") @db.VarChar(255)
+  avatarMediaId   String?    @map("avatar_media_id") @db.Uuid
+  avatarObjectKey String?    @map("avatar_object_key") @db.VarChar(500)
+  role            UserRole
+  status          UserStatus @default(pending_verification)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   sessions                 UserSession[]
   taughtCourses            Course[]                  @relation("CourseTeacher")
   authoredPosts            BlogPost[]                @relation("BlogAuthor")
   enrollments              Enrollment[]
+  tutorChatSessions        TutorChatSession[]
   lessonProgress           LessonProgress[]
   courseProgress           CourseProgress[]
   submissions              Submission[]              @relation("SubmissionStudent")
@@ -34,9 +37,15 @@ model User {
   notifications            Notification[]
   auditLogs                AuditLog[]                @relation("AuditActor")
   orders                   Order[]
+  idempotencyKeys          IdempotencyKey[]
+  uploadedMedia            Media[]                   @relation("UploadedMedia")
+  createdLessonMaterials   LessonMaterial[]          @relation("CreatedLessonMaterials")
+  createdAssessments       Assessment[]              @relation("AssessmentCreator")
+  avatarMedia              Media?                    @relation("UserAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
 
   @@index([role])
   @@index([status])
+  @@index([avatarMediaId])
   @@map("users")
 }
 
@@ -54,6 +63,5 @@ model UserSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, expiresAt])
   @@map("user_sessions")
 }

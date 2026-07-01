@@ -1,0 +1,17 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{ABSTRACT}}\\
+\end{center}
+\vspace{1cm}
+
+The growth of online education enables independent teachers and small test-preparation centers to digitize their teaching activities. However, using multiple disconnected tools fragments learning materials, increases manual access-control work, and makes individual learning progress difficult to monitor. Google Classroom, Moodle, and Udemy address different parts of this problem, but they are not simultaneously optimized for a small organization that wants to operate paid courses, manage learning activities, and provide course-grounded assistance in one self-managed system.
+
+To address these constraints, this thesis develops a centralized Learning Management System (LMS) based on the client-server model. The system unifies course content, learning materials, access rights, progress, and assessment results while integrating specialized services for media processing, payment, and course-grounded assistance. Retrieval-Augmented Generation (RAG) is used as a supporting self-study feature rather than the sole focus of the product.
+
+The proposed solution is an AI-enabled online learning platform that supports both teachers' administrative workflows and students' learning activities. It uses Next.js/React for the frontend, Node.js/Express for the backend, PostgreSQL with pgvector, and a separate Python AI service. Its main functions include structured course and material management, HLS video processing, per-student progress tracking, assessment delivery and grading, business notifications, and automated enrollment after payment webhooks.
+
+The main contribution is the design and implementation of an end-to-end operational workflow for independent teachers and small education centers: authoring and distributing courses, selling and granting access, organizing learning activities, monitoring individual students, and delivering and grading assessments. RAG, HLS, assessment-attempt control, and payment-webhook processing are supporting technical solutions within this workflow. The product has been containerized and deployed publicly over HTTPS.
+
+\end{document}

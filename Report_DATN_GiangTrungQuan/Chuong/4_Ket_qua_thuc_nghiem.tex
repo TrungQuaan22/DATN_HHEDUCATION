@@ -1,0 +1,974 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+Chương 3 đã trình bày các nền tảng lý thuyết và công nghệ được lựa chọn để đáp ứng yêu cầu của hệ thống. Trên cơ sở đó, chương này trình bày cách các công nghệ được áp dụng vào thiết kế và hiện thực hệ thống quản lý học tập trực tuyến. Nội dung chương bao gồm lựa chọn kiến trúc, thiết kế tổng quan và chi tiết, thiết kế giao diện và cơ sở dữ liệu, công cụ phát triển, kết quả xây dựng, kiểm thử và môi trường triển khai thử nghiệm.
+
+\section{Thiết kế kiến trúc}
+\subsection{Lựa chọn kiến trúc phần mềm}
+Hệ thống trong đồ án được thiết kế theo kiến trúc phân lớp (Layered Architecture). Đây là kiểu kiến trúc tổ chức phần mềm thành các lớp theo chiều ngang, trong đó mỗi lớp đảm nhiệm một nhóm trách nhiệm riêng. Theo mô tả của Mark Richards, kiến trúc phân lớp thường được triển khai với bốn lớp phổ biến là Presentation, Business, Persistence và Database \cite{richards2015softwareArchitecturePatterns}. Cách tổ chức này cũng phù hợp với các hệ thống ứng dụng doanh nghiệp, nơi cần tách giao diện người dùng, xử lý nghiệp vụ và truy cập dữ liệu thành các phần tương đối độc lập \cite{fowler2002poeaa}.
+
+Kiến trúc phân lớp được lựa chọn vì phù hợp với yêu cầu dễ bảo trì, dễ mở rộng và dễ kiểm soát thay đổi đã nêu ở Mục 2.4. Hệ thống LMS trong đồ án có nhiều nhóm chức năng như quản lý khóa học, quản lý bài kiểm tra, mua khóa học, xử lý media, theo dõi học tập và hỗ trợ hỏi đáp theo nội dung bài học. Nếu các chức năng này được viết lẫn giữa giao diện, xử lý nghiệp vụ và truy vấn dữ liệu, mã nguồn sẽ khó đọc và khó sửa khi hệ thống mở rộng. Việc chia lớp giúp mỗi phần của hệ thống có trách nhiệm rõ ràng hơn: giao diện tập trung vào tương tác với người dùng, service tập trung vào nghiệp vụ, còn repository và CSDL tập trung vào dữ liệu.
+
+Trong phạm vi đồ án, hệ thống không lựa chọn microservices vì quy mô hiện tại chưa cần tách thành nhiều dịch vụ độc lập. Nếu áp dụng microservices quá sớm, hệ thống sẽ phát sinh thêm nhiều vấn đề về triển khai, giám sát, giao tiếp giữa các dịch vụ và đồng bộ dữ liệu. Kiến trúc MVC cũng chưa đủ rõ để mô tả cách hệ thống được tổ chức, vì backend của đồ án không chỉ có controller và model mà còn có service xử lý nghiệp vụ, repository truy cập dữ liệu, các thành phần xử lý media, thanh toán và AI. Vì vậy, kiến trúc phân lớp là lựa chọn phù hợp hơn: đủ rõ để tách trách nhiệm, nhưng không làm hệ thống phức tạp quá mức.
+
+Kiến trúc phân lớp định hướng thiết kế hệ thống được trình bày trong Hình \ref{fig:layered_architecture}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.88\textwidth]{Hinhve/layered_architecture.png}
+    \caption{Kiến trúc phân lớp của hệ thống}
+    \label{fig:layered_architecture}
+\end{figure}
+
+Khi áp dụng vào hệ thống, lớp Presentation bao gồm giao diện Next.js ở phía người dùng và các route/controller Express ở phía backend. Lớp này chịu trách nhiệm hiển thị dữ liệu, nhận thao tác từ người dùng và chuyển yêu cầu vào hệ thống. Các thành phần cụ thể thuộc lớp này gồm các trang học tập, trang quản trị, form tạo khóa học, form tạo bài kiểm tra, trình phát video, các component hiển thị dữ liệu và các route tiếp nhận HTTP request.
+
+Lớp Business được triển khai chủ yếu bằng các service trong backend. Đây là nơi xử lý các quy tắc nghiệp vụ như tạo khóa học, xuất bản khóa học, thiết lập bài kiểm tra, tạo đơn hàng mua khóa học, kiểm tra quyền truy cập bài học, ghi nhận tiến độ học tập, xử lý trạng thái media và điều phối yêu cầu hỏi đáp theo nội dung bài học. Lớp này quyết định một thao tác có hợp lệ hay không theo ngữ cảnh nghiệp vụ, thay vì chỉ kiểm tra dữ liệu ở mức định dạng.
+
+Lớp Persistence gồm các repository, Prisma ORM và các thành phần làm việc với dịch vụ lưu trữ, xử lý video, thanh toán hoặc dịch vụ AI. Nhiệm vụ của lớp này là thực hiện truy vấn dữ liệu, cập nhật trạng thái, tạo đường dẫn tải tệp, lưu kết quả xử lý và che giấu chi tiết kỹ thuật khỏi lớp Business. Nhờ vậy, service không cần tự viết truy vấn CSDL hoặc tự xử lý chi tiết lưu trữ tệp.
+
+Lớp Database bao gồm PostgreSQL và Cloudflare R2. PostgreSQL lưu trữ dữ liệu có cấu trúc như người dùng, khóa học, chương, bài học, bài kiểm tra, đơn hàng, giao dịch và tiến độ học tập. Cloudflare R2 lưu trữ các media dung lượng lớn như ảnh, tài liệu và video bài giảng. Việc tách dữ liệu nghiệp vụ và media giúp backend không phải lưu trực tiếp các tệp lớn trên máy chủ, đồng thời thuận lợi hơn khi mở rộng dung lượng lưu trữ.
+
+So với mô hình phân lớp lý thuyết, hệ thống có ba điều chỉnh để phù hợp với ứng dụng Web: (i) lớp Presentation gồm cả giao diện phía trình duyệt và route/controller tiếp nhận yêu cầu ở backend; (ii) lớp Persistence bao gồm CSDL quan hệ cùng các thành phần tích hợp lưu trữ media, xử lý video, thanh toán và AI; (iii) mã nguồn được chia theo module nghiệp vụ như khóa học, bài kiểm tra, đơn hàng, media và tutor. Cách tổ chức này vẫn giữ trách nhiệm riêng cho từng lớp và hạn chế ảnh hưởng lan truyền khi thay đổi thành phần kỹ thuật.
+
+\subsection{Thiết kế tổng quan}
+Để cụ thể hóa kiến trúc đã lựa chọn ở Mục 4.1.1, hệ thống được mô tả bằng biểu đồ gói UML ở mức tổng quan. Biểu đồ này tập trung vào cách chia các package chính, quan hệ phụ thuộc giữa các package và ranh giới giữa phần giao diện người dùng, phần máy chủ và các tài nguyên bên ngoài. Hình \ref{fig:package_diagram_tong_quan} trình bày cấu trúc tổng quan của hệ thống.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{Hinhve/package_diagram_tong_quan.png}
+    \caption{Biểu đồ gói tổng quan của hệ thống}
+    \label{fig:package_diagram_tong_quan}
+\end{figure}
+
+Ở mức tổng quan, hệ thống gồm hai khối phần mềm chính là Frontend Application và Backend Application. Khối Frontend Application chạy ở phía trình duyệt, được tổ chức theo các package như App Routes/Pages, Feature Modules, UI Components, State/Data Fetch và API Client. App Routes/Pages định nghĩa các tuyến màn hình cho học sinh, giáo viên và quản trị viên. Feature Modules gom các thành phần theo nhóm chức năng như khóa học, bài kiểm tra, đơn hàng, media hoặc xác thực. UI Components chứa các thành phần giao diện tái sử dụng. State/Data Fetch quản lý trạng thái giao diện và dữ liệu lấy từ máy chủ. API Client là package giao tiếp với Backend Application thông qua REST API.
+
+Khối Backend Application chạy ở phía máy chủ và được tổ chức theo kiến trúc phân lớp. Tầng Presentation gồm Routes/Controllers, chịu trách nhiệm tiếp nhận request từ frontend, gọi middleware/validator cần thiết và chuyển yêu cầu xuống tầng nghiệp vụ. Tầng Business gồm các module nghiệp vụ chính như Auth, Users, Courses, Learning, Assessments, Orders, Payments, Media, Blogs và Tutor. Trong đó, Learning biểu diễn nhóm luồng học tập của học sinh, được hiện thực chủ yếu thông qua các route và service học tập trong module Courses, module Assessments và Tutor. Tầng Persistence/Integration gồm Repositories, Prisma ORM, R2 Storage, Video Processing, Payment Integration và AI Integration. Tầng Database/External Resources gồm PostgreSQL, Cloudflare R2, Payment Gateway và Python AI Service/Vector Store.
+
+Hình \ref{fig:package_diagram_backend} trình bày chi tiết hơn cấu trúc phân tầng của khối Backend Application.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.68\textwidth]{Hinhve/package_diagram_backend.png}
+    \caption{Biểu đồ gói phân tầng phía máy chủ}
+    \label{fig:package_diagram_backend}
+\end{figure}
+
+Quan hệ phụ thuộc trong thiết kế được giới hạn theo một chiều từ tầng trên xuống tầng dưới. Routes/Controllers phụ thuộc vào các module ở tầng Business để thực hiện nghiệp vụ. Các module nghiệp vụ không truy cập trực tiếp vào PostgreSQL, Cloudflare R2 hoặc dịch vụ thanh toán, mà thông qua các package ở tầng Persistence/Integration. Repositories và Prisma ORM đảm nhiệm truy vấn dữ liệu có cấu trúc trong PostgreSQL. R2 Storage và Video Processing phục vụ luồng upload, lưu trữ và xử lý video/tài liệu. Payment Integration chịu trách nhiệm kết nối với cổng thanh toán. AI Integration chịu trách nhiệm chuyển yêu cầu hỏi đáp từ Tutor sang Python AI Service.
+
+Thiết kế này hạn chế phụ thuộc vòng bằng cách không cho tầng dưới gọi ngược lên tầng trên. Các module nghiệp vụ cũng được tách theo nhóm chức năng để giảm phụ thuộc chéo. Một số quan hệ giữa các module nghiệp vụ vẫn tồn tại do yêu cầu thực tế của hệ thống, ví dụ Orders cần thông tin khóa học để tạo đơn mua khóa học, Payments cập nhật trạng thái đơn hàng sau khi có giao dịch, Learning cần thông tin khóa học và bài kiểm tra để hiển thị lộ trình học tập, còn Tutor cần ngữ cảnh bài học để trả lời câu hỏi. Các quan hệ này được giữ ở mức một chiều và có chủ đích, nhằm đảm bảo cấu trúc tổng thể vẫn bám theo kiến trúc phân lớp.
+
+\subsection{Thiết kế chi tiết gói}
+Sau khi xác định cấu trúc package tổng quan, đồ án lựa chọn hai nhóm chức năng tiêu biểu để trình bày thiết kế chi tiết gói. Các biểu đồ trong mục này chỉ thể hiện tên lớp và quan hệ giữa các lớp, chưa trình bày thuộc tính hoặc phương thức. Hai nhóm chức năng được lựa chọn là tạo khóa học và upload video bài giảng, vì đây là hai luồng thể hiện rõ cách hệ thống áp dụng kiến trúc phân lớp từ giao diện, controller, service, repository đến hạ tầng lưu trữ.
+
+\subsubsection{Thiết kế chi tiết gói chức năng tạo khóa học}
+
+Hình \ref{fig:package_course_create} trình bày thiết kế chi tiết cho chức năng tạo khóa học. Ở tầng Presentation, trang tạo khóa học chứa form nhập thông tin khóa học. Form này gửi yêu cầu tạo khóa học tới \texttt{AdminCourseController} ở tầng Controller. Controller không xử lý trực tiếp nghiệp vụ mà chuyển yêu cầu xuống \texttt{AdminCourseService}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Hinhve/course_create.package.png}
+    \caption{Thiết kế chi tiết gói chức năng tạo khóa học}
+    \label{fig:package_course_create}
+\end{figure}
+
+\texttt{AdminCourseService} là lớp xử lý nghiệp vụ chính của chức năng này, bao gồm kiểm tra dữ liệu, xác định người tạo khóa học và chuẩn bị thông tin cần lưu. Service phụ thuộc vào \texttt{CourseRepository} để thực hiện thao tác lưu trữ. \texttt{AdminCourseRepository} là lớp triển khai repository, làm việc với \texttt{PrismaORM} để ghi dữ liệu xuống PostgreSQL. Các lớp \texttt{Course}, \texttt{User} và \texttt{Media} biểu diễn các mô hình dữ liệu liên quan trong chức năng tạo khóa học. Trong đó, \texttt{Media} được sử dụng khi khóa học có ảnh đại diện hoặc tài nguyên media liên quan được lưu trên R2.
+
+Biểu đồ thể hiện quan hệ hợp thành giữa trang tạo khóa học và form tạo khóa học, quan hệ phụ thuộc từ form tới controller, quan hệ kết hợp/phụ thuộc giữa controller, service và repository, đồng thời thể hiện quan hệ thực thi giữa \texttt{AdminCourseRepository} và \texttt{CourseRepository}. Cách tổ chức này giữ cho phần giao diện, xử lý nghiệp vụ và truy cập dữ liệu không bị trộn lẫn với nhau.
+
+\subsubsection{Thiết kế chi tiết gói chức năng upload video bài giảng}
+
+Hình \ref{fig:package_upload_video_hls} trình bày thiết kế chi tiết cho chức năng upload video bài giảng và xử lý HLS. Đây là chức năng có nhiều thành phần kỹ thuật hơn so với tạo khóa học, vì hệ thống không chỉ lưu thông tin video trong CSDL mà còn phải đưa tệp lên Cloudflare R2 và chuyển đổi video sang định dạng phù hợp cho việc phát trên trình duyệt.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Hinhve/upload_video_hls.package.png}
+    \caption{Thiết kế chi tiết gói chức năng upload video bài giảng}
+    \label{fig:package_upload_video_hls}
+\end{figure}
+
+Ở tầng Presentation, \texttt{LessonVideoForm} chứa thành phần \texttt{VideoUploadField} để người quản lý nội dung chọn và tải video bài giảng. Thành phần này gửi yêu cầu upload tới \texttt{UploadController}. Controller chuyển tiếp yêu cầu cho \texttt{UploadService}. \texttt{UploadService} chịu trách nhiệm tạo bản ghi media, làm việc với kho lưu trữ thông qua \texttt{MediaStorage} và kích hoạt \texttt{TranscodeService} khi cần xử lý video.
+
+Tầng Persistence gồm \texttt{MediaRepository}, \texttt{MediaStorage}, \texttt{PrismaMediaRepository} và \texttt{R2MediaStorageAdapter}. Trong đó, \texttt{PrismaMediaRepository} triển khai \texttt{MediaRepository} để lưu thông tin media thông qua Prisma ORM, còn \texttt{R2MediaStorageAdapter} triển khai \texttt{MediaStorage} để làm việc với Cloudflare R2. \texttt{TranscodeService} sử dụng FFprobe để đọc thông tin video và FFmpeg để chuyển đổi video sang HLS. Các mô hình \texttt{Media} và \texttt{Lesson} thể hiện mối liên hệ giữa tệp video và bài học sử dụng video đó.
+
+Thiết kế này giúp tách rõ ba phần: giao diện upload video, nghiệp vụ quản lý trạng thái media và hạ tầng xử lý/lưu trữ video. Nhờ vậy, nếu thay đổi cách lưu trữ tệp hoặc thay đổi công cụ xử lý video, các thay đổi chủ yếu nằm ở tầng Persistence/Infrastructure mà không làm ảnh hưởng trực tiếp tới controller hoặc giao diện.
+
+\section{Thiết kế chi tiết}
+\subsection{Thiết kế giao diện}
+Hệ thống được thiết kế dưới dạng ứng dụng Web responsive, phục vụ hai nhóm thao tác chính: học sinh học tập trên trình duyệt và giáo viên/quản trị viên quản lý nội dung trên màn hình lớn. Đối với các màn hình quản trị như tạo khóa học, sắp xếp chương/bài học, upload học liệu và tạo bài kiểm tra, giao diện ưu tiên độ phân giải desktop từ 1366x768 trở lên để đảm bảo đủ không gian cho bảng dữ liệu, form nhập liệu và khu vực thao tác. Đối với các màn hình học tập, giao diện được thiết kế có khả năng thích ứng với màn hình nhỏ hơn bằng cách thu gọn sidebar, chuyển một số panel sang dạng ẩn/hiện và giữ khu vực nội dung chính dễ đọc.
+
+Về định hướng thị giác, hệ thống sử dụng giao diện nền tối làm mặc định để phù hợp với các phiên học dài, đặc biệt khi học sinh xem video hoặc đọc tài liệu trong thời gian liên tục. Màu nhấn được dùng có kiểm soát cho hành động chính, trạng thái đang chọn và các thông tin cần chú ý; các trạng thái thành công, cảnh báo và lỗi được quy ước nhất quán trong thông báo, validation và trạng thái xử lý. Bên cạnh đó, hệ thống vẫn hỗ trợ chế độ sáng để phù hợp với các môi trường sử dụng khác nhau.
+
+Về typography, giao diện sử dụng \texttt{Be Vietnam Pro} làm font chính cho nội dung, nhãn, nút bấm và dữ liệu bảng; font \texttt{Quicksand} được dùng cho một số tiêu đề cần nhấn mạnh. Cách lựa chọn này giúp hiển thị tiếng Việt rõ ràng, đồng thời giữ được cảm giác học thuật và thân thiện của hệ thống. Kích thước chữ trong giao diện được chia theo vai trò: tiêu đề trang có kích thước lớn hơn, nội dung thường là 16px, nhãn và nút bấm có kích thước nhỏ hơn để phù hợp với các màn hình quản trị nhiều thông tin.
+
+Các thành phần giao diện được chuẩn hóa để người dùng không phải học lại thao tác ở từng màn hình. Nút bấm có bốn biến thể chính gồm \texttt{primary}, \texttt{secondary}, \texttt{outline} và \texttt{ghost}; trong đó \texttt{primary} dùng cho hành động chính như lưu, tạo mới, mua khóa học hoặc bắt đầu làm bài. Trường nhập liệu có nhãn rõ ràng, viền, trạng thái focus và trạng thái lỗi. Các thao tác bất đồng bộ như lưu dữ liệu, upload media hoặc tạo bài kiểm tra có trạng thái loading và thông báo phản hồi. Hệ thống sử dụng toast ở góc trên bên phải để thông báo thành công, lỗi, cảnh báo hoặc thông tin; những thao tác có khả năng làm thay đổi dữ liệu quan trọng được kết hợp với hộp xác nhận hoặc trạng thái cảnh báo trực tiếp trên màn hình.
+
+Về bố cục, các màn hình công khai như danh sách khóa học ưu tiên khả năng tìm kiếm và so sánh nhanh. Các màn hình học tập ưu tiên việc tập trung vào bài giảng, giữ video hoặc nội dung bài học ở vùng trung tâm, lộ trình khóa học ở một bên và công cụ hỗ trợ học tập ở bên còn lại. Các màn hình quản trị ưu tiên thao tác lặp lại: danh sách, bộ lọc, form, nút hành động và thông báo trạng thái được đặt ở vị trí nhất quán. Hai hình dưới đây là wireframe minh họa định hướng bố cục, không phải giao diện sản phẩm sau cùng.
+
+Bố cục màn hình danh sách khóa học được trình bày trong Hình \ref{fig:ui_wireframe_course_list}. Màn hình gồm khu vực điều hướng, phần giới thiệu ngắn, bộ lọc ở bên trái và danh sách khóa học ở vùng nội dung chính. Khu vực danh sách có ô tìm kiếm, lựa chọn sắp xếp, các thẻ khóa học và phân trang. Cách bố trí này giúp học sinh hoặc khách truy cập lọc và so sánh khóa học trong cùng một màn hình.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Hinhve/ui_wireframe_course_list.png}
+    \caption{Wireframe màn hình danh sách khóa học}
+    \label{fig:ui_wireframe_course_list}
+\end{figure}
+
+Bố cục màn hình học tập trong Hình \ref{fig:ui_wireframe_learning} được chia thành ba vùng: lộ trình ở bên trái, nội dung bài học ở giữa và AI Tutor ở bên phải. Khu vực trung tâm ưu tiên trình phát video/HLS, phía dưới là các tab mô tả bài học và tài liệu. Thiết kế này cho phép học sinh xem bài giảng, truy cập học liệu và đặt câu hỏi trong cùng một ngữ cảnh.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Hinhve/ui_wireframe_learning.png}
+    \caption{Wireframe màn hình học tập}
+    \label{fig:ui_wireframe_learning}
+\end{figure}
+
+\subsection{Thiết kế lớp}
+Phần này trình bày thiết kế của hai lớp nghiệp vụ trung tâm là Course và Assessment, cùng các biểu đồ trình tự cho bốn chức năng tiêu biểu. Các lớp được mô tả ở mức nghiệp vụ: thuộc tính phản ánh dữ liệu cần quản lý, còn phương thức thể hiện các thao tác chính của hệ thống. Khi cài đặt, các thao tác này được phân tách vào controller, service và repository theo kiến trúc phân lớp đã trình bày ở Mục 4.1.
+
+\subsubsection{Thiết kế lớp Course}
+
+Lớp Course đại diện cho khóa học trong hệ thống. Lớp này quản lý thông tin nhận diện, môn học, khối lớp, giáo viên phụ trách, giá bán và trạng thái xuất bản của khóa học. Hình \ref{fig:class_course} mô tả các thuộc tính và phương thức chính của lớp Course.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Hinhve/class_course.png}
+    \caption{Biểu đồ lớp Course}
+    \label{fig:class_course}
+\end{figure}
+
+Các phương thức createCourse, updateCourse, publishCourse và archiveCourse hỗ trợ quản lý vòng đời khóa học. createChapter, createLesson và createLessonMaterial dùng để xây dựng cấu trúc khóa học theo thứ tự khóa học - chương - bài học - học liệu. Với học sinh, getLearningLesson tải nội dung bài học, getLearningLessonHlsFile cung cấp luồng video và updateLessonProgress ghi nhận tiến độ học tập.
+
+\subsubsection{Thiết kế lớp Assessment}
+
+Lớp Assessment đại diện cho bài kiểm tra trong hệ thống. Đối tượng này được sử dụng cho nhiều ngữ cảnh khác nhau: bài kiểm tra công khai, bài kiểm tra gắn với khóa học và bài quiz gắn với bài học. Hình \ref{fig:class_assessment} mô tả các thuộc tính và phương thức chính của lớp Assessment.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Hinhve/class_assessment.png}
+    \caption{Biểu đồ lớp Assessment}
+    \label{fig:class_assessment}
+\end{figure}
+
+Các thuộc tính của Assessment mô tả thông tin cơ bản của bài kiểm tra như môn học, khối lớp, loại bài kiểm tra, hình thức chấm điểm, thời gian làm bài, trạng thái hiển thị, tệp nguồn và người tạo. Nhóm phương thức createAssessment, updateAssessment, createSection, createSectionItems, createPlacement và publishAssessment thể hiện quá trình xây dựng và xuất bản bài kiểm tra. Nhóm phương thức startAttempt, getAssessmentWorkspace, saveAnswers và submitAttempt thể hiện quá trình học sinh làm bài, lưu câu trả lời và nộp bài. Với các câu hỏi tự luận, hệ thống có thêm gradeEssay và finalizeManualSubmission để giáo viên chấm điểm và hoàn tất kết quả cuối cùng.
+
+\subsubsection{Biểu đồ trình tự học bài}
+
+Hình \ref{fig:seq_learning} mô tả luồng xử lý khi Học sinh chọn một bài học từ màn hình học tập. Giao diện gửi yêu cầu tải bài học đến \texttt{LearningCourseController}; controller lấy định danh người dùng từ phiên đăng nhập và gọi \texttt{LearningCourseService.getLearningLesson}. Service gọi \texttt{LearningCourseRepository.findEnrolledLessonById}, nơi Prisma truy vấn dữ liệu ghi danh, bài học, video và học liệu trong PostgreSQL. Nếu học sinh chưa ghi danh hoặc bài học không tồn tại trong khóa học đã ghi danh, service trả lỗi để giao diện hiển thị thông báo. Ngược lại, controller trả chi tiết bài học để giao diện hiển thị nội dung video và tài liệu.
+
+Khi trình phát cần một tệp HLS, giao diện tiếp tục yêu cầu manifest hoặc segment video. Controller gọi \texttt{getLearningLessonHlsFile}; service kiểm tra lại bài học video thuộc quyền học của học sinh qua repository, sau đó gọi \texttt{R2HlsStorageAdapter.getObject} để lấy tệp từ Cloudflare R2 và chuyển luồng dữ liệu về trình phát. Trong quá trình xem, giao diện gửi vị trí xem hiện tại đến controller. \texttt{LearningCourseService.updateLessonProgress} gọi repository lưu tiến độ bài học và tiến độ khóa học bằng Prisma, rồi trả trạng thái mới để giao diện cập nhật.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth,height=0.88\textheight,keepaspectratio]{Hinhve/seq.learning.png}
+    \caption{Biểu đồ trình tự học bài}
+    \label{fig:seq_learning}
+\end{figure}
+
+\subsubsection{Biểu đồ trình tự hỏi đáp với AI Tutor}
+
+Hình \ref{fig:seq_ai_tutor} mô tả luồng Học sinh gửi câu hỏi trong khung chat của một bài học. Khi học sinh nhập và gửi câu hỏi, giao diện gọi \texttt{TutorController}; controller chuyển dữ liệu người dùng và nội dung câu hỏi cho \texttt{TutorService.\allowbreak sendMessage}. Service dùng \texttt{TutorRepository.findSessionDetail} để lấy phiên chat và lịch sử trao đổi bằng Prisma, sau đó dùng \texttt{findEnrolledCourse} kiểm tra học sinh có quyền học khóa học chứa bài học đang hỏi hay không. Nếu phiên chat, khóa học hoặc quyền truy cập không hợp lệ, controller trả lỗi để giao diện thông báo cho học sinh.
+
+Với yêu cầu hợp lệ, service gọi \texttt{createMessage} để lưu câu hỏi của học sinh vào PostgreSQL trước khi gửi ngữ cảnh gồm khóa học, bài học và câu hỏi đến Python AI Service. Dịch vụ AI truy xuất học liệu liên quan và trả về nội dung phản hồi cùng các nguồn trích dẫn. \texttt{TutorService} gọi \texttt{saveAssistantResponse} để Prisma lưu tin nhắn trả lời, các nguồn trích dẫn và thời điểm trao đổi cuối của phiên chat; sau đó controller trả dữ liệu này về giao diện để hiển thị câu trả lời cho học sinh.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth,height=0.88\textheight,keepaspectratio]{Hinhve/seq.ai.png}
+    \caption{Biểu đồ trình tự hỏi đáp với AI Tutor}
+    \label{fig:seq_ai_tutor}
+\end{figure}
+
+\subsubsection{Biểu đồ trình tự tạo và xuất bản bài kiểm tra}
+
+Hình \ref{fig:seq_assessment_publish} mô tả luồng Người quản lý nội dung tạo và xuất bản một bài kiểm tra. Luồng bắt đầu khi người dùng nhập thông tin cơ bản trên màn hình soạn đề và gửi yêu cầu đến \texttt{AdminAssessmentController}. Controller gọi \texttt{AdminAssessmentService.createAssessment}; service chuyển yêu cầu cho repository để Prisma tạo bản ghi bài kiểm tra ở trạng thái nháp trong PostgreSQL và trả lại mã bài kiểm tra cho giao diện.
+
+Trong giai đoạn soạn đề, mỗi thao tác thêm phần đề hoặc câu hỏi được controller chuyển đến service qua \texttt{createSection} và \texttt{createSectionItems}. Repository lưu cấu trúc phần đề, câu hỏi và thứ tự hiển thị bằng Prisma. Tiếp theo, người quản lý nội dung thiết lập vị trí sử dụng, thời gian mở - đóng và số lần làm bài; controller gọi \texttt{createPlacement} để repository lưu cấu hình này. Khi người dùng chọn xuất bản, controller gọi \texttt{publishAssessment}. Service dùng \texttt{findAssessmentForPublish} lấy lại cấu trúc bài kiểm tra từ PostgreSQL để kiểm tra các điều kiện xuất bản. Nếu thiếu dữ liệu cần thiết, hệ thống trả lỗi về giao diện; nếu hợp lệ, service gọi repository cập nhật trạng thái bài kiểm tra sang xuất bản và trả kết quả để giao diện thông báo thành công.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth,height=0.88\textheight,keepaspectratio]{Hinhve/seq.assessment_publish.png}
+    \caption{Biểu đồ trình tự tạo và xuất bản bài kiểm tra}
+    \label{fig:seq_assessment_publish}
+\end{figure}
+
+\subsubsection{Biểu đồ trình tự nộp bài kiểm tra}
+
+Hình \ref{fig:seq_submit_assessment} mô tả luồng Học sinh xác nhận nộp bài kiểm tra từ màn hình làm bài. Giao diện gửi yêu cầu đến \texttt{StudentAssessmentController}; controller chuyển định danh học sinh và bài làm cho \texttt{StudentAssessmentService.\allowbreak submitAttempt}. Service gọi \texttt{StudentAssessmentRepository.findSubmissionForStudent}; repository dùng Prisma lấy bài làm, câu trả lời đã lưu, cấu hình chấm điểm và đáp án cần thiết từ PostgreSQL. Bước này bảo đảm bài làm thuộc về học sinh và vẫn còn ở trạng thái có thể nộp. Nếu không thỏa điều kiện, service trả lỗi để giao diện thông báo và không thay đổi dữ liệu bài làm.
+
+Với bài làm hợp lệ, dịch vụ \texttt{calculateObjectiveScore} tính điểm các câu trắc nghiệm, đúng sai và số. Bài có câu tự luận được chuyển sang trạng thái chờ giáo viên chấm; các trường hợp còn lại được chốt điểm tự động. Hàm \texttt{updateAutoGrading} sau đó cập nhật điểm, trạng thái và thời điểm nộp bằng Prisma. Kết quả được trả về giao diện để học sinh xem điểm hoặc trạng thái chờ chấm.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth,height=0.88\textheight,keepaspectratio]{Hinhve/seq.submit_assessment.png}
+    \caption{Biểu đồ trình tự nộp bài kiểm tra}
+    \label{fig:seq_submit_assessment}
+\end{figure}
+\subsection{Thiết kế cơ sở dữ liệu}
+Hệ thống sử dụng PostgreSQL để lưu trữ dữ liệu nghiệp vụ có cấu trúc. Để tập trung vào luồng cốt lõi, biểu đồ thực thể liên kết mô hình hóa các nhóm bảng chính gồm người dùng, khóa học, bài học, học liệu, đơn hàng, thanh toán, bài kiểm tra, tiến độ học tập và dữ liệu AI Tutor. Các bảng kỹ thuật như phiên đăng nhập, webhook, idempotency, thông báo, nhật ký và blog vẫn thuộc lược đồ vật lý nhưng không được đưa vào biểu đồ này.
+
+\subsubsection{Biểu đồ thực thể liên kết}
+
+Hình \ref{fig:database_erd} trình bày biểu đồ thực thể liên kết của cơ sở dữ liệu ở mức lõi. Biểu đồ thể hiện các quan hệ chính giữa người dùng, khóa học, bài học, thanh toán, bài kiểm tra và dữ liệu hỏi đáp theo học liệu.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Hinhve/ERDiagram.png}
+    \caption{Biểu đồ thực thể liên kết của cơ sở dữ liệu}
+    \label{fig:database_erd}
+\end{figure}
+
+Trong biểu đồ, bảng \texttt{users} là bảng trung tâm cho các vai trò học sinh, giáo viên và quản trị viên. Một giáo viên có thể phụ trách nhiều khóa học thông qua quan hệ từ \texttt{courses.teacher\_id} tới \texttt{users.id}. Mỗi khóa học được tổ chức theo cấu trúc \texttt{courses} - \texttt{chapters} - \texttt{lessons}; trong đó mỗi bài học có thể có video, tài liệu đính kèm và các nội dung được trích xuất để phục vụ tìm kiếm ngữ cảnh. Bảng \texttt{media} được tách riêng để quản lý thông tin các tệp như ảnh, video và tài liệu, trong khi tệp thật được lưu ở dịch vụ lưu trữ đối tượng.
+
+Nhóm bảng thanh toán gồm \texttt{orders}, \texttt{order\_items}, \texttt{payments} và \texttt{enrollments}. Khi học sinh mua khóa học, hệ thống tạo đơn hàng, ghi nhận các khóa học trong đơn, theo dõi trạng thái thanh toán và tạo bản ghi ghi danh khi giao dịch hợp lệ. Cách tách này giúp hệ thống phân biệt rõ giữa ý định mua khóa học, giao dịch thanh toán và quyền truy cập khóa học của học sinh.
+
+Nhóm bảng bài kiểm tra được tổ chức quanh \texttt{assessments}. Mỗi bài kiểm tra được cấu hình cho một \texttt{assessment\_placement} cụ thể: công khai, thuộc khóa học hoặc gắn với bài học dạng quiz. Khi cần dùng lại nội dung đề ở vị trí khác, giáo viên tạo bản sao thay vì dùng chung một assessment, nhờ đó lịch mở bài, lượt làm và kết quả không bị trộn giữa các đợt. Nội dung đề được chia thành \texttt{assessment\_sections} và \texttt{assessment\_items}; các câu hỏi có thể lấy từ ngân hàng \texttt{questions} và \texttt{question\_options}. Bài làm của học sinh được lưu trong \texttt{submissions}, liên kết với bài kiểm tra, vị trí sử dụng và học sinh thực hiện.
+
+Nhóm bảng AI Tutor gồm \texttt{knowledge\_chunks}, \texttt{tutor\_chat\_sessions}, \texttt{tutor\_chat\_messages} và \texttt{tutor\_chat\_citations}. \texttt{knowledge\_chunks} lưu các đoạn kiến thức được tách từ mô tả bài học hoặc tài liệu bài học. Khi học sinh đặt câu hỏi, hệ thống tạo phiên chat, lưu các tin nhắn và ghi lại các đoạn kiến thức được sử dụng làm căn cứ trả lời. Thiết kế này giúp câu trả lời của AI Tutor gắn với học liệu nội bộ thay vì trả lời hoàn toàn độc lập với nội dung khóa học.
+
+\subsubsection{Danh sách các bảng dữ liệu}
+
+Bảng \ref{tab:database_tables} trình bày các bảng dữ liệu chính được sử dụng trong biểu đồ E-R. Các bảng kỹ thuật phụ như \texttt{user\_sessions}, \texttt{webhook\_events}, \texttt{idempotency\_keys}, \texttt{audit\_logs}, \texttt{notifications} và các bảng blog vẫn tồn tại trong cơ sở dữ liệu vật lý, nhưng không được đưa vào biểu đồ lõi để tránh làm biểu đồ quá phức tạp.
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.35\textwidth}|p{0.55\textwidth}|}
+\caption{Danh sách các bảng dữ liệu chính}
+\label{tab:database_tables}\\
+\hline
+\textbf{Tên bảng dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Danh sách các bảng dữ liệu chính - tiếp theo}\\
+\hline
+\textbf{Tên bảng dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+\path{users} & Lưu thông tin tài khoản người dùng, vai trò và trạng thái tài khoản. \\ \hline
+\path{media} & Lưu metadata của ảnh, video và tài liệu được tải lên hệ thống. \\ \hline
+\path{courses} & Lưu thông tin khóa học, giáo viên phụ trách, giá bán và trạng thái xuất bản. \\ \hline
+\path{chapters} & Lưu các chương thuộc một khóa học. \\ \hline
+\path{lessons} & Lưu các bài học thuộc từng chương, bao gồm bài học video, tài liệu hoặc quiz. \\ \hline
+\path{lesson_materials} & Lưu tài liệu bài học, nội dung trích xuất và trạng thái xử lý tài liệu. \\ \hline
+\path{enrollments} & Lưu quyền truy cập khóa học của học sinh sau khi mua, được cấp thủ công hoặc khóa học miễn phí. \\ \hline
+\path{lesson_progress} & Lưu tiến độ xem bài học của từng học sinh. \\ \hline
+\path{orders} & Lưu đơn mua khóa học của học sinh. \\ \hline
+\path{order_items} & Lưu các khóa học nằm trong một đơn hàng. \\ \hline
+\path{payments} & Lưu trạng thái thanh toán, mã giao dịch và thông tin thanh toán của đơn hàng. \\ \hline
+\path{topics} & Lưu chủ đề kiến thức dùng cho ngân hàng câu hỏi và thống kê kết quả học tập. \\ \hline
+\path{questions} & Lưu câu hỏi trong ngân hàng câu hỏi. \\ \hline
+\path{question_options} & Lưu các phương án trả lời của câu hỏi trắc nghiệm hoặc đúng/sai. \\ \hline
+\path{assessments} & Lưu thông tin chung của bài kiểm tra. \\ \hline
+\path{assessment_placements} & Lưu vị trí sử dụng bài kiểm tra, ví dụ công khai, trong khóa học hoặc trong bài học. \\ \hline
+\path{assessment_sections} & Lưu các phần trong một bài kiểm tra. \\ \hline
+\path{assessment_items} & Lưu các câu hỏi hoặc mục chấm điểm trong bài kiểm tra. \\ \hline
+\path{submissions} & Lưu lượt làm bài của học sinh. \\ \hline
+\path{knowledge_chunks} & Lưu các đoạn kiến thức được tách từ học liệu để phục vụ AI Tutor. \\ \hline
+\path{tutor_chat_sessions} & Lưu phiên hỏi đáp giữa học sinh và AI Tutor. \\ \hline
+\path{tutor_chat_messages} & Lưu từng tin nhắn trong phiên hỏi đáp. \\ \hline
+\path{tutor_chat_citations} & Lưu các đoạn kiến thức được trích dẫn trong câu trả lời của AI Tutor. \\ \hline
+\end{longtable}
+
+\subsubsection{Chi tiết các bảng dữ liệu chính}
+
+Các bảng dưới đây trình bày chi tiết một số bảng dữ liệu chính của hệ thống. Với các trường cho phép giá trị rỗng, kiểu dữ liệu được ký hiệu bằng dấu hỏi, ví dụ \texttt{uuid?} hoặc \texttt{timestamp?}. Với kiểu dữ liệu dạng enum, cột kiểu dữ liệu ghi tên enum kèm \texttt{(ENUM)} và phần mô tả nêu rõ các giá trị có thể nhận.
+
+{\small
+Bảng \texttt{users} lưu trữ thông tin đăng nhập, họ tên, vai trò và trạng thái tài khoản. Cấu trúc chi tiết của bảng này được trình bày tại Bảng \ref{tab:db_users}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{users}}
+\label{tab:db_users}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{users} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của người dùng. \\ \hline
+2 & \texttt{email} & \texttt{varchar(255)} & Email đăng nhập, không được trùng. \\ \hline
+3 & \texttt{password\_hash} & \texttt{text} & Mật khẩu đã được băm. \\ \hline
+4 & \texttt{full\_name} & \texttt{varchar(255)} & Họ tên hiển thị của người dùng. \\ \hline
+5 & \texttt{avatar\_media\_id} & \texttt{uuid?} & Ảnh đại diện, tham chiếu tới bảng \texttt{media}. \\ \hline
+6 & \texttt{role} & \texttt{user\_role (ENUM)} & Vai trò người dùng: \texttt{admin}, \texttt{teacher}, \texttt{student}. \\ \hline
+7 & \texttt{status} & \texttt{user\_status (ENUM)} & Trạng thái tài khoản: \texttt{pending\_verification}, \texttt{active}, \texttt{banned}. \\ \hline
+8 & \texttt{created\_at} & \texttt{timestamp} & Thời điểm tạo tài khoản. \\ \hline
+9 & \texttt{updated\_at} & \texttt{timestamp} & Thời điểm cập nhật tài khoản gần nhất. \\ \hline
+10 & \texttt{deleted\_at} & \texttt{timestamp?} & Thời điểm xóa mềm tài khoản, nếu có. \\ \hline
+\end{longtable}
+
+Để quản lý ảnh, video và tài liệu, hệ thống sử dụng bảng \texttt{media} với cấu trúc tại Bảng \ref{tab:db_media}. Bảng chỉ lưu metadata, trạng thái xử lý và liên kết tới người tải lên, không lưu trực tiếp nội dung tệp.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{media}}
+\label{tab:db_media}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{media} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của tệp media. \\ \hline
+2 & \texttt{type} & \texttt{media\_type (ENUM)} & Loại media: \texttt{image}, \texttt{video}, \texttt{document}. \\ \hline
+3 & \texttt{status} & \texttt{media\_status (ENUM)} & Trạng thái xử lý: \texttt{pending\_upload}, \texttt{uploaded}, \texttt{processing}, \texttt{ready}, \texttt{failed}, \texttt{deleted}. \\ \hline
+4 & \texttt{visibility} & \texttt{media\_visibility (ENUM)} & Phạm vi truy cập: \texttt{private}, \texttt{public}. \\ \hline
+5 & \texttt{original\_name} & \texttt{varchar(255)?} & Tên tệp gốc khi người dùng tải lên. \\ \hline
+6 & \texttt{object\_key} & \texttt{varchar(500)} & Khóa đối tượng trong dịch vụ lưu trữ. \\ \hline
+7 & \texttt{mime\_type} & \texttt{varchar(100)} & Kiểu MIME của tệp. \\ \hline
+8 & \texttt{size\_bytes} & \texttt{int} & Kích thước tệp theo byte. \\ \hline
+9 & \texttt{duration\_sec} & \texttt{int?} & Thời lượng video, nếu media là video. \\ \hline
+10 & \texttt{uploaded\_by\_id} & \texttt{uuid?} & Người tải tệp lên hệ thống. \\ \hline
+\end{longtable}
+
+Thông tin cốt lõi của khóa học như tên, môn học, giáo viên, giá bán, ảnh đại diện và trạng thái xuất bản được tổ chức trong bảng \texttt{courses} (Bảng \ref{tab:db_courses}).
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{courses}}
+\label{tab:db_courses}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{courses} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của khóa học. \\ \hline
+2 & \texttt{title} & \texttt{varchar(255)} & Tên khóa học. \\ \hline
+3 & \texttt{slug} & \texttt{varchar(255)} & Định danh khóa học trên URL. \\ \hline
+4 & \texttt{description} & \texttt{text?} & Mô tả khóa học. \\ \hline
+5 & \texttt{subject} & \texttt{subject (ENUM)} & Môn học: \texttt{math}, \texttt{physics}, \texttt{chemistry}, \texttt{literature}, \texttt{english}, \texttt{biology}, \texttt{history}, \texttt{geography}. \\ \hline
+6 & \texttt{grade} & \texttt{int} & Khối lớp mục tiêu của khóa học. \\ \hline
+7 & \texttt{teacher\_id} & \texttt{uuid} & Giáo viên phụ trách khóa học. \\ \hline
+8 & \texttt{thumbnail\_media\_id} & \texttt{uuid?} & Ảnh đại diện khóa học. \\ \hline
+9 & \texttt{price} & \texttt{int} & Giá gốc của khóa học. \\ \hline
+10 & \texttt{sale\_price} & \texttt{int?} & Giá khuyến mại, nếu có. \\ \hline
+11 & \texttt{status} & \texttt{course\_status (ENUM)} & Trạng thái khóa học: \texttt{draft}, \texttt{published}, \texttt{archived}. \\ \hline
+12 & \texttt{total\_lessons} & \texttt{int} & Tổng số bài học trong khóa học. \\ \hline
+\end{longtable}
+
+Các chương thuộc khóa học được sắp xếp trong bảng \texttt{chapters}. Những trường dùng để xác định khóa học, tiêu đề và thứ tự chương được liệt kê tại Bảng \ref{tab:db_chapters}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{chapters}}
+\label{tab:db_chapters}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{chapters} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của chương. \\ \hline
+2 & \texttt{course\_id} & \texttt{uuid} & Khóa học chứa chương. \\ \hline
+3 & \texttt{title} & \texttt{varchar(255)} & Tên chương. \\ \hline
+4 & \texttt{order\_index} & \texttt{int} & Thứ tự hiển thị của chương trong khóa học. \\ \hline
+5 & \texttt{deleted\_at} & \texttt{timestamp?} & Thời điểm xóa mềm chương, nếu có. \\ \hline
+\end{longtable}
+
+Mỗi bài học trong chương được biểu diễn bởi một bản ghi \texttt{lessons}, gồm loại bài, mô tả, video, thời lượng và quyền xem thử. Bảng \ref{tab:db_lessons} trình bày các trường tương ứng.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{lessons}}
+\label{tab:db_lessons}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{lessons} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của bài học. \\ \hline
+2 & \texttt{chapter\_id} & \texttt{uuid} & Chương chứa bài học. \\ \hline
+3 & \texttt{title} & \texttt{varchar(255)} & Tên bài học. \\ \hline
+4 & \texttt{type} & \texttt{lesson\_type (ENUM)} & Loại bài học: \texttt{video}, \texttt{quiz}, \texttt{document}. \\ \hline
+5 & \texttt{description} & \texttt{text?} & Mô tả bài học. \\ \hline
+6 & \texttt{video\_type} & \texttt{video\_type (ENUM)?} & Loại video: \texttt{system} hoặc \texttt{youtube}. \\ \hline
+7 & \texttt{video\_media\_id} & \texttt{uuid?} & Video bài giảng lưu trong hệ thống. \\ \hline
+8 & \texttt{youtube\_url} & \texttt{text?} & Đường dẫn YouTube nếu bài học dùng video ngoài. \\ \hline
+9 & \texttt{duration\_sec} & \texttt{int?} & Thời lượng bài học theo giây. \\ \hline
+10 & \texttt{allow\_preview} & \texttt{boolean} & Cho phép xem thử bài học hay không. \\ \hline
+11 & \texttt{order\_index} & \texttt{int} & Thứ tự hiển thị của bài học trong chương. \\ \hline
+\end{longtable}
+
+Học liệu tải lên, văn bản nhập trực tiếp và nội dung trích xuất từ tệp được lưu trong bảng \texttt{lesson\_materials} theo cấu trúc ở Bảng \ref{tab:db_lesson_materials}. Đây cũng là nguồn dữ liệu cho quá trình lập chỉ mục của AI Tutor.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{lesson\_materials}}
+\label{tab:db_lesson_materials}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{lesson\_materials} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của học liệu. \\ \hline
+2 & \texttt{course\_id} & \texttt{uuid} & Khóa học chứa học liệu. \\ \hline
+3 & \texttt{lesson\_id} & \texttt{uuid} & Bài học chứa học liệu. \\ \hline
+4 & \texttt{media\_id} & \texttt{uuid?} & Tệp tài liệu đính kèm. \\ \hline
+5 & \texttt{created\_by\_id} & \texttt{uuid?} & Người tạo học liệu. \\ \hline
+6 & \texttt{title} & \texttt{varchar(255)} & Tên học liệu. \\ \hline
+7 & \texttt{type} & \texttt{lesson\_material\_type (ENUM)} & Loại học liệu: \texttt{text}, \texttt{markdown}, \texttt{pdf}, \texttt{docx}, \texttt{pptx}. \\ \hline
+8 & \texttt{content\_text} & \texttt{text?} & Nội dung nhập trực tiếp nếu học liệu là văn bản. \\ \hline
+9 & \texttt{extracted\_text} & \texttt{text?} & Nội dung được trích xuất từ tệp tài liệu. \\ \hline
+10 & \texttt{processing\_status} & \texttt{lesson\_material\_processing\_status (ENUM)} & Trạng thái xử lý: \texttt{pending}, \texttt{processing}, \texttt{ready}, \texttt{failed}. \\ \hline
+11 & \texttt{is\_public} & \texttt{boolean} & Xác định học liệu có được hiển thị cho học sinh hay không. \\ \hline
+\end{longtable}
+
+Quyền truy cập khóa học của học sinh được lưu trong bảng \texttt{enrollments}. Cấu trúc tại Bảng \ref{tab:db_enrollments} cho phép phân biệt ghi danh qua thanh toán, cấp thủ công hoặc khóa học miễn phí.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{enrollments}}
+\label{tab:db_enrollments}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{enrollments} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của bản ghi ghi danh. \\ \hline
+2 & \texttt{user\_id} & \texttt{uuid} & Học sinh được cấp quyền học. \\ \hline
+3 & \texttt{course\_id} & \texttt{uuid} & Khóa học được cấp quyền truy cập. \\ \hline
+4 & \texttt{order\_id} & \texttt{uuid?} & Đơn hàng tạo ra quyền truy cập, nếu có. \\ \hline
+5 & \texttt{source} & \texttt{enrollment\_source (ENUM)} & Nguồn ghi danh: \texttt{payment}, \texttt{manual}, \texttt{free}. \\ \hline
+6 & \texttt{manual\_reason} & \texttt{varchar(500)?} & Lý do cấp quyền thủ công. \\ \hline
+7 & \texttt{enrolled\_at} & \texttt{timestamp} & Thời điểm học sinh được ghi danh vào khóa học. \\ \hline
+\end{longtable}
+
+Đơn mua khóa học được quản lý bằng bảng \texttt{orders}; các trường về mã đơn, tổng tiền, trạng thái và hạn thanh toán được trình bày tại Bảng \ref{tab:db_orders}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{orders}}
+\label{tab:db_orders}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{orders} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của đơn hàng. \\ \hline
+2 & \texttt{user\_id} & \texttt{uuid} & Học sinh tạo đơn hàng. \\ \hline
+3 & \texttt{order\_invoice\_number} & \texttt{varchar(50)} & Mã đơn hàng dùng để đối soát thanh toán. \\ \hline
+4 & \texttt{total\_amount} & \texttt{int} & Tổng số tiền của đơn hàng. \\ \hline
+5 & \texttt{currency} & \texttt{varchar(3)} & Đơn vị tiền tệ, mặc định là \texttt{VND}. \\ \hline
+6 & \texttt{status} & \texttt{order\_status (ENUM)} & Trạng thái đơn hàng: \texttt{pending}, \texttt{completed}, \texttt{cancelled}, \texttt{expired}. \\ \hline
+7 & \texttt{expires\_at} & \texttt{timestamp} & Thời điểm hết hạn thanh toán đơn hàng. \\ \hline
+\end{longtable}
+
+Thông tin thanh toán của đơn hàng được tách sang bảng \texttt{payments}, bao gồm nhà cung cấp, số tiền, mã giao dịch, đường dẫn QR và trạng thái. Chi tiết các trường được nêu tại Bảng \ref{tab:db_payments}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{payments}}
+\label{tab:db_payments}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{payments} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của bản ghi thanh toán. \\ \hline
+2 & \texttt{order\_id} & \texttt{uuid} & Đơn hàng tương ứng. \\ \hline
+3 & \texttt{provider} & \texttt{varchar(50)} & Nhà cung cấp thanh toán. \\ \hline
+4 & \texttt{amount} & \texttt{int} & Số tiền cần thanh toán. \\ \hline
+5 & \texttt{transaction\_ref} & \texttt{varchar(255)?} & Mã tham chiếu giao dịch. \\ \hline
+6 & \texttt{qr\_code\_url} & \texttt{varchar(1000)?} & Đường dẫn mã QR thanh toán. \\ \hline
+7 & \texttt{status} & \texttt{payment\_status (ENUM)} & Trạng thái thanh toán: \texttt{pending}, \texttt{success}, \texttt{failed}, \texttt{cancelled}, \texttt{late\_success}, \texttt{manual\_review}. \\ \hline
+8 & \texttt{paid\_at} & \texttt{timestamp?} & Thời điểm thanh toán thành công. \\ \hline
+\end{longtable}
+
+Các thuộc tính chung của bài kiểm tra được lưu trong bảng \texttt{assessments}, từ môn học, khối lớp đến cách chấm, thời gian làm bài và trạng thái hiển thị (Bảng \ref{tab:db_assessments}).
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{assessments}}
+\label{tab:db_assessments}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{assessments} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của bài kiểm tra. \\ \hline
+2 & \texttt{subject} & \texttt{subject (ENUM)} & Môn học của bài kiểm tra. \\ \hline
+3 & \texttt{grade} & \texttt{int} & Khối lớp mục tiêu. \\ \hline
+4 & \texttt{type} & \texttt{assessment\_type (ENUM)} & Loại bài kiểm tra: \texttt{quiz}, \texttt{exam}. \\ \hline
+5 & \texttt{title} & \texttt{text} & Tên bài kiểm tra. \\ \hline
+6 & \texttt{grading\_type} & \texttt{grading\_type (ENUM)} & Hình thức chấm điểm: \texttt{auto}, \texttt{manual}, \texttt{mixed}. \\ \hline
+7 & \texttt{time\_limit\_minutes} & \texttt{int?} & Thời gian làm bài nếu có giới hạn. \\ \hline
+8 & \texttt{visibility} & \texttt{assessment\_visibility (ENUM)} & Trạng thái hiển thị: \texttt{draft}, \texttt{published}, \texttt{hidden}. \\ \hline
+9 & \texttt{source\_media\_id} & \texttt{uuid?} & Tệp đề gốc nếu bài kiểm tra được import từ media. \\ \hline
+10 & \texttt{created\_by\_id} & \texttt{uuid?} & Người tạo bài kiểm tra. \\ \hline
+\end{longtable}
+
+Phạm vi phát hành bài kiểm tra được xác định bởi bảng \texttt{assessment\_placements}. Bảng \ref{tab:db_assessment_placements} thể hiện ba trường hợp sử dụng: công khai, trong khóa học hoặc tại một bài học cụ thể.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{assessment\_placements}}
+\label{tab:db_assessment_placements}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{assessment\_placements} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của vị trí sử dụng bài kiểm tra. \\ \hline
+2 & \texttt{assessment\_id} & \texttt{uuid} & Bài kiểm tra được đặt vào ngữ cảnh sử dụng. \\ \hline
+3 & \texttt{type} & \texttt{assessment\_placement\_type (ENUM)} & Ngữ cảnh sử dụng: \texttt{public\_practice}, \texttt{course}, \texttt{lesson}. \\ \hline
+4 & \texttt{course\_id} & \texttt{uuid?} & Khóa học chứa bài kiểm tra, nếu có. \\ \hline
+5 & \texttt{lesson\_id} & \texttt{uuid?} & Bài học chứa bài kiểm tra, nếu có. \\ \hline
+6 & \texttt{open\_time} & \texttt{timestamp?} & Thời điểm mở bài kiểm tra. \\ \hline
+7 & \texttt{close\_time} & \texttt{timestamp?} & Thời điểm đóng bài kiểm tra. \\ \hline
+8 & \texttt{max\_attempts} & \texttt{int?} & Số lần làm bài tối đa. \\ \hline
+9 & \texttt{slug} & \texttt{varchar(255)?} & Đường dẫn công khai nếu bài kiểm tra được phát hành dạng public. \\ \hline
+\end{longtable}
+
+Các câu hỏi của bài kiểm tra được sắp xếp trong bảng \texttt{assessment\_items}. Loại câu hỏi, thứ tự, điểm tối đa và liên kết tới ngân hàng câu hỏi được mô tả tại Bảng \ref{tab:db_assessment_items}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{assessment\_items}}
+\label{tab:db_assessment_items}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{assessment\_items} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của mục trong bài kiểm tra. \\ \hline
+2 & \texttt{assessment\_id} & \texttt{uuid} & Bài kiểm tra chứa mục này. \\ \hline
+3 & \texttt{section\_id} & \texttt{uuid} & Phần chứa mục này. \\ \hline
+4 & \texttt{item\_type} & \texttt{assessment\_item\_type (ENUM)} & Loại mục: \texttt{mcq}, \texttt{true\_false}, \texttt{numeric}, \texttt{essay}. \\ \hline
+5 & \texttt{question\_id} & \texttt{uuid?} & Câu hỏi trong ngân hàng câu hỏi nếu mục được liên kết với câu hỏi có sẵn. \\ \hline
+6 & \texttt{topic\_id} & \texttt{uuid?} & Chủ đề kiến thức liên quan. \\ \hline
+7 & \texttt{order\_index} & \texttt{int} & Thứ tự của mục trong phần. \\ \hline
+8 & \texttt{max\_score} & \texttt{decimal(8,2)} & Điểm tối đa của mục. \\ \hline
+\end{longtable}
+
+Mỗi lượt làm bài của học sinh tạo một bản ghi \texttt{submissions}. Bảng \ref{tab:db_submissions} trình bày các trường về bài kiểm tra, số lần làm, trạng thái, thời điểm và điểm số.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{submissions}}
+\label{tab:db_submissions}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{submissions} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của lượt làm bài. \\ \hline
+2 & \texttt{assessment\_id} & \texttt{uuid} & Bài kiểm tra được thực hiện. \\ \hline
+3 & \texttt{placement\_id} & \texttt{uuid?} & Vị trí sử dụng bài kiểm tra. \\ \hline
+4 & \texttt{student\_id} & \texttt{uuid} & Học sinh làm bài. \\ \hline
+5 & \texttt{attempt\_number} & \texttt{int} & Số thứ tự lần làm bài. \\ \hline
+6 & \texttt{status} & \texttt{submission\_status (ENUM)} & Trạng thái lượt làm: \texttt{doing}, \texttt{submitted}, \texttt{auto\_submitted}, \texttt{completed}. \\ \hline
+7 & \texttt{auto\_score} & \texttt{decimal(8,2)?} & Điểm tự động của các câu có thể chấm tự động. \\ \hline
+8 & \texttt{final\_score} & \texttt{decimal(8,2)?} & Điểm cuối cùng sau khi chấm. \\ \hline
+9 & \texttt{start\_time} & \texttt{timestamp} & Thời điểm bắt đầu làm bài. \\ \hline
+10 & \texttt{submit\_time} & \texttt{timestamp?} & Thời điểm nộp bài. \\ \hline
+\end{longtable}
+
+Các đoạn kiến thức tách từ mô tả bài học và học liệu được lưu trong bảng \texttt{knowledge\_chunks} để phục vụ truy xuất ngữ cảnh. Cấu trúc dữ liệu vector và thông tin nguồn được trình bày tại Bảng \ref{tab:db_knowledge_chunks}.
+
+\begin{longtable}{|p{0.06\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.29\textwidth}|}
+\caption{Chi tiết bảng \texttt{knowledge\_chunks}}
+\label{tab:db_knowledge_chunks}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endfirsthead
+\caption[]{Chi tiết bảng \texttt{knowledge\_chunks} - tiếp theo}\\
+\hline
+\textbf{STT} & \textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\endhead
+1 & \texttt{id} & \texttt{uuid} & Khóa chính của đoạn kiến thức. \\ \hline
+2 & \texttt{course\_id} & \texttt{uuid} & Khóa học chứa đoạn kiến thức. \\ \hline
+3 & \texttt{lesson\_id} & \texttt{uuid?} & Bài học chứa đoạn kiến thức. \\ \hline
+4 & \texttt{material\_id} & \texttt{uuid?} & Học liệu sinh ra đoạn kiến thức. \\ \hline
+5 & \texttt{source\_type} & \texttt{chunk\_source\_type (ENUM)} & Nguồn sinh đoạn kiến thức: \texttt{lesson\_description}, \texttt{material}. \\ \hline
+6 & \texttt{chunk\_index} & \texttt{int} & Thứ tự của đoạn kiến thức trong nguồn. \\ \hline
+7 & \texttt{content} & \texttt{text} & Nội dung đoạn kiến thức. \\ \hline
+8 & \texttt{content\_hash} & \texttt{varchar(128)} & Mã băm nội dung dùng để phát hiện trùng lặp hoặc thay đổi. \\ \hline
+9 & \texttt{indexed\_at} & \texttt{timestamp?} & Thời điểm đoạn kiến thức được lập chỉ mục. \\ \hline
+\end{longtable}
+}
+
+\section{Xây dựng ứng dụng}
+\subsection{Thư viện và công cụ sử dụng}
+Các công cụ, thư viện và dịch vụ được lựa chọn theo từng nhóm công việc của hệ thống, từ phát triển ứng dụng web, quản lý dữ liệu, xử lý media đến xây dựng AI Tutor. Bảng \ref{tab:tools_libraries} tổng hợp mục đích sử dụng và địa chỉ tài liệu của các thành phần chính.
+
+{\footnotesize
+\begin{longtable}{|p{0.25\textwidth}|p{0.30\textwidth}|p{0.28\textwidth}|}
+\caption{Danh sách thư viện và công cụ sử dụng}
+\label{tab:tools_libraries}\\
+\hline
+\textbf{Mục đích} & \textbf{Công cụ / Thư viện / API} & \textbf{Địa chỉ URL} \\ \hline
+\endfirsthead
+\caption[]{Danh sách thư viện và công cụ sử dụng - tiếp theo}\\
+\hline
+\textbf{Mục đích} & \textbf{Công cụ / Thư viện / API} & \textbf{Địa chỉ URL} \\ \hline
+\endhead
+IDE lập trình & Visual Studio Code & \url{https://code.visualstudio.com/} \\ \hline
+Môi trường chạy JavaScript & Node.js & \url{https://nodejs.org/} \\ \hline
+Quản lý gói JavaScript & npm & \url{https://www.npmjs.com/} \\ \hline
+Ngôn ngữ lập trình web & TypeScript & \url{https://www.typescriptlang.org/} \\ \hline
+Xây dựng REST API & Express & \url{https://expressjs.com/} \\ \hline
+Cơ sở dữ liệu quan hệ & PostgreSQL & \url{https://www.postgresql.org/} \\ \hline
+Tìm kiếm vector trong PostgreSQL & pgvector & \url{https://github.com/pgvector/pgvector} \\ \hline
+ORM và migration CSDL & Prisma, \texttt{@prisma/client} & \url{https://www.prisma.io/} \\ \hline
+Kiểm tra dữ liệu đầu vào & Zod & \url{https://zod.dev/} \\ \hline
+Xác thực người dùng & \texttt{jsonwebtoken}, \texttt{bcrypt} & \url{https://www.npmjs.com/package/jsonwebtoken} \\ \hline
+Tính toán điểm và tiền tệ & \texttt{decimal.js} & \url{https://mikemcl.github.io/decimal.js/} \\ \hline
+Tài liệu hóa API & \texttt{swagger-ui-express}, \texttt{yaml} & \url{https://swagger.io/specification/} \\ \hline
+Lưu trữ media & Cloudflare R2 & \url{https://developers.cloudflare.com/r2/} \\ \hline
+Kết nối kho lưu trữ tương thích S3 & AWS SDK for JavaScript & \url{https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/} \\ \hline
+Xử lý video bài giảng & FFmpeg, FFprobe & \url{https://ffmpeg.org/} \\ \hline
+Thanh toán khóa học & SePay Webhook/API & \url{https://sepay.vn/} \\ \hline
+Xây dựng ứng dụng web & Next.js & \url{https://nextjs.org/} \\ \hline
+Xây dựng giao diện & React, React DOM & \url{https://react.dev/} \\ \hline
+Thiết kế giao diện bằng lớp tiện ích & Tailwind CSS & \url{https://tailwindcss.com/} \\ \hline
+Quản lý dữ liệu từ máy chủ & TanStack Query & \url{https://tanstack.com/query/latest} \\ \hline
+Gọi HTTP API & Axios & \url{https://axios-http.com/} \\ \hline
+Quản lý trạng thái giao diện & Zustand & \url{https://zustand-demo.pmnd.rs/} \\ \hline
+Quản lý biểu mẫu & React Hook Form & \url{https://react-hook-form.com/} \\ \hline
+Soạn thảo nội dung giàu định dạng & Tiptap & \url{https://tiptap.dev/} \\ \hline
+Kéo thả cấu trúc khóa học & \texttt{@hello-pangea/dnd} & \url{https://github.com/hello-pangea/dnd} \\ \hline
+Phát video HLS trên trình duyệt & Video.js, \texttt{hls.js} & \url{https://videojs.com/} \\ \hline
+Biểu tượng và thông báo giao diện & Lucide, Sonner & \url{https://lucide.dev/} \\ \hline
+Ngôn ngữ của dịch vụ AI & Python & \url{https://www.python.org/} \\ \hline
+Xây dựng API cho dịch vụ AI & FastAPI, Uvicorn & \url{https://fastapi.tiangolo.com/} \\ \hline
+Kiểm tra dữ liệu dịch vụ AI & Pydantic & \url{https://docs.pydantic.dev/} \\ \hline
+Kết nối PostgreSQL từ Python & \texttt{psycopg2-binary} & \url{https://www.psycopg.org/} \\ \hline
+Chia nhỏ văn bản học liệu & \texttt{langchain-text-splitters} & \url{https://python.langchain.com/} \\ \hline
+Trích xuất nội dung tài liệu & \texttt{pypdf}, \texttt{python-docx}, \texttt{python-pptx} & \url{https://pypdf.readthedocs.io/} \\ \hline
+Kết nối mô hình ngôn ngữ & OpenAI Python SDK & \url{https://github.com/openai/openai-python} \\ \hline
+Kiểm tra chất lượng mã nguồn & ESLint, Prettier & \url{https://eslint.org/} \\ \hline
+Chạy máy chủ khi phát triển & Nodemon, TSX & \url{https://github.com/remy/nodemon} \\ \hline
+\end{longtable}
+}
+
+\subsection{Kết quả đạt được}
+\label{subsection:4.3.2}
+
+Sau quá trình thiết kế và phát triển, đồ án đã xây dựng được ba khối phần mềm chính gồm ứng dụng phía máy chủ, ứng dụng giao diện và dịch vụ AI. Ứng dụng phía máy chủ xử lý các nghiệp vụ cốt lõi như xác thực, quản lý khóa học, học tập, bài kiểm tra, đơn hàng, thanh toán, media, blog và tutor. Ứng dụng giao diện cung cấp các màn hình dành cho khách truy cập, học sinh, giáo viên và quản trị viên. Dịch vụ AI đảm nhận việc xử lý tài liệu học tập, tạo embedding, truy xuất ngữ cảnh và trả lời câu hỏi theo nội dung bài học.
+
+Về mặt dữ liệu, hệ thống đã xây dựng lược đồ PostgreSQL gồm 42 model và 33 enum trong Prisma schema. Cấu trúc dữ liệu này bao phủ các nhóm bảng chính như người dùng, phiên đăng nhập, khóa học, chương, bài học, học liệu, tiến độ học tập, bài kiểm tra, bài làm, đơn hàng, giao dịch thanh toán, media, blog, thông báo và dữ liệu phục vụ RAG. Cách tổ chức này giúp hệ thống không chỉ lưu trữ nội dung khóa học mà còn ghi nhận được các trạng thái vận hành quan trọng như thanh toán, quyền truy cập, tiến độ học tập và lịch sử hỏi đáp.
+
+Về mặt mã nguồn, backend được tổ chức thành mười module chính gồm \texttt{auth}, \texttt{users}, \texttt{courses}, \texttt{assessments}, \texttt{enrollments}, \texttt{media}, \texttt{orders}, \texttt{payments}, \texttt{tutor} và \texttt{blogs}. Frontend được chia theo các nhóm chức năng như \texttt{admin}, \texttt{assessments}, \texttt{auth}, \texttt{blog}, \texttt{courses}, \texttt{landing}, \texttt{media}, \texttt{orders}, \texttt{payments} và \texttt{users}. Python AI Service có các tệp xử lý chính cho API, kết nối CSDL, nạp tài liệu, đánh chỉ mục tri thức, truy xuất RAG và đánh giá chất lượng truy xuất.
+
+Các số liệu thống kê trong Bảng \ref{table:thong_ke_ma_nguon} được lấy từ mã nguồn của dự án, không tính thư mục thư viện ngoài như \texttt{node\_modules}, thư mục build hoặc môi trường ảo Python. Các số liệu này phản ánh quy mô mã nguồn của ba thành phần trong hệ thống.
+
+\begin{table}[H]
+\centering
+\caption{Thống kê quy mô mã nguồn của hệ thống}
+\label{table:thong_ke_ma_nguon}
+\small
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{|p{5.6cm}|c|c|c|}
+\hline
+\textbf{Thông tin} & \textbf{Frontend} & \textbf{Backend} & \textbf{AI Service} \\ \hline
+Số tệp mã nguồn & 246 & 290 & 10 \\ \hline
+Số dòng mã nguồn & 35.066 & 26.858 & 1.031 \\ \hline
+Số nhóm chức năng chính & 11 & 11 & 6 \\ \hline
+Dung lượng mã nguồn & 1,30 MB & 0,79 MB & 0,036 MB \\ \hline
+\end{tabular}
+\end{table}
+
+Các số liệu được đếm tại thời điểm hoàn thiện báo cáo trên các tệp mã nguồn thuộc thư mục \texttt{src} (và các tệp Python của AI Service), không gồm thư viện cài đặt, tệp build và tài nguyên nhị phân. Frontend có số dòng lớn nhất do gồm nhiều màn hình, form và trạng thái hiển thị; backend có nhiều tệp hơn do tách module, service, repository, DTO, validator và kiểm thử. Dịch vụ AI nhỏ hơn vì tập trung vào ingest tài liệu, truy xuất ngữ cảnh, sinh câu trả lời và đánh giá RAG.
+
+
+\subsection{Minh họa các chức năng chính}
+\label{subsection:4.3.3}
+
+Phần này minh họa một số màn hình thể hiện rõ các luồng nghiệp vụ quan trọng của hệ thống. Các ảnh được chụp trên bộ dữ liệu thử nghiệm, trong đó thông tin đơn hàng, giao dịch và học liệu được liên kết xuyên suốt để làm rõ cách hệ thống vận hành từ phía học sinh đến phía quản trị.
+
+\subsubsection{Màn hình thanh toán khóa học}
+
+Màn hình thanh toán bằng chuyển khoản được trình bày trong Hình \ref{fig:ui_checkout_screen}. Khi học sinh mở trang, frontend lấy thông tin theo mã đơn hàng; nếu đơn đang chờ và chưa có lần thanh toán, hệ thống tạo lần thanh toán với một idempotency key được lưu theo phiên trình duyệt. Cách làm này hạn chế bản ghi trùng khi người dùng tải lại trang hoặc mở lại đường dẫn.
+
+Mã QR được tạo theo số tiền và nội dung chuyển khoản là mã hóa đơn, vì vậy mỗi đơn hàng có thông tin thanh toán riêng. Giao diện hiển thị đồng hồ đếm ngược, trạng thái đối soát và cho phép sao chép nội dung chuyển khoản để giảm sai sót khi nhập mã. Trang thanh toán tự tải lại thông tin đơn hàng theo chu kỳ; khi webhook từ SePay được đối chiếu thành công và backend hoàn tất đơn hàng kèm ghi danh khóa học, trạng thái đơn hàng chuyển sang \texttt{completed} và giao diện điều hướng học sinh sang trang thanh toán thành công.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{Hinhve/ui_checkout_screen.png}
+    \caption{Màn hình thanh toán khóa học bằng mã QR}
+    \label{fig:ui_checkout_screen}
+\end{figure}
+
+\subsubsection{Không gian học tập và AI Tutor}
+
+Không gian học tập trong Hình \ref{fig:ui_learning_ai_workspace} gồm danh sách bài học ở bên trái, video và học liệu ở giữa, cùng AI Tutor ở bên phải. Khi học sinh mở bài, backend kiểm tra quyền ghi danh trước khi trả về nội dung. Với video HLS, trình phát chỉ yêu cầu playlist và các segment cần thiết; mỗi yêu cầu đều được kiểm tra quyền trước khi backend lấy tệp từ Cloudflare R2.
+
+Giao diện cũng ghi nhận tiến độ khi học sinh xem, tạm dừng hoặc tua video; dữ liệu này được lưu thành tiến độ bài học và tổng hợp lại ở mức khóa học. AI Tutor nhận câu hỏi trong đúng ngữ cảnh bài học đang mở. Sau khi kiểm tra phiên chat và quyền học, hệ thống chỉ truy xuất các chunk thuộc bài học đó, trả lời kèm nguồn trích dẫn và lưu lại lịch sử trao đổi. Vì vậy, khung chat không phải chatbot độc lập mà gắn trực tiếp với bài học học sinh đang theo dõi.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth,height=0.78\textheight,keepaspectratio]{Hinhve/ui_learning_ai_workspace.png}
+    \caption{Không gian học tập tích hợp video, học liệu và AI Tutor}
+    \label{fig:ui_learning_ai_workspace}
+\end{figure}
+
+\subsubsection{Trình xây dựng cấu trúc khóa học}
+
+Màn hình xây dựng chương trình học trong Hình \ref{fig:ui_course_builder} tổ chức khóa học theo chương và bài học. Mỗi chương có thể thu gọn, thêm bài, sửa hoặc xóa; từng bài học hiển thị loại nội dung và thời lượng. Trạng thái nháp cho biết nội dung chưa được công khai cho học sinh.
+
+Việc thay đổi thứ tự được thực hiện bằng thao tác kéo thả của thư viện \texttt{@hello-pangea/dnd}. Sau khi người dùng thả một chương hoặc bài học vào vị trí mới, frontend tính lại \texttt{orderIndex}, cập nhật ngay danh sách đang hiển thị và gửi danh sách mã chương hoặc bài học theo thứ tự mới đến backend để lưu. Hệ thống chỉ cho phép đổi thứ tự bài học trong cùng một chương; nếu kéo sang chương khác, giao diện thông báo giới hạn này thay vì tự thay đổi cấu trúc ngoài ý muốn. Khi có yêu cầu đang lưu, thao tác kéo thả được tạm khóa để tránh xung đột thứ tự.
+
+\begin{figure}[htbp]
+    \centering
+\includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{Hinhve/ui_course_builder.png}
+    \caption{Màn hình xây dựng cấu trúc khóa học}
+    \label{fig:ui_course_builder}
+\end{figure}
+
+\subsubsection{Trình xây dựng bài kiểm tra}
+
+Màn hình xây dựng bài kiểm tra dạng đề PDF được trình bày trong Hình \ref{fig:ui_assessment_builder}. Tài liệu nguồn nằm bên trái để đối chiếu; phiếu đáp án bên phải hỗ trợ thêm câu hỏi, chọn đáp án đúng, gán chuyên đề, độ khó và điểm. Người quản lý có thể nhập đáp án mà không phải chuyển qua lại giữa nhiều màn hình.
+
+Khi tạo bài kiểm tra, hệ thống lưu đề nháp, các phần đề, câu hỏi và vị trí sử dụng riêng. Người quản lý có thể thiết lập bài kiểm tra công khai, gắn với khóa học hoặc gắn với một bài học dạng quiz, đồng thời đặt thời gian mở - đóng và số lượt làm. Trước khi xuất bản, backend kiểm tra cấu trúc đề và cấu hình sử dụng. Sau khi đã có lượt nộp, nội dung câu hỏi được khóa để không làm thay đổi đáp án hoặc điểm của các bài làm đã tồn tại.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{Hinhve/ui_assessment_builder.png}
+    \caption{Màn hình xây dựng bài kiểm tra từ đề PDF}
+    \label{fig:ui_assessment_builder}
+\end{figure}
+
+\subsubsection{Quản lý đơn hàng và quyền học}
+
+Màn hình quản lý đơn hàng trong Hình \ref{fig:ui_order_management} hỗ trợ tìm theo mã hóa đơn hoặc email và lọc theo trạng thái, cổng thanh toán hoặc thời gian tạo. Phần chi tiết hiển thị khóa học đã mua, lịch sử thanh toán, giao dịch ngân hàng đã khớp và các bản ghi ghi danh.
+
+Thiết kế này giúp việc cấp quyền học có thể được kiểm tra từ cùng một màn hình. Với giao dịch hợp lệ, backend cập nhật trạng thái thanh toán, hoàn tất đơn hàng và tạo ghi danh trong một transaction. Nếu giao dịch ở trạng thái cần đối soát thủ công, hệ thống vẫn lưu đầy đủ lịch sử nhưng không tự cấp quyền học. Nhờ đó, người quản trị có thể phân biệt rõ đơn đã hoàn thành, đơn đang chờ thanh toán và các trường hợp cần kiểm tra thêm.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{Hinhve/ui_order_management.png}
+    \caption{Màn hình quản lý đơn hàng, thanh toán và quyền học}
+    \label{fig:ui_order_management}
+\end{figure}
+
+\subsubsection{Quản lý giao dịch và đối soát webhook}
+
+Màn hình kiểm tra giao dịch webhook trong Hình \ref{fig:ui_transaction_management} cho phép lọc theo mã hóa đơn, mã tham chiếu ngân hàng và khoảng thời gian. Chi tiết giao dịch gồm payload gốc từ nhà cung cấp, dữ liệu đã chuẩn hóa, trạng thái đối soát, đơn hàng liên kết và lần thanh toán tương ứng.
+
+Các trạng thái \texttt{matched}, \texttt{unmatched}, \texttt{manual\_review} và \texttt{ignored} phân biệt các trường hợp thiếu mã hóa đơn, sai số tiền, đơn hàng hết hạn hoặc giao dịch chi tiền. Việc lưu cả payload và kết quả đối soát cung cấp căn cứ kiểm tra quyết định cấp quyền; mã sự kiện từ nhà cung cấp giúp backend phát hiện webhook gửi lặp và tránh tạo ghi danh trùng.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{Hinhve/ui_transaction_management.png}
+    \caption{Màn hình quản lý giao dịch và đối soát webhook thanh toán}
+    \label{fig:ui_transaction_management}
+\end{figure}
+
+
+\section{Kiểm thử}
+Phần này kết hợp kiểm thử hộp đen các luồng người dùng với kiểm tra tự động ở mức mã nguồn. Các ca kiểm thử chức năng bao phủ xác thực, mua và cấp quyền khóa học, học bài, AI Tutor, theo dõi học viên và bài kiểm tra. Mỗi ca nêu thao tác, kết quả mong đợi và kết quả thực tế quan sát trong môi trường phát triển; các kiểm tra tự động được dùng để xác nhận thêm các quy tắc khó quan sát chỉ qua giao diện.
+
+\subsection{Kiểm thử chức năng đăng nhập}
+
+Chức năng đăng nhập là điểm vào của các tác nhân đã có tài khoản trong hệ thống. Bảng \ref{tab:test_login} trình bày các test case cho chức năng đăng nhập, bao gồm luồng đăng nhập thành công, dữ liệu không hợp lệ và kiểm soát truy cập với người dùng chưa xác thực.
+
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|p{0.10\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.25\textwidth}|p{0.08\textwidth}|}
+\caption{Test case cho chức năng đăng nhập}
+\label{tab:test_login}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endfirsthead
+\multicolumn{5}{c}{\textit{Bảng \ref{tab:test_login} - Tiếp trang trước}}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endhead
+TC001 & Đăng nhập thành công với tài khoản hợp lệ & Nhập đúng email và mật khẩu của học sinh, sau đó nhấn đăng nhập. & Hệ thống xác thực thành công, lưu phiên đăng nhập và chuyển người dùng vào khu vực học tập. & Đạt \\ \hline
+TC002 & Kiểm tra đăng nhập sai mật khẩu & Nhập email hợp lệ nhưng mật khẩu không đúng. & Hệ thống từ chối đăng nhập và hiển thị thông báo lỗi phù hợp, không tạo phiên đăng nhập. & Đạt \\ \hline
+TC003 & Kiểm tra định dạng email & Nhập email sai định dạng và mật khẩu bất kỳ. & Form báo lỗi dữ liệu đầu vào, request không được gửi hoặc bị backend từ chối theo schema kiểm tra dữ liệu. & Đạt \\ \hline
+TC004 & Kiểm tra truy cập trang cần đăng nhập & Truy cập trực tiếp trang học tập khi chưa có phiên đăng nhập hợp lệ. & Hệ thống không cho truy cập nội dung riêng tư và chuyển người dùng về trang đăng nhập. & Đạt \\ \hline
+\end{longtable}
+\normalsize
+
+\subsection{Kiểm thử chức năng mua khóa học}
+
+Chức năng mua khóa học kết hợp nhiều bước gồm chọn khóa học, tạo đơn hàng, hiển thị mã VietQR, tiếp nhận webhook thanh toán và tạo bản ghi ghi danh. Bảng \ref{tab:test_purchase} trình bày các test case cho chức năng này.
+
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|p{0.10\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.25\textwidth}|p{0.08\textwidth}|}
+\caption{Test case cho chức năng mua khóa học}
+\label{tab:test_purchase}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endfirsthead
+\multicolumn{5}{c}{\textit{Bảng \ref{tab:test_purchase} - Tiếp trang trước}}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endhead
+TC005 & Tạo đơn hàng mua khóa học & Học sinh chọn một khóa học chưa ghi danh và xác nhận mua. & Hệ thống tạo đơn hàng trạng thái \texttt{pending}, sinh mã hóa đơn và tạo thông tin thanh toán. & Đạt \\ \hline
+TC006 & Hiển thị mã thanh toán VietQR & Mở màn hình thanh toán của đơn hàng đang chờ thanh toán. & Hệ thống hiển thị đúng số tiền, mã đơn hàng và mã QR tương ứng với thông tin thanh toán. & Đạt \\ \hline
+TC007 & Xử lý webhook thanh toán hợp lệ & Gửi webhook giao dịch tiền vào có mã đơn hàng, số tiền và đơn vị tiền tệ khớp với đơn hàng. & Hệ thống cập nhật đơn hàng sang \texttt{completed}, đánh dấu giao dịch \texttt{matched} và tạo bản ghi \texttt{enrollments}. & Đạt \\ \hline
+TC008 & Xử lý webhook thiếu mã đơn hàng & Gửi webhook giao dịch tiền vào nhưng không có mã đơn hàng trong nội dung giao dịch. & Hệ thống không cấp quyền học tự động, lưu giao dịch ở trạng thái cần đối soát thủ công. & Đạt \\ \hline
+TC009 & Ngăn mua lại khóa học đã ghi danh & Học sinh đã có quyền học tiếp tục tạo đơn hàng cho cùng khóa học. & Hệ thống từ chối thao tác mua lại hoặc không tạo thêm quyền học trùng lặp. & Đạt \\ \hline
+\end{longtable}
+\normalsize
+
+\subsection{Kiểm thử chức năng học bài và hỏi AI}
+
+Chức năng học bài và hỏi AI là luồng trải nghiệm chính của học sinh sau khi đã mua khóa học. Bảng \ref{tab:test_learning_ai} trình bày các test case cho chức năng này, tập trung vào quyền truy cập bài học, phát video HLS, xem tài liệu và hỏi đáp theo học liệu.
+
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|p{0.10\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.25\textwidth}|p{0.08\textwidth}|}
+\caption{Test case cho chức năng học bài và hỏi AI}
+\label{tab:test_learning_ai}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endfirsthead
+\multicolumn{5}{c}{\textit{Bảng \ref{tab:test_learning_ai} - Tiếp trang trước}}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endhead
+TC010 & Truy cập bài học đã có quyền học & Học sinh đã ghi danh mở một bài học trong khóa học. & Hệ thống hiển thị màn hình học tập gồm danh sách bài học, video hoặc nội dung bài học, mô tả và tài liệu. & Đạt \\ \hline
+TC011 & Chặn truy cập bài học chưa có quyền & Học sinh chưa ghi danh truy cập trực tiếp URL của bài học không cho xem thử. & Hệ thống từ chối truy cập nội dung học tập và yêu cầu mua hoặc đăng ký khóa học. & Đạt \\ \hline
+TC012 & Phát video bài giảng HLS & Học sinh mở bài học có video đã xử lý HLS. & Trình phát tải được playlist \texttt{index.m3u8}, phát các segment video và không cho truy cập tên tệp HLS sai định dạng. & Đạt \\ \hline
+TC013 & Hỏi AI khi có học liệu liên quan & Học sinh đặt câu hỏi về nội dung bài học đã có tài liệu được đánh chỉ mục. & AI trả lời bằng tiếng Việt, sử dụng ngữ cảnh truy xuất được và trả về citation tương ứng. & Đạt \\ \hline
+TC014 & Hỏi AI khi bài học chưa có tài liệu & Học sinh hỏi về nội dung bài học hiện tại nhưng bài học chưa có tài liệu học tập. & AI không tự bịa nội dung, phản hồi rằng tài liệu hiện tại chưa đủ để trả lời chắc chắn. & Đạt \\ \hline
+\end{longtable}
+\normalsize
+
+\subsection{Kiểm thử theo dõi học viên và bài kiểm tra}
+
+Nhóm kiểm thử này đối chiếu trực tiếp với yêu cầu quản lý học tập: giáo viên phải nhận biết học sinh nào chưa học, chưa nộp bài hoặc có bài tự luận chờ chấm, thay vì chỉ quản lý nội dung khóa học.
+
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{|p{0.10\textwidth}|p{0.23\textwidth}|p{0.24\textwidth}|p{0.25\textwidth}|p{0.08\textwidth}|}
+\caption{Test case theo dõi học viên và bài kiểm tra}
+\label{tab:test_progress_assessment}\\
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endfirsthead
+\hline
+\textbf{Mã} & \textbf{Mục tiêu kiểm thử} & \textbf{Input/Thao tác} & \textbf{Kết quả mong đợi} & \textbf{Kết quả} \\ \hline
+\endhead
+TC015 & Xem danh sách học viên của khóa học & Mở tab Quản lý học viên của một khóa học có nhiều bản ghi ghi danh. & Hiển thị đúng học viên, trạng thái ghi danh và phần trăm tiến độ tổng quan. & Đạt \\ \hline
+TC016 & Xem chi tiết tiến độ một học sinh & Chọn một học sinh trong danh sách. & Hiển thị curriculum theo thứ tự chương-bài, bài đã hoàn thành, chưa hoàn thành và tiến độ tổng. & Đạt \\ \hline
+TC017 & Phân biệt chưa nộp bài & Mở kết quả một bài kiểm tra có học sinh ghi danh nhưng không có submission. & Học sinh được hiển thị ở trạng thái chưa nộp, không bị bỏ khỏi danh sách. & Đạt \\ \hline
+TC018 & Tổng hợp nhiều lượt làm & Học sinh có nhiều submission đã hoàn tất cho cùng assessment. & Bảng tổng hợp hiển thị số lượt làm và điểm cao nhất; chi tiết vẫn giữ từng lượt. & Đạt \\ \hline
+TC019 & Chấm bài tự luận & Mở submission có câu tự luận ở trạng thái chờ chấm, nhập điểm và hoàn tất. & Điểm cuối cùng được cập nhật và học sinh nhận thông báo kết quả. & Đạt \\ \hline
+TC020 & Không lộ đáp án trước khi hoàn tất & Mở preview hoặc kết quả của submission đang làm/chờ chấm. & API không trả đáp án đúng và giải thích; dữ liệu này chỉ xuất hiện sau khi hoàn tất chấm. & Đạt \\ \hline
+TC021 & Tự nộp khi hết hạn phía máy chủ & Để một submission ở trạng thái đang làm vượt quá hạn cá nhân hoặc giờ đóng bài. & Backend chuyển bài sang tự nộp; các câu có đáp án xác định được chấm tự động, câu tự luận chuyển chờ chấm. & Đạt \\ \hline
+TC022 & Khôi phục lượt làm đang dở & Đóng trang rồi mở lại bài khi submission còn hiệu lực. & Hệ thống trả đúng submission cũ, đáp án đã lưu và thời gian còn lại, không tạo lượt mới. & Đạt \\ \hline
+\end{longtable}
+\normalsize
+
+\subsection{Đánh giá định lượng AI Tutor RAG}
+\label{subsection:rag_quantitative_evaluation}
+
+Đánh giá định lượng được thực hiện trên khóa HSG ``HẠT'' sau khi khóa học có hai bài học và bốn tài liệu đã xử lý thành công. Bài 1 có 39 chunk, Bài 2 có 46 chunk, tổng cộng 85 chunk từ slide, tài liệu đọc và transcript bài giảng. Phạm vi truy xuất được giới hạn theo \texttt{lessonId}: khi học sinh đang ở bài nào, hệ thống chỉ xét các chunk thuộc bài đó. Cấu hình đánh giá dùng mô hình \texttt{text-embedding-3-small} để tạo embedding, \texttt{gpt-4.1-mini} để sinh câu trả lời, ngưỡng tương đồng 0,45 và tối đa 6 đoạn ngữ cảnh.
+
+Bộ dữ liệu gồm 25 câu hỏi: 15 câu có đáp án tập trung trong một tài liệu, 5 câu cần tổng hợp từ hai tài liệu trong cùng bài học và 5 câu không có đáp án trong học liệu. Với 20 câu có đáp án, các chunk đúng, tài liệu đúng và câu trả lời tham chiếu được đối chiếu thủ công từ corpus trước khi chạy đánh giá. Năm câu còn lại kiểm tra khả năng từ chối thay vì dùng kiến thức nền của mô hình để suy đoán. Mỗi câu được chạy với lịch sử hội thoại rỗng nhằm tránh ảnh hưởng từ các lượt hỏi trước.
+
+Ngoài Recall@6 và MRR đã trình bày ở Chương 5, phép đo còn sử dụng Source Recall@6, tức tỷ lệ tài liệu đúng xuất hiện trong tối đa 6 kết quả truy xuất. Tỷ lệ lấy đủ nguồn cho biết hệ thống có tìm được toàn bộ tài liệu cần thiết hay không; tỷ lệ từ chối đo số câu ngoài tài liệu được nhận diện đúng. Token F1 đo mức trùng khớp từ vựng với đáp án tham chiếu, còn tỷ lệ bao phủ citation đo phần câu trong câu trả lời có ký hiệu nguồn.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả đánh giá định lượng AI Tutor RAG}
+\label{tab:rag_quantitative_results}
+\small
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{|p{5.8cm}|p{2.2cm}|p{4.2cm}|}
+\hline
+\textbf{Chỉ số} & \textbf{Kết quả} & \textbf{Ý nghĩa} \\ \hline
+Recall@6 theo chunk & 0,771 & Mức thu hồi các chunk đúng trong top 6 \\ \hline
+Hit rate truy xuất & 90,0\% (18/20) & Câu có ít nhất một chunk đúng \\ \hline
+MRR & 0,746 & Vị trí trung bình của chunk đúng đầu tiên \\ \hline
+Source Recall@6 & 0,875 & Mức thu hồi các tài liệu nguồn đúng \\ \hline
+Lấy đủ toàn bộ nguồn & 80,0\% (16/20) & Câu lấy được mọi tài liệu cần thiết \\ \hline
+Tỷ lệ trả lời câu có đáp án & 85,0\% (17/20) & Câu có đáp án không bị từ chối \\ \hline
+Độ chính xác từ chối & 100\% (5/5) & Câu ngoài tài liệu được từ chối đúng \\ \hline
+Token F1 & 0,532 & Mức trùng khớp từ vựng với đáp án tham chiếu \\ \hline
+Bao phủ citation theo câu & 0,323 & Tỷ lệ câu trong câu trả lời có gắn nguồn \\ \hline
+Độ trễ trung bình & 3,99 giây & Thời gian truy xuất và sinh câu trả lời \\ \hline
+Lỗi gọi mô hình & 0/25 & Số mẫu không hoàn tất do lỗi provider \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Kết quả truy xuất theo nhóm câu hỏi}
+\label{tab:rag_results_by_category}
+\small
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{|p{6.2cm}|c|c|}
+\hline
+\textbf{Nhóm câu hỏi} & \textbf{Recall@6} & \textbf{Source Recall@6} \\ \hline
+Một tài liệu & 0,811 & 0,933 \\ \hline
+Nhiều tài liệu trong cùng bài & 0,650 & 0,700 \\ \hline
+\end{tabular}
+\end{table}
+
+Kết quả cho thấy RAG hoạt động tốt hơn khi đáp án tập trung trong một tài liệu. Với câu cần tổng hợp nhiều nguồn, top 6 có thể bị chiếm bởi các chunk tương tự của cùng một tài liệu nên chưa lấy đủ nguồn còn lại. Ba câu có đáp án nhưng hệ thống từ chối là \texttt{HAT-D07}, \texttt{HAT-D12} và \texttt{HAT-M05}; hai câu đầu không truy xuất được chunk chuẩn, câu cuối chỉ lấy được một phần nguồn cần tổng hợp. Ngược lại, cả 5 câu không có đáp án đều được từ chối, kể cả khi hệ thống lấy được đoạn gần chủ đề. Điều này cho thấy prompt kiểm tra bằng chứng trực tiếp đã hạn chế được việc mô hình tự bổ sung kiến thức ngoài học liệu.
+
+Token F1 bằng 0,532 không đồng nghĩa với độ chính xác ngữ nghĩa chỉ đạt 53,2\%, vì chỉ số này nhạy với cách diễn đạt. Tỷ lệ bao phủ citation 0,323 cho thấy mô hình đã trả nguồn nhưng chưa gắn citation đều vào mọi câu chứa thông tin. Hai điểm cần cải thiện tiếp theo là kết hợp truy xuất vector với từ khóa, đa dạng hóa tài liệu trong top-K hoặc bổ sung reranking, đồng thời kiểm soát chặt hơn vị trí gắn citation. Bộ dữ liệu và kết quả được lưu trong \texttt{rag\_benchmark\_hat.jsonl}, \texttt{rag\_evaluation\_hat\_retrieval.json} và \texttt{rag\_evaluation\_hat\_generation.json} để có thể chạy lại. Do corpus mới giới hạn ở một khóa học và hai bài học, kết quả này chỉ phản ánh bộ đánh giá nội bộ, chưa đại diện cho mọi môn học hoặc mọi dạng học liệu.
+
+\subsection{Kết quả kiểm tra tự động}
+
+\begin{table}[H]
+\centering
+\caption{Kết quả kiểm tra kỹ thuật trên mã nguồn}
+\label{tab:automated_verification}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{3.0cm}|p{5.6cm}|p{4.0cm}|}
+\hline
+\textbf{Thành phần} & \textbf{Lệnh/Phạm vi kiểm tra} & \textbf{Kết quả} \\ \hline
+Frontend & \texttt{npm run lint}; \texttt{npm run build} & Lint và build thành công \\ \hline
+Backend & \texttt{npm run lint}; \texttt{npm run build}; \texttt{npm test} & Lint, build thành công; 22/22 test đạt \\ \hline
+Cơ sở dữ liệu & \texttt{npx prisma validate} & Prisma schema hợp lệ \\ \hline
+Tài liệu API & Kiểm tra parse OpenAPI và toàn bộ \texttt{\$ref} & 83 path; không có tham chiếu lỗi \\ \hline
+AI Service & Kiểm thử evaluator; chạy benchmark 25 câu & 4/4 test đạt; hoàn tất 25/25 mẫu, không lỗi provider \\ \hline
+\end{tabular}
+\end{table}
+
+Tổng cộng, báo cáo trình bày 22 test case hộp đen cho năm nhóm chức năng, một benchmark RAG gồm 25 câu và các bước kiểm tra tự động cho các thành phần kỹ thuật. Kết quả này chứng minh các luồng chính hoạt động trong môi trường phát triển, nhưng chưa thay thế cho kiểm thử tải, kiểm thử bảo mật chuyên sâu và đánh giá chấp nhận với người dùng thật.
+
+\section{Triển khai}
+Hệ thống được triển khai trên Cloud Server của CloudFly, sử dụng Ubuntu 24.04 LTS, 2 vCPU, 3,8 GiB RAM, ổ đĩa 77 GiB và 2 GiB swap. Phần mềm được truy cập tại \url{https://hheducation.io.vn}; API được cung cấp tại \url{https://api.hheducation.io.vn}. Hai tên miền cùng trỏ tới địa chỉ IP của máy chủ và sử dụng chứng chỉ TLS do Let's Encrypt cấp.
+
+Các thành phần Next.js, Express, Python AI Service và PostgreSQL được đóng gói bằng Docker và vận hành bằng Docker Compose. Caddy tiếp nhận yêu cầu từ Internet và chuyển tiếp tới \textit{frontend} hoặc \textit{backend} theo tên miền. PostgreSQL và AI Service chỉ trao đổi dữ liệu trong mạng Docker. Ảnh, video HLS và tài liệu được lưu trên Cloudflare R2, còn volume PostgreSQL lưu dữ liệu nghiệp vụ và dữ liệu vector.
+
+Quá trình triển khai gồm bốn bước: (i) đóng gói mã nguồn thành ba image cho \textit{frontend}, \textit{backend} và AI Service; (ii) khởi tạo PostgreSQL trên volume mới và áp dụng 17 migration bằng Prisma; (iii) cấu hình riêng các biến môi trường về CSDL, JWT, R2, SePay và mô hình AI trên máy chủ; và (iv) khởi động các thành phần bằng Docker Compose trước khi Caddy tiếp nhận yêu cầu. Máy chủ chỉ cho phép kết nối SSH bằng khóa công khai và lưu lượng web qua HTTP/HTTPS.
+
+Sau khi triển khai, hệ thống được kiểm tra từ một máy tính bên ngoài VPS. Phép đo tải nhẹ gửi 100 yêu cầu cho mỗi địa chỉ với 10 luồng đồng thời. Thời gian trong Bảng \ref{tab:production_deployment_verification} là thời gian hoàn thành một yêu cầu HTTP, không bao gồm thời gian trình duyệt dựng giao diện.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả triển khai và đo thử trên môi trường public}
+\label{tab:production_deployment_verification}
+\small
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{|p{4.0cm}|p{8.6cm}|}
+\hline
+\textbf{Hạng mục} & \textbf{Kết quả quan sát} \\ \hline
+Truy cập công khai & Trang web và API cùng trả mã HTTP 200; chứng chỉ TLS được xác minh hợp lệ. \\ \hline
+Frontend & 100/100 yêu cầu thành công; thời gian trung bình 285,0 ms; P95 đạt 409,5 ms; thông lượng 33,6 yêu cầu/giây. \\ \hline
+API healthcheck & 100/100 yêu cầu thành công; thời gian trung bình 78,2 ms; P95 đạt 295,1 ms; thông lượng 123,3 yêu cầu/giây. \\ \hline
+Cơ sở dữ liệu & 17 migration được áp dụng thành công; lần khởi động lại không còn migration chờ xử lý. \\ \hline
+Đăng nhập & Tài khoản admin được tạo trên CSDL mới và đăng nhập qua địa chỉ HTTPS thành công. \\ \hline
+Sao lưu và phục hồi & Backup PostgreSQL được phục hồi vào CSDL tạm; số tài khoản sau phục hồi khớp với CSDL nguồn. \\ \hline
+Khởi động lại & Các container hoạt động trở lại, dữ liệu PostgreSQL và chứng chỉ HTTPS được giữ nguyên. \\ \hline
+\end{tabular}
+\end{table}
+
+Trong phép đo trên, hệ thống không ghi nhận yêu cầu lỗi. Kết quả này phản ánh hoạt động của hai endpoint với 10 luồng đồng thời, chưa phải giới hạn tải tối đa của toàn hệ thống. Môi trường hiện chưa có người dùng thật nên chưa có số liệu về số người truy cập hoặc phản hồi người dùng. PostgreSQL được sao lưu tự động hằng ngày; các bản sao được giữ trong bảy ngày.
+
+Chương này đã trình bày thiết kế, kết quả xây dựng, kiểm thử và quá trình triển khai hệ thống trên máy chủ công khai. Chương 5 tiếp tục phân tích các giải pháp kỹ thuật chính gồm RAG, kiểm soát làm bài, HLS và xử lý \textit{webhook} thanh toán.
+
+\end{document}

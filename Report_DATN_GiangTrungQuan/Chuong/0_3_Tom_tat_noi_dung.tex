@@ -1,0 +1,24 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{TÓM TẮT NỘI DUNG ĐỒ ÁN}}\\
+\end{center}
+\vspace{1cm}
+
+Sự phát triển của giáo dục trực tuyến tạo điều kiện cho giáo viên cá nhân và trung tâm luyện thi quy mô nhỏ số hóa hoạt động giảng dạy. Tuy nhiên, việc vận hành bằng nhiều công cụ rời rạc làm phân tán học liệu, tăng thao tác cấp quyền và gây khó khăn khi theo dõi tiến độ của từng học sinh. Các nền tảng phổ biến như Google Classroom, Moodle và Udemy giải quyết tốt những nhóm nhu cầu riêng, nhưng không đồng thời tối ưu cho mô hình cần tự vận hành khóa học có thu phí, quản lý học tập và hỏi đáp theo học liệu riêng trên cùng một hệ thống.
+
+Để khắc phục các hạn chế trên, đồ án xây dựng một hệ thống quản lý học tập (LMS) tập trung theo mô hình Client-Server. Hệ thống thống nhất dữ liệu khóa học, học liệu, quyền truy cập, tiến độ và kết quả đánh giá; đồng thời tích hợp các dịch vụ chuyên biệt cho xử lý media, thanh toán và hỏi đáp theo học liệu. Trong đó, kỹ thuật Sinh tăng cường truy xuất (Retrieval-Augmented Generation - RAG) được sử dụng như một chức năng hỗ trợ học sinh tự học, không phải trọng tâm duy nhất của sản phẩm.
+
+Giải pháp của đồ án là một nền tảng học tập trực tuyến tích hợp AI, hỗ trợ đồng thời quy trình quản trị của giáo viên và quá trình học của học sinh. Hệ thống sử dụng Next.js/React ở frontend, Node.js/Express ở backend, PostgreSQL kết hợp pgvector và một dịch vụ AI bằng Python. Các chức năng chính gồm tổ chức khóa học và học liệu, xử lý video HLS, theo dõi tiến độ từng học sinh, quản lý và chấm bài kiểm tra, thông báo nghiệp vụ, cùng luồng ghi danh tự động sau khi tiếp nhận webhook thanh toán.
+
+Đóng góp chính của đồ án là thiết kế và hiện thực một quy trình vận hành khép kín cho giáo viên hoặc trung tâm nhỏ: biên soạn và phân phối khóa học, bán và cấp quyền học, tổ chức học tập, theo dõi từng học sinh, giao và chấm bài kiểm tra. Các giải pháp RAG, HLS, kiểm soát lượt làm bài và xử lý webhook là những thành phần kỹ thuật hỗ trợ quy trình này. Sản phẩm đã được đóng gói bằng Docker và triển khai công khai qua HTTPS. Kết quả thử nghiệm cho thấy hệ thống vận hành ổn định, đáp ứng tốt các nhu cầu của giáo viên và học sinh trong mô hình tự vận hành khóa học trực tuyến có thu phí.
+
+\begin{flushright}
+Sinh viên thực hiện\\
+\begin{tabular}{@{}c@{}}
+\textit{(Giang Trung Quân)}\\
+\end{tabular}
+\end{flushright}
+
+\end{document}

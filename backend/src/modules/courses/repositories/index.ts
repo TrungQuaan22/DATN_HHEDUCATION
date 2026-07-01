@@ -1,0 +1,7 @@
+export { adminChapterRepository } from './admin-chapters.repository'
+export { adminCourseRepository } from './admin-courses.repository'
+export { adminCourseStudentRepository } from './admin-course-students.repository'
+export { adminLessonRepository } from './admin-lessons.repository'
+export { adminLessonMaterialRepository } from './admin-lesson-materials.repository'
+export { learningCourseRepository } from './learning.repository'
+export { publicCourseRepository } from './public.repository'

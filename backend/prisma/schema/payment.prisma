@@ -10,6 +10,8 @@ enum PaymentStatus {
   success
   failed
   cancelled
+  late_success
+  manual_review
 }
 
 enum WebhookStatus {
@@ -19,34 +21,45 @@ enum WebhookStatus {
   failed
 }
 
+enum PaymentTransactionDirection {
+  in
+  out
+}
+
+enum PaymentTransactionMatchStatus {
+  matched
+  unmatched
+  manual_review
+  ignored
+}
+
 model Order {
   id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId             String      @map("user_id") @db.Uuid
-  idempotencyKey     String      @map("idempotency_key") @db.VarChar(255)
   orderInvoiceNumber String      @unique @map("order_invoice_number") @db.VarChar(50)
-  totalAmount        Decimal     @map("total_amount") @db.Decimal(12, 2)
+  totalAmount        Int         @map("total_amount")
   currency           String      @default("VND") @db.VarChar(3)
   status             OrderStatus @default(pending)
   expiresAt          DateTime    @map("expires_at")
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
-  user        User         @relation(fields: [userId], references: [id])
-  items       OrderItem[]
-  payments    Payment[]
-  enrollments Enrollment[]
+  user                User                 @relation(fields: [userId], references: [id])
+  items               OrderItem[]
+  payments            Payment[]
+  paymentTransactions PaymentTransaction[]
+  enrollments         Enrollment[]
 
-  @@unique([userId, idempotencyKey])
   @@index([userId, createdAt])
   @@index([status, expiresAt])
   @@map("orders")
 }
 
 model OrderItem {
-  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId         String  @map("order_id") @db.Uuid
-  courseId        String  @map("course_id") @db.Uuid
-  priceAtPurchase Decimal @map("price_at_purchase") @db.Decimal(12, 2)
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String @map("order_id") @db.Uuid
+  courseId        String @map("course_id") @db.Uuid
+  priceAtPurchase Int    @map("price_at_purchase")
 
   order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id])
@@ -56,22 +69,59 @@ model OrderItem {
 }
 
 model Payment {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId        String        @map("order_id") @db.Uuid
-  provider       String        @db.VarChar(50)
-  amount         Decimal       @db.Decimal(12, 2)
-  currency       String        @default("VND") @db.VarChar(3)
-  rawPayload     Json?         @map("raw_payload")
-  transactionRef String        @unique @map("transaction_ref") @db.VarChar(255)
-  status         PaymentStatus @default(pending)
-  createdAt      DateTime      @default(now()) @map("created_at")
-  paidAt         DateTime?     @map("paid_at")
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId           String        @map("order_id") @db.Uuid
+  provider          String        @db.VarChar(50)
+  providerPaymentId String?       @map("provider_payment_id") @db.VarChar(255)
+  amount            Int
+  currency          String        @default("VND") @db.VarChar(3)
+  transactionRef    String?       @unique @map("transaction_ref") @db.VarChar(255)
+  checkoutUrl       String?       @map("checkout_url") @db.VarChar(1000)
+  qrCodeUrl         String?       @map("qr_code_url") @db.VarChar(1000)
+  expiresAt         DateTime?     @map("expires_at")
+  metadata          Json?
+  status            PaymentStatus @default(pending)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  paidAt            DateTime?     @map("paid_at")
 
-  order Order @relation(fields: [orderId], references: [id])
+  order        Order                @relation(fields: [orderId], references: [id])
+  transactions PaymentTransaction[]
 
   @@index([orderId])
   @@index([status])
+  @@index([provider, providerPaymentId])
+  @@index([expiresAt])
   @@map("payments")
+}
+
+model PaymentTransaction {
+  id                 String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId          String?                       @map("payment_id") @db.Uuid
+  orderId            String?                       @map("order_id") @db.Uuid
+  provider           String                        @db.VarChar(50)
+  providerEventId    String?                       @map("provider_event_id") @db.VarChar(255)
+  transactionRef     String?                       @map("transaction_ref") @db.VarChar(255)
+  orderInvoiceNumber String?                       @map("order_invoice_number") @db.VarChar(50)
+  amount             Int
+  currency           String                        @default("VND") @db.VarChar(3)
+  direction          PaymentTransactionDirection
+  transactionDate    DateTime?                     @map("transaction_date")
+  rawPayload         Json?                         @map("raw_payload")
+  matchStatus        PaymentTransactionMatchStatus @default(unmatched) @map("match_status")
+  metadata           Json?
+  createdAt          DateTime                      @default(now()) @map("created_at")
+
+  payment Payment? @relation(fields: [paymentId], references: [id])
+  order   Order?   @relation(fields: [orderId], references: [id])
+
+  @@unique([provider, providerEventId])
+  @@unique([provider, transactionRef])
+  @@index([orderId])
+  @@index([paymentId])
+  @@index([orderInvoiceNumber])
+  @@index([provider, createdAt])
+  @@index([matchStatus])
+  @@map("payment_transactions")
 }
 
 model WebhookEvent {
@@ -91,4 +141,23 @@ model WebhookEvent {
   @@index([status, nextRetryAt])
   @@index([provider, createdAt])
   @@map("webhook_events")
+}
+
+model IdempotencyKey {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scope        String    @db.VarChar(100)
+  key          String    @db.VarChar(255)
+  userId       String    @map("user_id") @db.Uuid
+  requestHash  String    @map("request_hash") @db.VarChar(128)
+  statusCode   Int?      @map("status_code")
+  responseBody Json?     @map("response_body")
+  processingAt DateTime? @map("processing_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  expiresAt    DateTime  @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }

@@ -3,22 +3,54 @@ enum BlogPostStatus {
   published
 }
 
+model BlogCategory {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String     @unique @db.VarChar(100)
+  slug      String     @unique @db.VarChar(100)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  posts     BlogPost[]
+
+  @@map("blog_categories")
+}
+
 model BlogPost {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String         @db.VarChar(255)
-  slug         String         @unique @db.VarChar(255)
-  content      Json
-  authorId     String         @map("author_id") @db.Uuid
-  thumbnailUrl String?        @map("thumbnail_url")
-  status       BlogPostStatus @default(draft)
-  publishedAt  DateTime?      @map("published_at")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-  deletedAt    DateTime?      @map("deleted_at")
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title              String         @db.VarChar(255)
+  slug               String         @unique @db.VarChar(255)
+  excerpt            String?        @db.VarChar(500)
+  categoryId         String?        @map("category_id") @db.Uuid
+  tags               String[]       @default([])
+  content            Json
+  authorId           String         @map("author_id") @db.Uuid
+  thumbnailMediaId   String?        @map("thumbnail_media_id") @db.Uuid
+  thumbnailObjectKey String?        @map("thumbnail_object_key") @db.VarChar(500)
+  status             BlogPostStatus @default(draft)
+  isFeatured         Boolean        @default(false) @map("is_featured")
+  publishedAt        DateTime?      @map("published_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  deletedAt          DateTime?      @map("deleted_at")
 
-  author User @relation("BlogAuthor", fields: [authorId], references: [id])
+  author         User            @relation("BlogAuthor", fields: [authorId], references: [id])
+  thumbnailMedia Media?          @relation("BlogThumbnailMedia", fields: [thumbnailMediaId], references: [id], onDelete: SetNull)
+  category       BlogCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  contentMedia   BlogPostMedia[]
 
-  @@index([status])
   @@index([authorId])
+  @@index([thumbnailMediaId])
+  @@index([categoryId])
   @@map("blog_posts")
+}
+
+model BlogPostMedia {
+  blogPostId String @map("blog_post_id") @db.Uuid
+  mediaId    String @map("media_id") @db.Uuid
+
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  media    Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, mediaId])
+  @@index([mediaId])
+  @@map("blog_post_media")
 }

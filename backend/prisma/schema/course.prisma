@@ -7,85 +7,174 @@ enum CourseStatus {
 enum LessonType {
   video
   quiz
+  document
+}
+
+enum VideoType {
+  system
+  youtube
+}
+
+enum LessonMaterialType {
+  text
+  markdown
+  pdf
+  docx
+  pptx
+}
+
+enum LessonMaterialProcessingStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
+enum Subject {
+  math
+  physics
+  chemistry
+  literature
+  english
+  biology
+  history
+  geography
 }
 
 enum EnrollmentSource {
   payment
   manual
+  free
 }
 
 model Course {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String       @db.VarChar(255)
-  slug         String       @unique @db.VarChar(255)
-  description  String?
-  teacherId    String       @map("teacher_id") @db.Uuid
-  thumbnailUrl String?      @map("thumbnail_url")
-  price        Decimal      @default(0) @db.Decimal(12, 2)
-  status       CourseStatus @default(draft)
-  allowPreview Boolean      @default(true) @map("allow_preview")
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
-  deletedAt    DateTime?    @map("deleted_at")
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title              String       @db.VarChar(255)
+  slug               String       @db.VarChar(255)
+  description        String?
+  subject            Subject
+  grade              Int
+  teacherId          String       @map("teacher_id") @db.Uuid
+  thumbnailMediaId   String?      @map("thumbnail_media_id") @db.Uuid
+  thumbnailObjectKey String?      @map("thumbnail_object_key") @db.VarChar(500)
+  price              Int          @default(0)
+  salePrice          Int?         @map("sale_price")
+  status             CourseStatus @default(draft)
+  isFeatured         Boolean      @default(false) @map("is_featured")
+  totalLessons       Int          @default(0) @map("total_lessons")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  deletedAt          DateTime?    @map("deleted_at")
 
-  teacher          User              @relation("CourseTeacher", fields: [teacherId], references: [id])
-  chapters         Chapter[]
-  topics           Topic[]
-  assessments      Assessment[]
-  orderItems       OrderItem[]
-  enrollments      Enrollment[]
-  courseProgress   CourseProgress[]
-  practiceSessions PracticeSession[]
+  teacher              User                  @relation("CourseTeacher", fields: [teacherId], references: [id])
+  thumbnailMedia       Media?                @relation("CourseThumbnailMedia", fields: [thumbnailMediaId], references: [id], onDelete: SetNull)
+  chapters             Chapter[]
+  topics               Topic[]
+  courseAssessments    CourseAssessment[]
+  assessmentPlacements AssessmentPlacement[]
+  orderItems           OrderItem[]
+  enrollments          Enrollment[]
+  courseProgress       CourseProgress[]
+  practiceSessions     PracticeSession[]
+  lessonMaterials      LessonMaterial[]
+  knowledgeChunks      KnowledgeChunk[]
+  tutorChatSessions    TutorChatSession[]
 
   @@index([teacherId])
-  @@index([status])
   @@map("courses")
 }
 
 model Chapter {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId   String   @map("course_id") @db.Uuid
-  title      String   @db.VarChar(255)
-  orderIndex Int      @map("order_index")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId   String    @map("course_id") @db.Uuid
+  title      String    @db.VarChar(255)
+  orderIndex Int       @map("order_index")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons Lesson[]
 
   @@unique([courseId, orderIndex])
   @@index([courseId])
+  @@index([courseId, deletedAt])
   @@map("chapters")
 }
 
 model Lesson {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chapterId   String     @map("chapter_id") @db.Uuid
-  title       String     @db.VarChar(255)
-  type        LessonType
-  videoUrl    String?    @map("video_url")
-  durationSec Int?       @map("duration_sec")
-  orderIndex  Int        @map("order_index")
-  resources   String?
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chapterId    String     @map("chapter_id") @db.Uuid
+  title        String     @db.VarChar(255)
+  type         LessonType
+  description  String?
+  videoType    VideoType? @map("video_type")
+  videoMediaId String?    @map("video_media_id") @db.Uuid
+  youtubeUrl   String?    @map("youtube_url")
+  durationSec  Int?       @map("duration_sec")
+  allowPreview Boolean    @default(false) @map("allow_preview")
+  orderIndex   Int        @map("order_index")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
 
-  chapter     Chapter          @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  assessments Assessment[]
-  progress    LessonProgress[]
+  chapter              Chapter               @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  videoMedia           Media?                @relation("LessonVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  assessmentPlacements AssessmentPlacement[]
+  progress             LessonProgress[]
+  materials            LessonMaterial[]
+  knowledgeChunks      KnowledgeChunk[]
+  tutorChatSessions    TutorChatSession[]
 
   @@unique([chapterId, orderIndex])
   @@index([chapterId])
+  @@index([chapterId, deletedAt])
+  @@index([deletedAt])
   @@map("lessons")
 }
 
+model LessonMaterial {
+  id               String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId         String                         @map("course_id") @db.Uuid
+  lessonId         String                         @map("lesson_id") @db.Uuid
+  mediaId          String?                        @map("media_id") @db.Uuid
+  createdById      String?                        @map("created_by_id") @db.Uuid
+  title            String                         @db.VarChar(255)
+  type             LessonMaterialType
+  objectKey        String?                        @map("object_key") @db.VarChar(500)
+  contentText      String?                        @map("content_text") @db.Text
+  extractedText    String?                        @map("extracted_text") @db.Text
+  processingStatus LessonMaterialProcessingStatus @default(pending) @map("processing_status")
+  processingError  String?                        @map("processing_error") @db.Text
+  contentHash      String?                        @map("content_hash") @db.VarChar(64)
+  isPublic         Boolean                        @default(true) @map("is_public")
+  createdAt        DateTime                       @default(now()) @map("created_at")
+  updatedAt        DateTime                       @updatedAt @map("updated_at")
+  deletedAt        DateTime?                      @map("deleted_at")
+
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson    Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  media     Media? @relation("LessonMaterialMedia", fields: [mediaId], references: [id], onDelete: SetNull)
+  createdBy User?  @relation("CreatedLessonMaterials", fields: [createdById], references: [id], onDelete: SetNull)
+  knowledgeChunks KnowledgeChunk[]
+
+  @@index([courseId])
+  @@index([lessonId, isPublic, deletedAt])
+  @@index([courseId, lessonId])
+  @@index([mediaId])
+  @@index([createdById])
+  @@index([processingStatus])
+  @@map("lesson_materials")
+}
+
 model Enrollment {
-  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
-  courseId   String           @map("course_id") @db.Uuid
-  orderId    String?          @map("order_id") @db.Uuid
-  source     EnrollmentSource @default(payment)
-  enrolledAt DateTime         @default(now()) @map("enrolled_at")
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  courseId     String           @map("course_id") @db.Uuid
+  orderId      String?          @map("order_id") @db.Uuid
+  source       EnrollmentSource @default(payment)
+  manualReason String?          @map("manual_reason") @db.VarChar(500)
+  enrolledAt   DateTime         @default(now()) @map("enrolled_at")
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])

@@ -21,7 +21,6 @@ model LessonProgress {
 model CourseProgress {
   userId           String    @map("user_id") @db.Uuid
   courseId         String    @map("course_id") @db.Uuid
-  totalLessons     Int       @map("total_lessons")
   completedLessons Int       @default(0) @map("completed_lessons")
   lastLearnedAt    DateTime? @map("last_learned_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")

@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Dark Theme (Cozy Forest Library - Moss & Amber) */
+  --brand-dark: #0e1412; /* Deep Forest Black */
+  --deep-black: #080c0a; /* Even deeper dark */
+  --off-black: #060908;
+  --brand-pink: #34d399; /* Brand Mint Green (Primary Accent) */
+  --accent-orange: #f59e0b; /* Amber Gold (Secondary Accent) */
+  --sky-blue: #0ea5e9; /* Info Accent */
+  --cream: #f4f7f5; /* Cream Alabaster Text */
+  --muted-text: #8e9a95; /* Muted Sage Gray */
+  --muted-taupe: #8e9a95;
+  --surface-input: #0a0f0d;
+  --border-dark: #202b27; /* Deep Moss Border */
+
+  /* Admin Theme (Cozy Forest - matching public pages) */
+  --admin-bg: #0e1412;
+  --admin-deep-black: #080c0a;
+  --admin-off-black: #060908;
+  --admin-pink: #34d399;
+  --admin-muted-text: #8e9a95;
+  --admin-surface-low: #0a0f0d;
+  --admin-border-dark: rgba(52, 211, 153, 0.15);
+  --admin-cream: #f4f7f5;
+
+  /* Extra Theme Variables for Assessment Screens */
+  --surface-container: #16201c;
+  --surface-container-high: #202b27;
+  --surface-container-highest: #2d3d37;
+  --primary-container: rgba(52, 211, 153, 0.15);
+  --on-primary-container: #34d399;
+  --outline-variant: #202b27;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+html.light {
+  /* Light Theme (Organic Academic Style) */
+  --brand-dark: #f1fcf7;
+  --deep-black: #ffffff;
+  --off-black: #e5f0eb;
+  --brand-pink: #14422d; /* Forest Green */
+  --accent-orange: #d97706; /* Amber orange */
+  --sky-blue: #3d6751; /* Dark green accent */
+  --cream: #141e1b; /* Charcoal Ink Text */
+  --muted-text: #414943;
+  --muted-taupe: #414943;
+  --surface-input: #ffffff;
+  --border-dark: #dae5e0;
+  /* Admin Theme in Light Mode (Moss & Cream) */
+  --admin-bg: #f1fcf7;
+  --admin-deep-black: #ffffff;
+  --admin-off-black: #e5f0eb;
+  --admin-pink: #14422d;
+  --admin-muted-text: #5a6e65;
+  --admin-surface-low: #ebf5f0;
+  --admin-border-dark: #dae5e0;
+  --admin-cream: #141e1b;
+
+  /* Extra Theme Variables for Assessment Screens (Light Mode) */
+  --surface-container: #ffffff;
+  --surface-container-high: #f1fcf7;
+  --surface-container-highest: #e5f0eb;
+  --primary-container: rgba(20, 66, 45, 0.1);
+  --on-primary-container: #14422d;
+  --outline-variant: #dae5e0;
+  --success: #10b981;
+  --warning: #d97706;
+  --error: #ef4444;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--deep-black);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--brand-dark);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-pink);
+}
+
+/* Base resets & typography */
+body {
+  background-color: var(--brand-dark);
+  color: var(--cream);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.landing-pattern-page {
+  background-color: var(--brand-dark);
+}
+
+html.light .landing-pattern-page {
+  background-color: var(--brand-dark);
+  background-image:
+    radial-gradient(circle at 18% 8%, rgba(52, 211, 153, 0.14), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(245, 158, 11, 0.10), transparent 22%),
+    radial-gradient(circle at 70% 78%, rgba(14, 165, 233, 0.08), transparent 24%),
+    url("/education-hero-pattern.svg");
+  background-position:
+    center top,
+    center top,
+    center bottom,
+    0 0;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat;
+  background-size:
+    100% 900px,
+    100% 820px,
+    100% 900px,
+    180px 180px;
+}
+
+html.light .landing-pattern-page section {
+  background-color: transparent !important;
+}
+
+.font-serif {
+  font-family: var(--font-quicksand) !important;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Poetic scroll reveals & animations */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 800ms cubic-bezier(0.25, 1, 0.5, 1),
+    transform 800ms cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-item.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Typing cursor animation */
+.typing-cursor::after {
+  content: "|";
+  display: inline-block;
+  margin-left: 6px;
+  animation: blink 0.8s step-end infinite;
+  -webkit-text-fill-color: var(--brand-pink);
+  opacity: 1;
+}
+
+@keyframes blink {
+  from,
+  to {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Slide panels slide smoothly using transform, avoiding layout width transitions */
+.learning-slide-panel {
+  transition-property: transform !important;
+  transition-duration: 420ms !important;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+
+.learning-fade-backdrop {
+  transition-property: opacity, backdrop-filter !important;
+  transition-duration: 420ms !important;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Glass panel design matching Stitch mockups but adapted to Cozy Forest themes */
+.glass-panel {
+  background: rgba(22, 32, 28, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(20, 66, 45, 0.1);
+}
+
+/* Hide scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
