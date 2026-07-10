@@ -71,12 +71,6 @@ export function CitationBadge({ rank, citation }: { rank: number; citation: Cita
     }, 150);
   };
 
-  const score = citation.score 
-    ? (typeof citation.score === 'number' 
-        ? citation.score 
-        : parseFloat(citation.score.toString() || '0')) 
-    : 0;
-
   const quote = citation.quote || "";
   const sourceTitle = citation.sourceTitle || citation.source_title || "Tài liệu học tập";
 
@@ -104,11 +98,6 @@ export function CitationBadge({ rank, citation }: { rank: number; citation: Cita
               <FileText size={10} />
               Nguồn [{rank}]
             </span>
-            {score > 0 && (
-              <span className="text-[9px] font-semibold text-muted-text">
-                Độ khớp: {Math.round(score * 100)}%
-              </span>
-            )}
           </div>
 
           {/* Title */}

@@ -9,8 +9,6 @@ interface LessonQuizFieldProps {
   register: UseFormRegister<LessonFormValues>;
   errors: FieldErrors<LessonFormValues>;
   assessments: { id: string; title: string }[];
-  courseId?: string;
-  lessonId?: string;
   onRefresh?: () => void;
 }
 
@@ -18,8 +16,6 @@ export default function LessonQuizField({
   register,
   errors,
   assessments,
-  courseId,
-  lessonId,
   onRefresh,
 }: LessonQuizFieldProps) {
   return (
@@ -68,8 +64,7 @@ export default function LessonQuizField({
         <button
           type="button"
           onClick={() => {
-            const url = `/admin/assessments/builder?placementType=lesson&courseId=${courseId || ""}${lessonId ? `&lessonId=${lessonId}` : ""}`;
-            window.open(url, "_blank");
+            window.open("/admin/assessments", "_blank");
           }}
           className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-lg bg-admin-pink text-white font-bold text-xs hover:brightness-110 transition active:scale-95 whitespace-nowrap"
         >

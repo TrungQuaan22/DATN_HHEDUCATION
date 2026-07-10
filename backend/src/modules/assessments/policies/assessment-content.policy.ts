@@ -19,10 +19,12 @@ const objectiveItemTypes = new Set<AssessmentItemType>([
   AssessmentItemType.numeric
 ])
 
+// Ném lỗi validation thống nhất cho nội dung assessment không hợp lệ.
 const invalidAssessment = (message: string): never => {
   throw new AppError(400, ERROR_CODE.BAD_REQUEST, message)
 }
 
+// Kiểm tra loại section có phù hợp với kiểu chấm điểm không.
 export function validateSectionType(
   gradingType: GradingType,
   itemType: AssessmentItemType
@@ -36,6 +38,7 @@ export function validateSectionType(
   }
 }
 
+// Kiểm tra toàn bộ section có phù hợp với kiểu chấm điểm không.
 export function validateSectionsForGrading(
   gradingType: GradingType,
   sections: Array<{ itemType: AssessmentItemType }>
@@ -45,6 +48,7 @@ export function validateSectionsForGrading(
   }
 }
 
+// Kiểm tra các câu hỏi import có đủ đáp án, điểm và cấu trúc hợp lệ.
 export function validateImportedItems(
   items: Array<CreateAssessmentItemDto & { itemType: AssessmentItemType }>
 ): void {
@@ -95,6 +99,7 @@ export function validateImportedItems(
   }
 }
 
+// Kiểm tra payload item theo chế độ quiz nhập câu hỏi hoặc exam nhập đáp án.
 export function validateItemsForMode(
   assessmentType: AssessmentType,
   itemType: AssessmentItemType,
@@ -138,6 +143,12 @@ export function validateItemsForMode(
     }
   }
 }
+
+// Kiểm tra assessment đã đủ điều kiện để publish cho học sinh làm.
+// Assessment phải có ít nhất 1 section, mỗi section phải có ít nhất 1 item, và các item phải hợp lệ.
+// Exam assessment phải có source media là PDF, và các placement phải hợp lệ.
+// Mixed assessment phải có ít nhất 1 section essay và 1 section objective.
+// Nếu không hợp lệ, ném lỗi AppError với status 400 và code BAD_REQUEST.
 
 export function validateAssessmentCanPublish(assessment: AssessmentForPublishDetail): void {
   if (assessment.sections.length === 0) {

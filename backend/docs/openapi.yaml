@@ -1969,6 +1969,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Blog
+      summary: Create blog category
+      description: Admin or teacher creates a reusable blog category. The slug is generated when omitted.
+      operationId: createBlogCategory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlogCategoryRequest'
+      responses:
+        '201':
+          description: Blog category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogCategorySuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Category name or slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /admin/blog-posts/{blogPostId}:
     get:
@@ -3560,7 +3593,211 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /tutor/sessions:
+  /admin/teachers/options:
+    get:
+      tags: [Users]
+      summary: List teacher options
+      description: Admin lists active teachers for assignment selectors.
+      operationId: listTeacherOptions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - in: query
+          name: search
+          schema: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '200':
+          description: Teacher options returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListTeacherOptionsSuccessResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/lessons/{lessonId}/materials:
+    get:
+      tags: [Courses]
+      summary: List lesson materials
+      operationId: listLessonMaterials
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonIdPath'
+      responses:
+        '200':
+          description: Lesson materials returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListLessonMaterialsSuccessResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Courses]
+      summary: Create lesson material
+      description: Creates text/Markdown content or attaches an uploaded PDF, DOCX, or PPTX. Ingestion is triggered asynchronously.
+      operationId: createLessonMaterial
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLessonMaterialRequest' }
+      responses:
+        '201':
+          description: Lesson material created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonMaterialSuccessResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/lesson-materials/{materialId}:
+    patch:
+      tags: [Courses]
+      summary: Update lesson material
+      operationId: updateLessonMaterial
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MaterialIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateLessonMaterialRequest' }
+      responses:
+        '200':
+          description: Lesson material updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonMaterialSuccessResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Courses]
+      summary: Delete lesson material
+      operationId: deleteLessonMaterial
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MaterialIdPath'
+      responses:
+        '200':
+          description: Lesson material soft-deleted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeleteLessonMaterialSuccessResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/lesson-materials/{materialId}/ingest:
+    post:
+      tags: [Courses, Tutor]
+      summary: Re-ingest lesson material
+      description: Triggers extraction, chunking, embedding, and indexing in the AI service.
+      operationId: ingestLessonMaterial
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MaterialIdPath'
+      responses:
+        '200':
+          description: Ingestion triggered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestLessonMaterialSuccessResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502':
+          description: AI ingestion service failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /learning/assessments:
+    get:
+      tags: [Assessments]
+      summary: List my assigned assessments
+      description: Lists published course and lesson assessments available through the student's enrollments.
+      operationId: listStudentAssessments
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: subject
+          schema: { $ref: '#/components/schemas/Subject' }
+        - in: query
+          name: grade
+          schema: { type: integer, minimum: 1, maximum: 12 }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [not_started, doing, submitted, auto_submitted, completed]
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Student assessments returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListStudentAssessmentsSuccessResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /learning/lessons/{lessonId}/hls/{fileName}:
+    get:
+      tags: [Learning]
+      summary: Stream a protected HLS lesson file
+      description: Returns the rewritten HLS playlist or one MPEG-TS segment after enrollment checks.
+      operationId: streamLearningLessonHls
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LessonIdPath'
+        - in: path
+          name: fileName
+          required: true
+          schema:
+            type: string
+            pattern: '^(index\.m3u8|segment_\d{3,}\.ts)$'
+      responses:
+        '200':
+          description: HLS playlist or segment
+          content:
+            application/vnd.apple.mpegurl:
+              schema: { type: string }
+            video/mp2t:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /learning/tutor/sessions:
     get:
       tags:
         - Tutor
@@ -3588,6 +3825,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListTutorSessionsSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
     post:
       tags:
         - Tutor
@@ -3609,8 +3849,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateTutorSessionSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
-  /tutor/sessions/{sessionId}:
+  /learning/tutor/sessions/{sessionId}:
     get:
       tags:
         - Tutor
@@ -3633,8 +3877,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TutorSessionDetailSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
-  /tutor/sessions/{sessionId}/messages:
+  /learning/tutor/sessions/{sessionId}/messages:
     post:
       tags:
         - Tutor
@@ -3663,8 +3911,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SendTutorMessageSuccessResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502':
+          description: AI service failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /tutor/sessions/{sessionId}/messages/stream:
+  /learning/tutor/sessions/{sessionId}/messages/stream:
     post:
       tags:
         - Tutor
@@ -3693,6 +3950,10 @@ paths:
             text/event-stream:
               schema:
                 type: string
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
 components:
   parameters:
@@ -3715,6 +3976,14 @@ components:
     LessonIdPath:
       in: path
       name: lessonId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    MaterialIdPath:
+      in: path
+      name: materialId
       required: true
       schema:
         type: string
@@ -5426,12 +5695,46 @@ components:
 
     BlogCategorySummary:
       type: object
+      required: [id, name, slug, count]
       properties:
+        id:
+          type: string
+          format: uuid
         name:
+          type: string
+        slug:
           type: string
         count:
           type: integer
-          minimum: 1
+          minimum: 0
+
+    CreateBlogCategoryRequest:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 255
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+
+    BlogCategorySuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [id, name, slug]
+              properties:
+                id: { type: string, format: uuid }
+                name: { type: string }
+                slug: { type: string }
 
     ListBlogCategoriesResponseData:
       type: object
@@ -8388,6 +8691,218 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/SendTutorMessageResponseData'
+
+    TeacherOption:
+      type: object
+      required: [id, email, fullName, avatarUrl]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        avatarUrl: { type: string, nullable: true }
+
+    ListTeacherOptionsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [items, pagination]
+              properties:
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/TeacherOption' }
+                pagination: { $ref: '#/components/schemas/OffsetPagination' }
+
+    LessonMaterialType:
+      type: string
+      enum: [text, markdown, pdf, docx, pptx]
+
+    LessonMaterialProcessingStatus:
+      type: string
+      enum: [pending, processing, ready, failed]
+
+    CreateLessonMaterialRequest:
+      oneOf:
+        - type: object
+          required: [title, type, contentText]
+          additionalProperties: false
+          properties:
+            title: { type: string, minLength: 2, maxLength: 255 }
+            type: { type: string, enum: [text] }
+            contentText: { type: string, minLength: 1, maxLength: 200000 }
+            isPublic: { type: boolean }
+        - type: object
+          required: [title, type, contentText]
+          additionalProperties: false
+          properties:
+            title: { type: string, minLength: 2, maxLength: 255 }
+            type: { type: string, enum: [markdown] }
+            contentText: { type: string, minLength: 1, maxLength: 200000 }
+            isPublic: { type: boolean }
+        - type: object
+          required: [title, type, mediaId]
+          additionalProperties: false
+          properties:
+            title: { type: string, minLength: 2, maxLength: 255 }
+            type: { type: string, enum: [pdf, docx, pptx] }
+            mediaId: { type: string, format: uuid }
+            isPublic: { type: boolean }
+
+    UpdateLessonMaterialRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 2, maxLength: 255 }
+        contentText: { type: string, minLength: 1, maxLength: 200000 }
+        mediaId: { type: string, format: uuid }
+        isPublic: { type: boolean }
+
+    LessonMaterialMedia:
+      type: object
+      nullable: true
+      required: [id, url, originalName, mimeType, sizeBytes, status]
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string, nullable: true }
+        originalName: { type: string, nullable: true }
+        mimeType: { type: string }
+        sizeBytes: { type: integer, minimum: 0 }
+        status: { $ref: '#/components/schemas/MediaStatus' }
+
+    AdminLessonMaterial:
+      type: object
+      required: [id, courseId, lessonId, mediaId, title, type, contentText, extractedText, processingStatus, processingError, isPublic, media, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        courseId: { type: string, format: uuid }
+        lessonId: { type: string, format: uuid }
+        mediaId: { type: string, format: uuid, nullable: true }
+        title: { type: string }
+        type: { $ref: '#/components/schemas/LessonMaterialType' }
+        contentText: { type: string, nullable: true }
+        extractedText: { type: string, nullable: true }
+        processingStatus: { $ref: '#/components/schemas/LessonMaterialProcessingStatus' }
+        processingError: { type: string, nullable: true }
+        isPublic: { type: boolean }
+        media: { $ref: '#/components/schemas/LessonMaterialMedia' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    LessonMaterialSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/AdminLessonMaterial' }
+
+    ListLessonMaterialsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/AdminLessonMaterial' }
+
+    DeleteLessonMaterialSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [id, deleted]
+              properties:
+                id: { type: string, format: uuid }
+                deleted: { type: boolean, enum: [true] }
+
+    IngestLessonMaterialSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [id, processingStatus, triggered]
+              properties:
+                id: { type: string, format: uuid }
+                processingStatus: { type: string, enum: [processing] }
+                triggered: { type: boolean, enum: [true] }
+
+    StudentAssessmentCourse:
+      type: object
+      nullable: true
+      required: [id, title, slug]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        slug: { type: string }
+
+    StudentAssessmentLesson:
+      type: object
+      nullable: true
+      required: [id, title, chapterTitle]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        chapterTitle: { type: string }
+
+    StudentAssessmentLatestSubmission:
+      type: object
+      nullable: true
+      required: [id, assessmentId, placementId, attemptNumber, status, startTime, submitTime, autoScore, finalScore]
+      properties:
+        id: { type: string, format: uuid }
+        assessmentId: { type: string, format: uuid }
+        placementId: { type: string, format: uuid, nullable: true }
+        attemptNumber: { type: integer, minimum: 1 }
+        status: { type: string, enum: [doing, submitted, auto_submitted, completed] }
+        startTime: { type: string, format: date-time }
+        submitTime: { type: string, format: date-time, nullable: true }
+        autoScore: { type: string, nullable: true }
+        finalScore: { type: string, nullable: true }
+
+    StudentAssessmentListItem:
+      type: object
+      required: [placementId, placementType, assessmentId, title, subject, grade, assessmentType, gradingType, timeLimitMinutes, maxAttempts, openTime, closeTime, course, lesson, attempt]
+      properties:
+        placementId: { type: string, format: uuid }
+        placementType: { $ref: '#/components/schemas/AssessmentPlacementType' }
+        assessmentId: { type: string, format: uuid }
+        title: { type: string }
+        subject: { $ref: '#/components/schemas/Subject' }
+        grade: { type: integer, minimum: 1, maximum: 12 }
+        assessmentType: { $ref: '#/components/schemas/AssessmentType' }
+        gradingType: { $ref: '#/components/schemas/GradingType' }
+        timeLimitMinutes: { type: integer, minimum: 1, nullable: true }
+        maxAttempts: { type: integer, minimum: 1, nullable: true }
+        openTime: { type: string, format: date-time, nullable: true }
+        closeTime: { type: string, format: date-time, nullable: true }
+        course: { $ref: '#/components/schemas/StudentAssessmentCourse' }
+        lesson: { $ref: '#/components/schemas/StudentAssessmentLesson' }
+        attempt:
+          type: object
+          required: [usedAttempts, latestSubmission]
+          properties:
+            usedAttempts: { type: integer, minimum: 0 }
+            latestSubmission: { $ref: '#/components/schemas/StudentAssessmentLatestSubmission' }
+
+    ListStudentAssessmentsSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [items, pagination]
+              properties:
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/StudentAssessmentListItem' }
+                pagination: { $ref: '#/components/schemas/OffsetPagination' }
 
     SuccessResponse:
       type: object

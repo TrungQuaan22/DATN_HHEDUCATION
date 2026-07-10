@@ -52,13 +52,6 @@ export default function SiteNavLinks({
         Thi Thử
       </Link>
       <Link
-        href="/teachers"
-        onClick={onLinkClick}
-        className={`${itemClassName} text-cream hover:text-brand-pink`}
-      >
-        Teachers
-      </Link>
-      <Link
         href="/blog"
         onClick={onLinkClick}
         className={`${itemClassName} ${

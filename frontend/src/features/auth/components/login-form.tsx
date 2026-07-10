@@ -186,35 +186,6 @@ export function LoginForm() {
         </Button>
       </form>
 
-      {/* Divider */}
-      <div className="relative my-8">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border-dark"></div>
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="px-4 bg-deep-black text-muted-text font-bold">
-            Hoặc
-          </span>
-        </div>
-      </div>
-
-      {/* Social Login */}
-      <div className="grid gap-4">
-        <Button
-          variant="secondary"
-          type="button"
-          className="w-full"
-          onClick={() => {}}
-        >
-          <img
-            alt="Google"
-            className="w-5 h-5 mr-2"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtiZWFbehkPh_VjCh3BbhIqU6T4qaQGFOTmfq_lzq5JcBQYATLXdqnKovyhBldzePPeQ7AczNOnUAxlmNZOGiF0gg8h8vp-fwJvLd2np9HdxTL6LSA0Yh35hx14tmByFeZlXawBUENJXggz5KuE_KgsXwmpMcJ-PnP6NbOdJy_nHrBR_6BExVWAB7cTVxhdKOxhhr9H_CjzCYso8RfPcx3X9BYASz6r73eLhnlD0vG0FHAM8XKHf-cGZze3uk9dVHe_xgN80eYkuE"
-          />
-          Đăng nhập bằng Google
-        </Button>
-      </div>
-
       {/* Switch Text */}
       <div className="mt-8 text-center">
         <p className="text-sm text-muted-text">

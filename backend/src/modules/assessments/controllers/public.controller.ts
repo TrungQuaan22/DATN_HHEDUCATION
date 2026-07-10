@@ -18,6 +18,7 @@ type PlacementSlugValidated = z.infer<typeof placementSlugSchema>
 export class PublicAssessmentController {
   constructor(private readonly service: PublicAssessmentService) {}
 
+  // Liệt kê các public practice assessment.
   listPublicPlacements = async (req: Request, res: Response) => {
     const validated = req.validated as ListPublicPlacementsValidated
     const data = await this.service.listPublicPlacements(validated.query)
@@ -25,6 +26,7 @@ export class PublicAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Lấy preview assessment theo placementId.
   getRuntimeAssessment = async (req: Request, res: Response) => {
     const validated = req.validated as PlacementIdValidated
     const data = await this.service.getRuntimeAssessment({
@@ -35,6 +37,7 @@ export class PublicAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Lấy preview assessment public theo slug.
   getRuntimeAssessmentBySlug = async (req: Request, res: Response) => {
     const validated = req.validated as PlacementSlugValidated
     const data = await this.service.getRuntimeAssessmentBySlug({

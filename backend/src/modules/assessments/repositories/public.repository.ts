@@ -21,6 +21,7 @@ import type {
 } from '../types'
 
 export class PrismaPublicAssessmentRepository implements PublicAssessmentRepositoryPort {
+  // Liệt kê các placement public practice đã publish.
   listPublicPlacements(data: {
     subject?: Subject
     grade?: number
@@ -51,6 +52,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     ])
   }
 
+  // Lấy preview placement public/course/lesson theo id.
   findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -64,6 +66,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
+  // Lấy preview placement theo id kèm submission của học sinh.
   findRuntimePreviewPlacementByIdForStudent(placementId: string, userId: string): Promise<RuntimePreviewPlacementForStudent | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -98,6 +101,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
+  // Lấy workspace đầy đủ của public practice theo slug.
   findRuntimePlacementBySlug(slug: string): Promise<RuntimePlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -112,6 +116,7 @@ export class PrismaPublicAssessmentRepository implements PublicAssessmentReposit
     })
   }
 
+  // Lấy preview public practice theo slug.
   findRuntimePreviewPlacementBySlug(slug: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {

@@ -32,7 +32,7 @@ __pycache__/
 temp_ponytail/
 Report_DATN_GiangTrungQuan/
 backend/temp/
-
+slides/
 # LaTeX build artefacts
 *.aux
 *.bbl

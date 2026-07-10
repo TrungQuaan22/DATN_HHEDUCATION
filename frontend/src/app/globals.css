@@ -153,26 +153,6 @@ html.light .landing-pattern-page section {
   transform: none;
 }
 
-/* Typing cursor animation */
-.typing-cursor::after {
-  content: "|";
-  display: inline-block;
-  margin-left: 6px;
-  animation: blink 0.8s step-end infinite;
-  -webkit-text-fill-color: var(--brand-pink);
-  opacity: 1;
-}
-
-@keyframes blink {
-  from,
-  to {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -207,6 +187,12 @@ html.light .glass-panel {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(20, 66, 45, 0.1);
+}
+
+html.light .assessment-card {
+  background: #ffffff;
+  border-color: rgba(20, 66, 45, 0.16);
+  box-shadow: 0 12px 32px rgba(20, 66, 45, 0.08);
 }
 
 /* Hide scrollbars */

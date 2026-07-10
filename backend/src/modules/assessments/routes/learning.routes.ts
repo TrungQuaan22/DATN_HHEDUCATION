@@ -28,6 +28,7 @@ import {
 
 export const learningAssessmentRoutes = Router()
 
+// API cho trang học sinh xem danh sách bài kiểm tra được giao.
 learningAssessmentRoutes.get(
   '/assessments',
   requireAuth,
@@ -36,6 +37,7 @@ learningAssessmentRoutes.get(
   asyncHandler(listStudentAssessmentsController)
 )
 
+// API cho màn làm bài: lấy câu hỏi, đáp án đã lưu và thời gian còn lại.
 learningAssessmentRoutes.get(
   '/assessment-placements/:placementId/workspace',
   requireAuth,
@@ -44,6 +46,7 @@ learningAssessmentRoutes.get(
   asyncHandler(getAssessmentWorkspaceController)
 )
 
+// API cho học sinh xem kết quả sau khi đã nộp bài.
 learningAssessmentRoutes.get(
   '/assessment-submissions/:submissionId/result',
   requireAuth,
@@ -52,6 +55,7 @@ learningAssessmentRoutes.get(
   asyncHandler(getSubmissionResultController)
 )
 
+// API cho màn preview/overview bài kiểm tra trước khi bắt đầu làm.
 learningAssessmentRoutes.get(
   '/assessment-placements/:placementId',
   requireAuth,
@@ -60,6 +64,7 @@ learningAssessmentRoutes.get(
   asyncHandler(getRuntimeAssessmentController)
 )
 
+// API khi học sinh bấm bắt đầu làm bài hoặc resume attempt đang làm.
 learningAssessmentRoutes.post(
   '/assessment-placements/:placementId/attempts',
   requireAuth,
@@ -68,6 +73,7 @@ learningAssessmentRoutes.post(
   asyncHandler(startAttemptController)
 )
 
+// API lưu tạm câu trả lời trong lúc học sinh đang làm bài.
 learningAssessmentRoutes.put(
   '/assessment-submissions/:submissionId/answers',
   requireAuth,
@@ -76,6 +82,7 @@ learningAssessmentRoutes.put(
   asyncHandler(saveAnswersController)
 )
 
+// API khi học sinh bấm nộp bài.
 learningAssessmentRoutes.post(
   '/assessment-submissions/:submissionId/submit',
   requireAuth,
@@ -84,6 +91,7 @@ learningAssessmentRoutes.post(
   asyncHandler(submitAttemptController)
 )
 
+// API ghi nhận vi phạm trong lúc làm bài, ví dụ rời màn hình quá nhiều lần.
 learningAssessmentRoutes.post(
   '/assessment-submissions/:submissionId/violations',
   requireAuth,

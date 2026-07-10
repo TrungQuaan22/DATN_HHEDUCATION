@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Subject, Grade } from "@/types/common";
 import {
   getAdminCourses,
+  getAdminCourseStats,
   publishAdminCourse,
   archiveAdminCourse,
 } from "@/features/courses/api";
@@ -87,7 +88,7 @@ export function useAdminCourses() {
   // Query for stats
   const statsQuery = useQuery({
     queryKey: ["admin-courses-stats"],
-    queryFn: () => getAdminCourses({ page: 1, limit: 100 }),
+    queryFn: getAdminCourseStats,
   });
 
   const coursesList = coursesQuery.data?.items || [];
@@ -132,17 +133,12 @@ export function useAdminCourses() {
     queryClient.invalidateQueries({ queryKey: ["admin-courses-stats"] });
   }, [queryClient]);
 
-  const kpis = useMemo(() => {
-    const list = statsQuery.data?.items || [];
-    const activeCount = list.filter((c) => c.status === "published").length;
-    const draftCount = list.filter((c) => c.status === "draft").length;
-    const teachers = new Set(list.map((c) => c.teacherId));
-    return {
-      active: activeCount,
-      draft: draftCount,
-      teachers: teachers.size,
-    };
-  }, [statsQuery.data]);
+  const kpis = statsQuery.data ?? {
+    active: 0,
+    draft: 0,
+    teachers: 0,
+    monthlyRevenue: 0,
+  };
 
   return {
     isCreateModalOpen,

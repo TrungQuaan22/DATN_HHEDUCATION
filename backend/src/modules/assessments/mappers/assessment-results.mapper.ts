@@ -8,6 +8,7 @@ import {
 } from '../helpers/assessment-results.helper'
 import type { AssessmentResultParticipantRecord } from '../ports/admin-assessment-result-repository.port'
 
+// Gom dữ liệu học sinh, lượt làm và điểm thành response kết quả assessment.
 export function mapAssessmentResultParticipant(
   participant: AssessmentResultParticipantRecord
 ): AssessmentResultParticipantDto {

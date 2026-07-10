@@ -1,4 +1,12 @@
-import { CourseStatus, UserRole, UserStatus, type Prisma, type Subject } from '@prisma/client'
+import {
+  CourseStatus,
+  OrderStatus,
+  PaymentStatus,
+  UserRole,
+  UserStatus,
+  type Prisma,
+  type Subject
+} from '@prisma/client'
 
 import type { GradeValue } from '~/common/constant/taxonomy'
 import { prisma } from '~/config/db'
@@ -250,6 +258,66 @@ export class PrismaAdminCourseRepository implements AdminCourseRepositoryPort {
     ])
 
     return [courses.map(mapToCourseRecord), total]
+  }
+
+  async getAdminCourseStats(data: {
+    teacherId?: string
+    revenueFrom: Date
+    revenueTo: Date
+  }) {
+    const courseWhere: Prisma.CourseWhereInput = {
+      deletedAt: null,
+      teacherId: data.teacherId
+    }
+
+    const [active, draft, teachers, revenue] = await prisma.$transaction([
+      prisma.course.count({
+        where: {
+          ...courseWhere,
+          status: CourseStatus.published
+        }
+      }),
+      prisma.course.count({
+        where: {
+          ...courseWhere,
+          status: CourseStatus.draft
+        }
+      }),
+      prisma.course.findMany({
+        where: courseWhere,
+        distinct: ['teacherId'],
+        select: {
+          teacherId: true
+        }
+      }),
+      prisma.orderItem.aggregate({
+        where: {
+          course: courseWhere,
+          order: {
+            status: OrderStatus.completed,
+            payments: {
+              some: {
+                status: PaymentStatus.success,
+                paidAt: {
+                  gte: data.revenueFrom,
+                  lt: data.revenueTo
+                }
+              }
+            }
+          }
+        },
+        _sum: {
+          priceAtPurchase: true
+        }
+      })
+    ])
+
+    return {
+      active,
+      draft,
+      teachers: teachers.length,
+      monthlyRevenue: revenue._sum.priceAtPurchase ?? 0
+    }
   }
 
   async createCourse(data: {

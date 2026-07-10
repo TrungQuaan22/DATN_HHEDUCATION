@@ -113,3 +113,10 @@ export type ListAdminCoursesResponse = {
     totalPages: number
   }
 }
+
+export type AdminCourseStatsResponse = {
+  active: number
+  draft: number
+  teachers: number
+  monthlyRevenue: number
+}

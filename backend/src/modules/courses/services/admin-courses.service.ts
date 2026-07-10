@@ -9,6 +9,7 @@ import { createSlugFromText } from '~/common/utils/slug'
 import {
   type AdminCourseDetailResponse,
   type AdminCourseResponse,
+  type AdminCourseStatsResponse,
   type CourseIdDto,
   type CreateCourseDto,
   type ListAdminCoursesDto,
@@ -134,6 +135,18 @@ export class AdminCourseService {
         totalPages: Math.ceil(totalItems / input.limit)
       }
     }
+  }
+
+  async getStats(actor: CourseActor): Promise<AdminCourseStatsResponse> {
+    const now = new Date()
+    const revenueFrom = new Date(now.getFullYear(), now.getMonth(), 1)
+    const revenueTo = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+
+    return this.courseRepository.getAdminCourseStats({
+      teacherId: actor.role === 'admin' ? undefined : actor.id,
+      revenueFrom,
+      revenueTo
+    })
   }
 
   async getCourse(actor: CourseActor, input: CourseIdDto): Promise<AdminCourseDetailResponse> {

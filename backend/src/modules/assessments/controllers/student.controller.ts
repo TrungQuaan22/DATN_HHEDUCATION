@@ -24,6 +24,7 @@ type SubmissionIdValidated = z.infer<typeof submissionIdSchema>
 export class StudentAssessmentController {
   constructor(private readonly service: StudentAssessmentService) {}
 
+  // Lấy danh sách assessment mà học sinh có thể thấy/làm.
   listStudentAssessments = async (req: Request, res: Response) => {
     const validated = req.validated as ListStudentAssessmentsValidated
     const data = await this.service.listStudentAssessments({
@@ -34,6 +35,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Lấy workspace làm bài cho một submission đang active.
   getAssessmentWorkspace = async (req: Request, res: Response) => {
     const validated = req.validated as PlacementWorkspaceValidated
     const data = await this.service.getAssessmentWorkspace({
@@ -45,6 +47,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Lấy kết quả một submission đã nộp.
   getSubmissionResult = async (req: Request, res: Response) => {
     const validated = req.validated as SubmissionIdValidated
     const data = await this.service.getSubmissionResult({
@@ -55,6 +58,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Bắt đầu attempt mới hoặc resume attempt đang làm.
   startAttempt = async (req: Request, res: Response) => {
     const validated = req.validated as StartAttemptValidated
     const data = await this.service.startAttempt({
@@ -65,6 +69,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data, status: 201 })
   }
 
+  // Lưu tạm câu trả lời của học sinh trong submission.
   saveAnswers = async (req: Request, res: Response) => {
     const validated = req.validated as SaveAnswersValidated
     const data = await this.service.saveAnswers({
@@ -76,6 +81,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Nộp bài và chuyển submission sang trạng thái kết thúc phù hợp.
   submitAttempt = async (req: Request, res: Response) => {
     const validated = req.validated as SubmitAttemptValidated
     const data = await this.service.submitAttempt({
@@ -86,6 +92,7 @@ export class StudentAssessmentController {
     sendSuccess({ res, data })
   }
 
+  // Ghi nhận vi phạm khi làm bài và auto-submit nếu vượt ngưỡng.
   recordViolation = async (req: Request, res: Response) => {
     const validated = req.validated as SubmissionIdValidated
     const data = await this.service.recordViolation({

@@ -14,6 +14,7 @@ export type PlacementAccess = {
   lesson?: { chapter?: { course?: { teacherId: string } | null } | null } | null
 }
 
+// Kiểm tra teacher có liên quan tới course/lesson của placement không.
 const isTeacherPlacement = (actor: AssessmentActor, placement: PlacementAccess): boolean => {
   if (actor.role !== UserRole.teacher) {
     return false
@@ -25,6 +26,7 @@ const isTeacherPlacement = (actor: AssessmentActor, placement: PlacementAccess):
   )
 }
 
+// Xác định actor có quyền quản lý assessment theo người tạo hoặc admin.
 export function canManageAssessment(
   createdById: string | null | undefined,
   actor: AssessmentActor
@@ -32,6 +34,7 @@ export function canManageAssessment(
   return actor.role === UserRole.admin || createdById === actor.id
 }
 
+// Chặn actor không có quyền chỉnh sửa assessment.
 export function validateCanManageAssessment(
   assessment: { createdById?: string | null },
   actor: AssessmentActor
@@ -41,6 +44,7 @@ export function validateCanManageAssessment(
   }
 }
 
+// Chặn actor không có quyền xem assessment hoặc placement liên quan.
 export function validateCanViewAssessment(
   assessment: { createdById?: string | null },
   actor: AssessmentActor,
@@ -55,6 +59,7 @@ export function validateCanViewAssessment(
   }
 }
 
+// Chặn actor không có quyền chỉnh placement của assessment.
 export function validateCanManagePlacement(
   assessment: { createdById?: string | null },
   actor: AssessmentActor,
@@ -69,6 +74,7 @@ export function validateCanManagePlacement(
   }
 }
 
+// Chặn actor không có quyền chấm submission của assessment.
 export function validateCanGradeAssessment(
   assessment: { createdById?: string | null },
   actor: AssessmentActor,

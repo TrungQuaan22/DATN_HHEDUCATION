@@ -9,7 +9,11 @@ import { ERROR_CODE } from '~/common/constant/error-code'
 import { AppError } from '~/common/error/app-error'
 
 import type { ListStudentAssessmentsDto, SaveAnswerDto } from '../dto'
-import { mapRuntimePlacement } from '../mappers/assessment.mapper'
+import {
+  mapAssessmentWorkspace,
+  mapStudentAssessmentListResponse,
+  mapSubmissionForRuntime
+} from '../mappers/assessment.mapper'
 import {
   addScores,
   calculateTrueFalseRatio,
@@ -29,60 +33,27 @@ import {
   validatePlacementAvailable,
   validateSubmissionAccess
 } from '../policies/assessment-placement.policy'
-import type {
-  SubmissionDetail,
-  StudentPlacementListItem,
-  StudentSubmissionComplete
-} from '../types'
+import type { StudentSubmissionComplete } from '../types'
 import { mapStudentSubmissionResult } from '../mappers/submission-result.mapper'
 import type { NotificationEventService } from '~/modules/notifications/service'
 
+// Đảm bảo submission vẫn đang ở trạng thái làm bài.
 const ensureSubmissionIsDoing = (status: SubmissionStatus) => {
   if (status !== SubmissionStatus.doing) {
     throw new AppError(409, ERROR_CODE.CONFLICT, 'Submission is already submitted')
   }
 }
 
+// Lấy danh sách option của câu hỏi, rỗng nếu item không có question.
 const getQuestionOptions = (item: {
   question: {
     options: Array<{ id: string; isCorrect?: boolean }>
   } | null
 }) => item.question?.options ?? []
 
+// Trải phẳng item trong các section để validate/chấm nhanh hơn.
 const flattenSections = <TItem>(sections: Array<{ items: TItem[] }>): TItem[] =>
   sections.flatMap((section) => section.items)
-
-const mapSubmissionForRuntime = (submission: SubmissionDetail) => ({
-  id: submission.id,
-  assessmentId: submission.assessmentId,
-  placementId: submission.placementId,
-  attemptNumber: submission.attemptNumber,
-  status: submission.status,
-  startTime: submission.startTime,
-  submitTime: submission.submitTime,
-  autoScore: submission.autoScore?.toString() ?? null,
-  finalScore: submission.finalScore?.toString() ?? null,
-  violationCount: submission.violationCount,
-  answers: {
-    mcq: (submission.mcqAnswers ?? []).map((answer) => ({
-      itemId: answer.itemId,
-      selectedOptionIds: answer.selectedOptions.map((option) => option.optionId)
-    })),
-    trueFalse: (submission.tfAnswers ?? []).map((answer) => ({
-      itemId: answer.itemId,
-      optionId: answer.optionId,
-      selectedValue: answer.selectedValue
-    })),
-    numeric: (submission.numericAnswers ?? []).map((answer) => ({
-      itemId: answer.itemId,
-      answerValue: answer.answerValue.toString()
-    })),
-    essay: (submission.essayAnswers ?? []).map((answer) => ({
-      itemId: answer.itemId,
-      answer: answer.answer
-    }))
-  }
-})
 
 export class StudentAssessmentService {
   constructor(
@@ -90,6 +61,7 @@ export class StudentAssessmentService {
     private readonly notifications: NotificationEventService
   ) {}
 
+  // Liệt kê các assessment của học sinh kèm trạng thái attempt gần nhất.
   async listStudentAssessments(data: ListStudentAssessmentsDto & { userId: string }) {
     const [placements, totalItems] = await this.repository.listStudentAssessmentPlacements({
       userId: data.userId,
@@ -100,59 +72,10 @@ export class StudentAssessmentService {
       limit: data.limit
     })
 
-    return {
-      items: placements.map((placement: StudentPlacementListItem) => {
-        const latestSubmission = placement.submissions[0] ?? null
-        const course = placement.course ?? placement.lesson?.chapter.course ?? null
-
-        return {
-          placementId: placement.id,
-          placementType: placement.type,
-          assessmentId: placement.assessmentId,
-          title: placement.assessment.title,
-          subject: placement.assessment.subject,
-          grade: placement.assessment.grade,
-          assessmentType: placement.assessment.type,
-          gradingType: placement.assessment.gradingType,
-          timeLimitMinutes: placement.assessment.timeLimitMinutes,
-          maxAttempts: placement.maxAttempts,
-          openTime: placement.openTime,
-          closeTime: placement.closeTime,
-          course,
-          lesson: placement.lesson
-            ? {
-                id: placement.lesson.id,
-                title: placement.lesson.title,
-                chapterTitle: placement.lesson.chapter.title
-              }
-            : null,
-          attempt: {
-            usedAttempts: placement.submissions.length,
-            latestSubmission: latestSubmission
-              ? {
-                  id: latestSubmission.id,
-                  assessmentId: latestSubmission.assessmentId,
-                  placementId: latestSubmission.placementId,
-                  attemptNumber: latestSubmission.attemptNumber,
-                  status: latestSubmission.status,
-                  startTime: latestSubmission.startTime,
-                  submitTime: latestSubmission.submitTime,
-                  autoScore: latestSubmission.autoScore?.toString() ?? null,
-                  finalScore: latestSubmission.finalScore?.toString() ?? null
-                }
-              : null
-          }
-        }
-      }),
-      pagination: {
-        page: data.page,
-        limit: data.limit,
-        totalItems,
-        totalPages: Math.ceil(totalItems / data.limit)
-      }
-    }
+    return mapStudentAssessmentListResponse(placements, totalItems, data.page, data.limit)
   }
 
+  // Lấy kết quả submission đã nộp cho chính học sinh đó.
   async getSubmissionResult(data: { userId: string; submissionId: string }) {
     const submissionRecord = await this.repository.findSubmissionForStudent(
       data.submissionId,
@@ -167,6 +90,7 @@ export class StudentAssessmentService {
     return mapStudentSubmissionResult(submission)
   }
 
+  // Mở workspace làm bài, kiểm tra submission đang active và deadline.
   async getAssessmentWorkspace(data: {
     userId: string
     placementId: string
@@ -216,18 +140,10 @@ export class StudentAssessmentService {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Assessment placement not found')
     }
 
-    const runtime = mapRuntimePlacement(placement)
-    const { type: placementType, ...workspace } = runtime
-    void placementType
-
-    return {
-      ...workspace,
-      submissionId: submission.id,
-      submission: mapSubmissionForRuntime(activeSubmission),
-      timeRemainingSeconds
-    }
+    return mapAssessmentWorkspace(placement, submission.id, activeSubmission, timeRemainingSeconds)
   }
 
+  // Tạo attempt mới hoặc trả lại attempt đang doing để resume.
   async startAttempt(data: { userId: string; placementId: string }) {
     const placement = await this.repository.findRuntimePreviewPlacementById(data.placementId)
 
@@ -268,6 +184,7 @@ export class StudentAssessmentService {
     return mapSubmissionForRuntime(submission)
   }
 
+  // Lưu câu trả lời trong submission đang làm.
   async saveAnswers(data: { userId: string; submissionId: string; answers: SaveAnswerDto[] }) {
     const submissionRecord = await this.repository.findSubmissionForStudent(
       data.submissionId,
@@ -300,6 +217,7 @@ export class StudentAssessmentService {
     return { submissionId: data.submissionId, saved: true }
   }
 
+  // Nộp bài thủ công hoặc auto-submit nếu đã quá hạn.
   async submitAttempt(data: { userId: string; submissionId: string }) {
     const submissionRecord = await this.repository.findSubmissionForStudent(
       data.submissionId,
@@ -326,6 +244,7 @@ export class StudentAssessmentService {
     return this.finalizeAttempt(submission, hasReachedDeadline ? 'automatic' : 'manual')
   }
 
+  // Tăng số lần vi phạm và auto-submit khi đạt ngưỡng.
   async recordViolation(data: { userId: string; submissionId: string }) {
     const submissionRecord = await this.repository.findSubmissionForStudent(
       data.submissionId,
@@ -375,6 +294,7 @@ export class StudentAssessmentService {
     }
   }
 
+  // Worker dùng hàm này để nộp các submission đã quá hạn.
   async autoSubmitExpiredAttempts(data: { now?: Date; limit?: number } = {}) {
     const now = data.now ?? new Date()
     const limit = data.limit ?? 100
@@ -400,6 +320,7 @@ export class StudentAssessmentService {
     }
   }
 
+  // Kiểm tra submission đã chạm deadline server chưa.
   private hasReachedDeadline(submission: StudentSubmissionComplete, now = new Date()) {
     return isSubmissionExpired(
       {
@@ -411,6 +332,7 @@ export class StudentAssessmentService {
     )
   }
 
+  // Hoàn tất attempt: chấm tự động, đổi trạng thái và gửi thông báo nếu cần.
   private async finalizeAttempt(
     submission: StudentSubmissionComplete,
     mode: 'manual' | 'automatic'
@@ -461,6 +383,7 @@ export class StudentAssessmentService {
     return mapSubmissionForRuntime(result.submission)
   }
 
+  // Đảm bảo answers gửi lên đúng item, đúng loại câu và option hợp lệ.
   private ensureAnswersBelongToAssessment(
     answers: SaveAnswerDto[],
     items: Array<{
@@ -522,6 +445,7 @@ export class StudentAssessmentService {
     }
   }
 
+  // Tính điểm tự động cho MCQ, true/false và numeric.
   private calculateObjectiveScore(submission: StudentSubmissionComplete) {
     if (!submission) {
       throw new AppError(404, ERROR_CODE.NOT_FOUND, 'Submission not found')

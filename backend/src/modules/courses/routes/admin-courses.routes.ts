@@ -10,6 +10,7 @@ import { validateRequest } from '~/common/middlewares/validate-request'
 import {
   archiveCourseController,
   createCourseController,
+  getAdminCourseStatsController,
   getAdminCourseController,
   listAdminCoursesController,
   publishCourseController,
@@ -49,6 +50,14 @@ adminCourseRoutes.get(
   requireRole(UserRole.admin, UserRole.teacher),
   validateRequest(listAdminCoursesSchema),
   asyncHandler(listAdminCoursesController)
+)
+
+adminCourseRoutes.get(
+  '/courses/stats',
+  requireAuth,
+  requireActiveSession,
+  requireRole(UserRole.admin, UserRole.teacher),
+  asyncHandler(getAdminCourseStatsController)
 )
 
 adminCourseRoutes.get(

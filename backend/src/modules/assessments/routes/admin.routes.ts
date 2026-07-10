@@ -60,6 +60,7 @@ import {
 
 export const adminAssessmentRoutes = Router()
 
+// API cho admin/teacher xem danh sách assessment trong trang quản trị.
 adminAssessmentRoutes.get(
   '/assessments',
   requireAuth,
@@ -68,6 +69,7 @@ adminAssessmentRoutes.get(
   asyncHandler(listAdminAssessmentsController)
 )
 
+// API lấy chi tiết assessment để xem/sửa cấu trúc, section, item và placement.
 adminAssessmentRoutes.get(
   '/assessments/:assessmentId',
   requireAuth,
@@ -76,6 +78,7 @@ adminAssessmentRoutes.get(
   asyncHandler(getAdminAssessmentController)
 )
 
+// API xem bảng kết quả tổng hợp của một assessment.
 adminAssessmentRoutes.get(
   '/assessments/:assessmentId/results',
   requireAuth,
@@ -84,6 +87,7 @@ adminAssessmentRoutes.get(
   asyncHandler(listAssessmentResultsController)
 )
 
+// API xem toàn bộ các lần làm của một học sinh trong assessment.
 adminAssessmentRoutes.get(
   '/assessments/:assessmentId/students/:studentId/attempts',
   requireAuth,
@@ -92,6 +96,7 @@ adminAssessmentRoutes.get(
   asyncHandler(getAssessmentStudentAttemptsController)
 )
 
+// API tạo assessment mới, ban đầu ở trạng thái draft.
 adminAssessmentRoutes.post(
   '/assessments',
   requireAuth,
@@ -100,6 +105,7 @@ adminAssessmentRoutes.post(
   asyncHandler(createAssessmentController)
 )
 
+// API cập nhật thông tin chung của assessment.
 adminAssessmentRoutes.patch(
   '/assessments/:assessmentId',
   requireAuth,
@@ -108,6 +114,7 @@ adminAssessmentRoutes.patch(
   asyncHandler(updateAssessmentController)
 )
 
+// API tạo section/phần câu hỏi trong assessment.
 adminAssessmentRoutes.post(
   '/assessments/:assessmentId/sections',
   requireAuth,
@@ -116,6 +123,7 @@ adminAssessmentRoutes.post(
   asyncHandler(createSectionController)
 )
 
+// API cập nhật tiêu đề hoặc mô tả section.
 adminAssessmentRoutes.patch(
   '/assessments/:assessmentId/sections/:sectionId',
   requireAuth,
@@ -124,6 +132,7 @@ adminAssessmentRoutes.patch(
   asyncHandler(updateSectionController)
 )
 
+// API xóa section khi section chưa có item và assessment chưa bị khóa.
 adminAssessmentRoutes.delete(
   '/assessments/:assessmentId/sections/:sectionId',
   requireAuth,
@@ -132,6 +141,7 @@ adminAssessmentRoutes.delete(
   asyncHandler(deleteSectionController)
 )
 
+// API thêm item/câu hỏi vào section.
 adminAssessmentRoutes.post(
   '/assessments/:assessmentId/sections/:sectionId/items',
   requireAuth,
@@ -140,6 +150,7 @@ adminAssessmentRoutes.post(
   asyncHandler(createSectionItemsController)
 )
 
+// API import nhiều item/câu hỏi vào section.
 adminAssessmentRoutes.post(
   '/assessments/:assessmentId/sections/:sectionId/items/import',
   requireAuth,
@@ -148,6 +159,7 @@ adminAssessmentRoutes.post(
   asyncHandler(importSectionItemsController)
 )
 
+// API cập nhật một item/câu hỏi trong assessment.
 adminAssessmentRoutes.patch(
   '/assessments/:assessmentId/items/:itemId',
   requireAuth,
@@ -156,6 +168,7 @@ adminAssessmentRoutes.patch(
   asyncHandler(updateSectionItemController)
 )
 
+// API xóa một item/câu hỏi khỏi assessment.
 adminAssessmentRoutes.delete(
   '/assessments/:assessmentId/items/:itemId',
   requireAuth,
@@ -164,6 +177,7 @@ adminAssessmentRoutes.delete(
   asyncHandler(deleteSectionItemController)
 )
 
+// API publish assessment sau khi nội dung và placement hợp lệ.
 adminAssessmentRoutes.post(
   '/assessments/:assessmentId/publish',
   requireAuth,
@@ -172,6 +186,7 @@ adminAssessmentRoutes.post(
   asyncHandler(publishAssessmentController)
 )
 
+// API đổi visibility của assessment: draft, published hoặc hidden.
 adminAssessmentRoutes.patch(
   '/assessments/:assessmentId/visibility',
   requireAuth,
@@ -180,6 +195,7 @@ adminAssessmentRoutes.patch(
   asyncHandler(updateVisibilityController)
 )
 
+// API clone assessment để tạo bản sao chỉnh sửa độc lập.
 adminAssessmentRoutes.post(
   '/assessments/:assessmentId/clone',
   requireAuth,
@@ -188,6 +204,7 @@ adminAssessmentRoutes.post(
   asyncHandler(cloneAssessmentController)
 )
 
+// API gắn hoặc cập nhật placement chính của assessment vào course/lesson/public.
 adminAssessmentRoutes.put(
   '/assessments/:assessmentId/placement',
   requireAuth,
@@ -196,6 +213,7 @@ adminAssessmentRoutes.put(
   asyncHandler(upsertPlacementController)
 )
 
+// API xóa placement chính của assessment.
 adminAssessmentRoutes.delete(
   '/assessments/:assessmentId/placement',
   requireAuth,
@@ -204,6 +222,7 @@ adminAssessmentRoutes.delete(
   asyncHandler(deletePlacementController)
 )
 
+// API tạo placement mới theo payload có assessmentId.
 adminAssessmentRoutes.post(
   '/assessment-placements',
   requireAuth,
@@ -212,6 +231,7 @@ adminAssessmentRoutes.post(
   asyncHandler(createPlacementController)
 )
 
+// API liệt kê các submission đang cần giáo viên chấm.
 adminAssessmentRoutes.get(
   '/assessment-submissions/grading',
   requireAuth,
@@ -220,6 +240,7 @@ adminAssessmentRoutes.get(
   asyncHandler(listGradingSubmissionsController)
 )
 
+// API lấy chi tiết submission để giáo viên chấm bài.
 adminAssessmentRoutes.get(
   '/assessment-submissions/:submissionId',
   requireAuth,
@@ -228,6 +249,7 @@ adminAssessmentRoutes.get(
   asyncHandler(getGradingSubmissionController)
 )
 
+// API chấm điểm một câu tự luận trong submission.
 adminAssessmentRoutes.patch(
   '/assessment-submissions/:submissionId/essay-score',
   requireAuth,
@@ -236,6 +258,7 @@ adminAssessmentRoutes.patch(
   asyncHandler(gradeEssayController)
 )
 
+// API chốt điểm cuối cùng sau khi đã chấm xong phần tự luận.
 adminAssessmentRoutes.post(
   '/assessment-submissions/:submissionId/finalize',
   requireAuth,

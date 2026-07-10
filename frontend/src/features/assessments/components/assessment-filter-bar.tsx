@@ -90,7 +90,7 @@ export function AssessmentFilterBar({
           {activeTab === "courses" && (
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-admin-muted">
-                KhĂ³a há»c:
+                Khóa học:
               </span>
               {isLoadingCourses ? (
                 <span className="text-xs text-admin-muted animate-pulse">
@@ -128,7 +128,7 @@ export function AssessmentFilterBar({
           />
           <input
             type="text"
-            placeholder="TĂ¬m theo tĂªn Ä‘á», mĂ´n há»c..."
+            placeholder="Tìm kiếm theo tên bài kiểm tra"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-admin-border bg-admin-bg py-2 pl-9 pr-4 text-xs text-admin-cream outline-none placeholder-admin-muted focus:border-admin-pink"

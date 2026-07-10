@@ -16,6 +16,7 @@ type StudentAttemptsValidated = z.infer<typeof getAssessmentStudentAttemptsSchem
 export class AdminAssessmentResultController {
   constructor(private readonly service: AdminAssessmentResultService) {}
 
+  // Lấy bảng kết quả tổng hợp của một assessment.
   listResults = async (req: Request, res: Response) => {
     const validated = req.validated as ListResultsValidated
     const data = await this.service.listResults({
@@ -26,6 +27,7 @@ export class AdminAssessmentResultController {
     sendSuccess({ res, data })
   }
 
+  // Lấy toàn bộ các lần làm của một học sinh trong assessment.
   getStudentAttempts = async (req: Request, res: Response) => {
     const validated = req.validated as StudentAttemptsValidated
     const data = await this.service.getStudentAttempts({

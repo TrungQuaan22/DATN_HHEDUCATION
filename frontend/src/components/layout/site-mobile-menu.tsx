@@ -57,13 +57,6 @@ export default function SiteMobileMenu({
         Thi Thử
       </Link>
       <Link
-        href="/#teachers"
-        onClick={onClose}
-        className="text-sm font-medium text-cream hover:text-brand-pink transition-colors"
-      >
-        Teachers
-      </Link>
-      <Link
         href="/blog"
         onClick={onClose}
         className={`text-sm font-medium transition-colors ${

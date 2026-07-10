@@ -10,6 +10,7 @@ import { validateCanViewAssessment } from '../policies/assessment-access.policy'
 export class AdminAssessmentResultService {
   constructor(private readonly repository: AdminAssessmentResultRepositoryPort) {}
 
+  // Lấy context assessment và kiểm tra actor được xem kết quả.
   private async getAccessibleContext(assessmentId: string, actor: AssessmentActorDto) {
     const context = await this.repository.findResultContext(assessmentId)
     if (!context) {
@@ -20,6 +21,7 @@ export class AdminAssessmentResultService {
     return context
   }
 
+  // Tạo bảng kết quả tổng hợp, thống kê và phân trang học sinh.
   async listResults(data: {
     actor: AssessmentActorDto
     assessmentId: string
@@ -88,6 +90,7 @@ export class AdminAssessmentResultService {
     }
   }
 
+  // Lấy chi tiết các lần làm của một học sinh trong assessment.
   async getStudentAttempts(data: {
     actor: AssessmentActorDto
     assessmentId: string

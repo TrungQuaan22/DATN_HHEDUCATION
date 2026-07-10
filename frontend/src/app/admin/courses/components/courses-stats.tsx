@@ -7,8 +7,16 @@ type CoursesStatsProps = {
     active: number;
     draft: number;
     teachers: number;
+    monthlyRevenue: number;
   };
 };
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(amount);
 
 export default function CoursesStats({ kpis }: CoursesStatsProps) {
   return (
@@ -70,15 +78,14 @@ export default function CoursesStats({ kpis }: CoursesStatsProps) {
           <span className="p-2 bg-amber-500/10 text-amber-500 rounded-full">
             <CreditCard className="w-5 h-5" />
           </span>
-          <span className="text-xs font-bold text-emerald-400">
-            +8.2% ↑
-          </span>
         </div>
         <div className="mt-4">
           <p className="text-xs font-bold text-admin-muted uppercase tracking-wider">
             Doanh thu tháng (ước tính)
           </p>
-          <p className="text-3xl font-bold text-admin-cream mt-1">1.2B đ</p>
+          <p className="text-3xl font-bold text-admin-cream mt-1">
+            {formatCurrency(kpis.monthlyRevenue)}
+          </p>
         </div>
       </div>
     </div>

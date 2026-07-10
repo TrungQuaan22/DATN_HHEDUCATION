@@ -38,6 +38,12 @@ export class AdminCourseController {
     sendSuccess({ res, data })
   }
 
+  getAdminCourseStats = async (req: Request, res: Response) => {
+    const data = await this.service.getStats(req.user!)
+
+    sendSuccess({ res, data })
+  }
+
   getAdminCourse = async (req: Request, res: Response) => {
     const validated = req.validated as GetAdminCourseValidated
     const dto: CourseIdDto = {
@@ -82,6 +88,7 @@ export const adminCourseController = new AdminCourseController(adminCourseServic
 
 export const createCourseController = adminCourseController.createCourse
 export const listAdminCoursesController = adminCourseController.listAdminCourses
+export const getAdminCourseStatsController = adminCourseController.getAdminCourseStats
 export const getAdminCourseController = adminCourseController.getAdminCourse
 export const updateCourseController = adminCourseController.updateCourse
 export const publishCourseController = adminCourseController.publishCourse

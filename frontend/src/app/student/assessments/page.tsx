@@ -306,7 +306,7 @@ export default function StudentAssessmentsPage() {
                     return (
                       <div
                         key={item.placementId}
-                        className="glass-panel p-5 rounded-2xl flex flex-col justify-between border border-outline-variant/30 hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 relative group"
+                        className="assessment-card glass-panel p-5 rounded-2xl flex flex-col justify-between border border-outline-variant/30 hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 relative group"
                       >
                         <div>
                           {/* Top row: Badges */}
@@ -419,7 +419,7 @@ export default function StudentAssessmentsPage() {
                           ) : (
                             <Link
                               href={`/student/assessments/${item.placementId}`}
-                              className="w-full bg-primary-container text-white hover:brightness-115 font-bold py-2 rounded-xl flex items-center justify-center gap-1 text-label-md transition-all transform active:scale-95 shadow-md shadow-primary/10"
+                              className="w-full bg-primary text-brand-dark hover:brightness-110 font-bold py-2 rounded-xl flex items-center justify-center gap-1 text-label-md transition-all transform active:scale-95 shadow-md shadow-primary/10"
                             >
                               {used > 0
                                 ? `Làm lại (Lượt #${used + 1})`

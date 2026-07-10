@@ -7,10 +7,13 @@ import {
 import type { CreateAssessmentItemDto } from '../dto'
 import type { AssessmentItemUnion } from '../types'
 
+// Chuyển số/chuỗi điểm sang Decimal để tính điểm chính xác.
 export const toDecimal = (value: number | string) => new Prisma.Decimal(value)
 
+// Đổi vị trí đáp án thành nhãn A, B, C... cho đề thi dạng PDF.
 export const toExamOptionLabel = (index: number) => String.fromCharCode(65 + index)
 
+// Tạo nội dung câu hỏi phù hợp giữa quiz nhập trực tiếp và exam theo số câu.
 export const buildQuestionContent = (
   item: Partial<CreateAssessmentItemDto>,
   mode: AssessmentType,
@@ -30,6 +33,7 @@ export const buildQuestionContent = (
   }
 }
 
+// Tạo tham chiếu nguồn câu hỏi trong PDF/đề gốc.
 export const buildSourceRef = (
   assessmentId: string,
   sectionId: string,
@@ -40,12 +44,14 @@ export const buildSourceRef = (
   itemType
 })
 
+// Đóng gói phần giải thích đáp án thành JSON lưu trong assessment item.
 export const buildExplanation = (item: Partial<CreateAssessmentItemDto>): Prisma.InputJsonValue | undefined => {
   const data = item as AssessmentItemUnion
   const explanation = data.explanation?.trim()
   return explanation ? explanation : undefined
 }
 
+// Tạo đáp án đúng theo từng loại câu hỏi.
 export const buildCorrectAnswer = (
   item: Partial<CreateAssessmentItemDto>,
   itemType: AssessmentItemType
@@ -81,6 +87,7 @@ export const buildCorrectAnswer = (
   return undefined
 }
 
+// Tạo cấu hình chấm điểm theo từng loại câu hỏi.
 export const buildScoringConfig = (
   item: Partial<CreateAssessmentItemDto>,
   itemType: AssessmentItemType
@@ -113,6 +120,7 @@ export const buildScoringConfig = (
   }
 }
 
+// Quy đổi loại item assessment sang loại question dùng chung.
 export const toQuestionType = (itemType: AssessmentItemType): QuestionType => {
   if (itemType === AssessmentItemType.mcq) {
     return QuestionType.mcq
@@ -129,4 +137,5 @@ export const toQuestionType = (itemType: AssessmentItemType): QuestionType => {
   return QuestionType.essay
 }
 
+// Chuẩn hóa tên chủ đề để tránh lệch do khoảng trắng thừa.
 export const normalizeTopicName = (value: string) => value.trim().replace(/\s+/g, ' ')

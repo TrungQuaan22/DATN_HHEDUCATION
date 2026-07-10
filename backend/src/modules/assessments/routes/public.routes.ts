@@ -17,12 +17,14 @@ import {
 
 export const publicAssessmentRoutes = Router()
 
+// API public practice: liệt kê các bài luyện tập công khai.
 publicAssessmentRoutes.get(
   '/assessments',
   validateRequest(listPublicPlacementsSchema),
   asyncHandler(listPublicPlacementsController)
 )
 
+// API lấy preview bài luyện tập công khai theo slug.
 publicAssessmentRoutes.get(
   '/assessment-placements/slug/:slug',
   requireAuth,
@@ -30,6 +32,7 @@ publicAssessmentRoutes.get(
   asyncHandler(getRuntimeAssessmentBySlugController)
 )
 
+// API lấy preview placement theo id cho người dùng đã đăng nhập.
 publicAssessmentRoutes.get(
   '/assessment-placements/:placementId',
   requireAuth,

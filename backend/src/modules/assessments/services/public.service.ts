@@ -10,6 +10,7 @@ import type { StudentAssessmentRepositoryPort } from '../ports/student-assessmen
 import { validatePlacementAccess } from '../policies/assessment-placement.policy'
 import type { SubmissionSummary } from '../types'
 
+// Map thông tin lần làm ngắn gọn cho preview assessment.
 const mapSubmissionSummaryForRuntime = (submission: SubmissionSummary) => ({
   id: submission.id,
   assessmentId: submission.assessmentId,
@@ -28,6 +29,7 @@ export class PublicAssessmentService {
     private readonly studentRepository: StudentAssessmentRepositoryPort
   ) {}
 
+  // Liệt kê các assessment public practice.
   async listPublicPlacements(data: {
     subject?: SubjectValue
     grade?: number
@@ -52,6 +54,7 @@ export class PublicAssessmentService {
     }
   }
 
+  // Lấy preview runtime của assessment theo placementId.
   async getRuntimeAssessment(data: { userId?: string; placementId: string }) {
     const placement = data.userId
       ? await this.repository.findRuntimePreviewPlacementByIdForStudent(
@@ -81,6 +84,7 @@ export class PublicAssessmentService {
     }
   }
 
+  // Lấy preview runtime của assessment public theo slug.
   async getRuntimeAssessmentBySlug(data: { userId?: string; slug: string }) {
     const placement = await this.repository.findRuntimePreviewPlacementBySlug(data.slug)
 

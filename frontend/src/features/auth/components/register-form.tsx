@@ -10,7 +10,6 @@ import { registerSchema, RegisterInput, useRegisterMutation } from "../hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage, UI_MESSAGES } from "@/lib/constants/messages";
-import RegisterSocialButtons from "./register-social-buttons";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = React.useState(false);
@@ -263,8 +262,6 @@ export function RegisterForm() {
           )}
         </Button>
       </form>
-
-      <RegisterSocialButtons />
 
       {/* Switch Text */}
       <div className="mt-8 text-center">

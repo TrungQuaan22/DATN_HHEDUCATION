@@ -112,11 +112,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 {course.title}
               </h1>
 
-              <p className="text-base md:text-lg text-muted-taupe leading-relaxed">
-                {course.description ||
-                  "Chương trình ôn luyện toàn diện được thiết kế giúp học sinh ôn thi đạt kết quả tốt nhất."}
-              </p>
-
               <div className="flex items-center gap-4 py-4">
                 <SafeImg
                   alt={course.teacher.fullName}
@@ -198,20 +193,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 <h2 className="text-2xl font-bold text-cream mb-6">
                   Mô tả khóa học
                 </h2>
-                <div className="text-base text-muted-taupe leading-relaxed space-y-4">
-                  <p>
-                    Chào mừng bạn đến với khóa học chuyên sâu được thiết kế
-                    riêng dành cho học sinh chuẩn bị bứt phá điểm số và ôn luyện
-                    xét tuyển đại học. Đây không chỉ là việc ghi nhớ công thức
-                    đơn thuần mà là một hành trình rèn luyện kỹ năng giải bài và
-                    khai phá tư duy bản chất.
-                  </p>
-                  <p>
-                    Hệ thống bài giảng được phân loại khoa học từ cơ bản đến
-                    nâng cao, đi kèm bài tập tự luyện và chấm thi tự động giúp
-                    bạn liên tục củng cố kiến thức và phát hiện lỗ hổng kịp
-                    thời.
-                  </p>
+                <div className="text-base text-muted-taupe leading-relaxed space-y-4 ">
+                  <p>{course.description}</p>
                 </div>
               </div>
 

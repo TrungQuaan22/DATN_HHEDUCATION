@@ -6,6 +6,7 @@ import {
   AdminLessonRequest,
   AdminCourseDetail,
   CatalogCourseDetailResponse,
+  AdminCourseStats,
   ListAdminCoursesParams,
   ListAdminCoursesResponse,
   CreateCourseRequest,
@@ -37,6 +38,13 @@ export const getAdminCourses = async (
     {
       params,
     },
+  );
+  return response.data.data;
+};
+
+export const getAdminCourseStats = async (): Promise<AdminCourseStats> => {
+  const response = await api.get<ApiEnvelope<AdminCourseStats>>(
+    "/admin/courses/stats",
   );
   return response.data.data;
 };

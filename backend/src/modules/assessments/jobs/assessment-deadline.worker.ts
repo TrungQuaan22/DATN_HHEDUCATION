@@ -3,11 +3,13 @@ import type { StudentAssessmentService } from '../services/student.service'
 const DEFAULT_INTERVAL_MS = 30_000
 const DEFAULT_BATCH_SIZE = 100
 
+// Đọc biến môi trường dạng số dương, sai thì dùng giá trị mặc định.
 const readPositiveInteger = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
 }
 
+// Chạy worker định kỳ để tự động nộp các bài đã quá hạn.
 export function startAssessmentDeadlineWorker(service: StudentAssessmentService) {
   const intervalMs = readPositiveInteger(
     process.env.ASSESSMENT_DEADLINE_SWEEP_INTERVAL_MS,

@@ -6,10 +6,12 @@ import type { StudentSubmissionComplete } from '../types'
 
 export type SubmissionResultOutcome = 'correct' | 'incorrect' | 'partial' | 'unanswered'
 
+// Lấy phần giải thích đáp án từ JSON đã lưu.
 const getExplanation = (
   item: StudentSubmissionComplete['assessment']['sections'][number]['items'][number]
 ) => item.explanation ?? item.question?.explanation ?? null
 
+// Đọc đáp án đúng của câu numeric từ cấu trúc correctAnswer.
 const getNumericCorrectValue = (correctAnswer: unknown): string | null => {
   if (
     correctAnswer &&
@@ -23,6 +25,7 @@ const getNumericCorrectValue = (correctAnswer: unknown): string | null => {
   return null
 }
 
+// Xác định kết quả từng câu: chưa trả lời, đúng, sai hoặc đúng một phần.
 const getOutcome = (data: {
   hasAnswer: boolean
   pointEarned: string
@@ -36,6 +39,7 @@ const getOutcome = (data: {
   return 'partial'
 }
 
+// Map submission đã nộp thành dữ liệu kết quả cho học sinh xem lại.
 export function mapStudentSubmissionResult(submission: StudentSubmissionComplete) {
   const reviewAvailable =
     submission.status !== SubmissionStatus.doing &&

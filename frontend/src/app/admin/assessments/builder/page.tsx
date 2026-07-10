@@ -3,7 +3,6 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import {
   ArrowLeft,
   Clock,
@@ -604,89 +603,6 @@ function BuilderContent() {
     }
   };
 
-  // Import questions from Excel template
-  const handleExcelImport = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (!selectedSection) return;
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer);
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any>(sheet);
-
-      const parsed: BuilderItem[] = rows.map((row: any, idx: number) => {
-        const itemType = String(row.itemType || "mcq").trim() as ItemType;
-        if (itemType !== selectedSection.itemType) {
-          throw new Error("Excel item type must match selected section type");
-        }
-        const base: BuilderItem = {
-          id: String(Date.now() + idx),
-          sectionId: selectedSection.id,
-          questionNumber: sectionItems.length + idx + 1,
-          itemType,
-          topicId: row.topicId || null,
-          difficulty: (row.difficulty || "understanding") as Difficulty,
-          maxScore: Number(row.maxScore || 1),
-          explanation: row.explanation ? String(row.explanation) : null,
-          contentLabel:
-            row.questionContent ||
-            `Câu hỏi số ${sectionItems.length + idx + 1}`,
-        };
-
-        if (itemType === "mcq") {
-          base.mode = (row.mode || "single") as McqMode;
-          const optionValues = String(row.options || "")
-            .split(/[|;]/)
-            .map((o) => o.trim())
-            .filter(Boolean);
-          const correctValues = String(row.correctOptions || row.answer || "")
-            .split(/[|;]/)
-            .map((o) => o.trim())
-            .filter(Boolean);
-          base.optionCount = Number(
-            row.optionCount || optionValues.length || 4,
-          );
-          base.correctOptions =
-            correctValues.length > 0 ? correctValues : ["A"];
-          base.options = optionValues.map((content, optionIndex) => ({
-            content,
-            isCorrect:
-              correctValues.includes(content) ||
-              correctValues.includes(String.fromCharCode(65 + optionIndex)),
-          }));
-        } else if (itemType === "true_false") {
-          const stmLabels = String(row.statements || "").split(/[|;]/);
-          const stmAns = String(row.answer || "").split(/[|;]/);
-          base.statements = stmLabels.map((label, i) => ({
-            label: label.trim(),
-            correctValue:
-              String(stmAns[i]).toLowerCase() === "true" ||
-              String(stmAns[i]).toLowerCase() === "t" ||
-              String(stmAns[i]) === "1",
-          }));
-        } else if (itemType === "numeric") {
-          base.correctAnswer = Number(row.correctAnswer);
-        } else if (itemType === "essay") {
-          base.rubric = row.rubric || "";
-        }
-
-        return base;
-      });
-
-      if (parsed.length > 0) {
-        setItems((current) => [...current, ...parsed]);
-        setSelectedItemId(parsed[0].id);
-        toast.success(`Đã nhập ${parsed.length} câu hỏi thành công!`);
-      }
-    } catch (err) {
-      toast.error("Nhập Excel thất bại. Vui lòng kiểm tra lại định dạng tệp.");
-    }
-  };
-
   // Generate Questions via AI Assistant
   const handleAiGeneration = () => {
     if (!aiPrompt.trim()) {
@@ -1100,21 +1016,6 @@ function BuilderContent() {
         selectedCourse
           ? selectedCourse.grade
           : grade;
-      const topicCourseId =
-        placementType === "course" || placementType === "lesson"
-          ? selectedCourseId || null
-          : null;
-
-      if (
-        topicCourseId &&
-        items.some((item) => !item.topicId && !item.topicName?.trim())
-      ) {
-        toast.error(
-          "Bài kiểm tra thuộc khóa học cần gắn chuyên đề cho từng câu.",
-        );
-        return;
-      }
-
       let assessmentObjId = assessmentId;
 
       // 1. Save metadata
@@ -1442,23 +1343,6 @@ function BuilderContent() {
         <div className="flex items-center gap-2.5">
           {step === 1 && (
             <>
-              <label
-                className={`inline-flex items-center gap-1.5 rounded-lg border border-admin-border bg-admin-surface-low px-3.5 py-2 text-xs font-bold text-admin-cream transition ${
-                  isContentLocked
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer hover:border-admin-pink"
-                }`}
-              >
-                <Upload size={13} />
-                Excel
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  className="hidden"
-                  disabled={isContentLocked}
-                  onChange={handleExcelImport}
-                />
-              </label>
               <button
                 type="button"
                 onClick={handleSaveContent}
@@ -1554,8 +1438,7 @@ function BuilderContent() {
       {isContentLocked && step === 1 && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-300">
           Bài kiểm tra đã có {submissionCount} lượt nộp. Để giữ ổn định dữ liệu
-          điểm số, nội dung câu hỏi/đáp án đã được khóa; bạn vẫn có thể chỉnh
-          sửa cấu hình phân phối ở Phase 2.
+          điểm số, nội dung câu hỏi/đáp án đã được khóa.
         </div>
       )}
 
@@ -2167,7 +2050,7 @@ function BuilderContent() {
                 }}
                 className="rounded-lg bg-admin-pink px-4 py-2 text-xs font-bold text-admin-bg hover:brightness-110 disabled:opacity-50"
               >
-                Xac nhan publish
+                Xác nhận Publish
               </button>
             </div>
           </div>

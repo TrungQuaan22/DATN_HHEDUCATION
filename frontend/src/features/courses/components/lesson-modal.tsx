@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "next/navigation";
 import {
   X,
   FileText,
@@ -40,9 +39,6 @@ export default function LessonModal({
   onSave,
   initialData = null,
 }: LessonModalProps) {
-  const params = useParams();
-  const courseId = params?.courseId as string | undefined;
-
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [activeModalTab, setActiveModalTab] = useState<"general" | "materials">("general");
@@ -417,8 +413,6 @@ export default function LessonModal({
               register={register}
               errors={errors}
               assessments={assessmentsList}
-              courseId={courseId}
-              lessonId={initialData?.id}
               onRefresh={() => refetchAssessments()}
             />
           )}

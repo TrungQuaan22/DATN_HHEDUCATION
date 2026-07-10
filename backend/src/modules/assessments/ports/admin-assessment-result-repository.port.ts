@@ -71,12 +71,15 @@ export type AssessmentResultContextRecord = {
 }
 
 export interface AdminAssessmentResultRepositoryPort {
+  // Lấy context assessment để xem kết quả.
   findResultContext(assessmentId: string): Promise<AssessmentResultContextRecord | null>
+  // Liệt kê học sinh và attempt của họ.
   listParticipants(data: {
     assessmentId: string
     courseId: string | null
     search?: string
   }): Promise<AssessmentResultParticipantRecord[]>
+  // Tìm một học sinh và các attempt của học sinh đó.
   findParticipant(data: {
     assessmentId: string
     courseId: string | null

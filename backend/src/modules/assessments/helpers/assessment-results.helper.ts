@@ -2,6 +2,7 @@ import type { AssessmentResultParticipantRecord } from '../ports/admin-assessmen
 
 export type AssessmentParticipantStatus = 'not_started' | 'doing' | 'pending_grading' | 'completed'
 
+// Xác định trạng thái tổng hợp của một học sinh trong bài assessment.
 export function getParticipantStatus(
   participant: AssessmentResultParticipantRecord
 ): AssessmentParticipantStatus {
@@ -18,6 +19,7 @@ export function getParticipantStatus(
   return 'completed'
 }
 
+// Lấy điểm cuối cùng tốt nhất trong các lần làm của học sinh.
 export function getBestFinalScore(participant: AssessmentResultParticipantRecord): string | null {
   const scores = participant.attempts
     .map((attempt) => attempt.finalScore)
@@ -27,6 +29,7 @@ export function getBestFinalScore(participant: AssessmentResultParticipantRecord
   return Math.max(...scores.map(Number)).toString()
 }
 
+// Lấy điểm của lần làm mới nhất.
 export function getLatestScore(participant: AssessmentResultParticipantRecord): string | null {
   const latestAttempt = participant.attempts.at(-1)
   return latestAttempt?.finalScore ?? latestAttempt?.autoScore ?? null

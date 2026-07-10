@@ -82,6 +82,13 @@ export type ListAdminCoursesParams = {
 export type ListAdminCoursesResponse =
   PaginatedResponseShape<AdminCourseSummary>;
 
+export type AdminCourseStats = {
+  active: number;
+  draft: number;
+  teachers: number;
+  monthlyRevenue: number;
+};
+
 export type CreateCourseRequest = {
   title: string;
   description?: string;

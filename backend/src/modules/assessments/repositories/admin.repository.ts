@@ -48,6 +48,7 @@ import type {
   AssessmentItemUnion
 } from '../types'
 
+// Tạo filter tìm assessment theo course hoặc lesson thuộc course.
 const buildCourseFilters = (courseId: string): Prisma.AssessmentWhereInput => ({
   placements: {
     some: {
@@ -59,6 +60,7 @@ const buildCourseFilters = (courseId: string): Prisma.AssessmentWhereInput => ({
   }
 })
 
+// Tạo filter theo phạm vi public/course/unplaced.
 const buildScopeFilters = (filters: ListAdminAssessmentsFilters): Prisma.AssessmentWhereInput => {
   if (filters.scope === 'public') {
     return { placements: { some: { type: AssessmentPlacementType.public_practice } } }
@@ -75,6 +77,7 @@ const buildScopeFilters = (filters: ListAdminAssessmentsFilters): Prisma.Assessm
   return {}
 }
 
+// Tạo filter assessment mà teacher tạo hoặc quản lý qua placement.
 const buildTeacherFilters = (teacherId: string): Prisma.AssessmentWhereInput => ({
   OR: [
     { createdById: teacherId },
@@ -89,6 +92,7 @@ const buildTeacherFilters = (teacherId: string): Prisma.AssessmentWhereInput => 
 })
 
 export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositoryPort {
+  // Liệt kê assessment cho trang quản trị.
   listAdminAssessments(data: {
     filters: ListAdminAssessmentsFilters
     page: number
@@ -133,6 +137,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     ])
   }
 
+  // Liệt kê submission có essay để giáo viên chấm.
   listGradingSubmissions(data: {
     actor: { id: string; role: UserRole }
     assessmentId?: string
@@ -211,6 +216,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     ])
   }
 
+  // Tạo assessment mới.
   createAssessment(data: CreateAssessmentDto) {
     return prisma.assessment.create({
       data: {
@@ -227,6 +233,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Cập nhật thông tin assessment.
   updateAssessment(id: string, data: Partial<CreateAssessmentDto>) {
     return prisma.assessment.update({
       where: { id },
@@ -243,6 +250,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tạo section mới và tự tăng orderIndex.
   createSection(data: {
     assessmentId: string
     title: string
@@ -277,6 +285,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Cập nhật tiêu đề/mô tả section.
   updateSection(data: {
     assessmentId: string
     sectionId: string
@@ -302,6 +311,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Xóa section nếu thuộc assessment và không còn item.
   async deleteSection(assessmentId: string, sectionId: string): Promise<AssessmentSection | null> {
     const section = await prisma.assessmentSection.findFirst({
       where: {
@@ -328,6 +338,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Lấy assessment chi tiết để kiểm tra quyền và chỉnh sửa.
   findAssessmentById(id: string): Promise<AdminAssessmentDetail | null> {
     return prisma.assessment.findFirst({
       where: {
@@ -369,6 +380,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Lấy assessment đầy đủ để validate publish hoặc trả detail.
   findAssessmentForPublish(id: string): Promise<AssessmentForPublishDetail | null> {
     return prisma.assessment.findFirst({
       where: {
@@ -419,6 +431,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tìm media document PDF sẵn sàng dùng làm đề nguồn.
   findDocumentMediaById(id: string) {
     return prisma.media.findFirst({
       where: {
@@ -430,6 +443,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tìm course dùng làm target placement.
   findCourseForPlacement(courseId: string) {
     return prisma.course.findFirst({
       where: {
@@ -448,6 +462,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tìm lesson dùng làm target placement.
   findLessonForPlacement(lessonId: string) {
     return prisma.lesson.findFirst({
       where: {
@@ -482,6 +497,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Liệt kê topic của course để validate item.
   listTopicsByCourse(courseId: string) {
     return prisma.topic.findMany({
       where: {
@@ -497,6 +513,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tìm section thuộc assessment.
   findSectionInAssessment(
     assessmentId: string,
     sectionId: string
@@ -516,6 +533,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tạo hàng loạt item/câu hỏi trong một section.
   async createSectionItems(data: {
     assessmentId: string
     sectionId: string
@@ -684,6 +702,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Cập nhật một item và question/options liên quan.
   async updateSectionItem(data: {
     assessmentId: string
     itemId: string
@@ -891,6 +910,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Xóa item và dọn question/options nếu cần.
   async deleteSectionItem(
     assessmentId: string,
     itemId: string
@@ -934,6 +954,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Chuyển assessment sang published và set publishedAt.
   publishAssessment(id: string): Promise<Assessment> {
     return prisma.assessment.update({
       where: { id },
@@ -945,6 +966,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Cập nhật visibility của assessment.
   updateVisibility(id: string, visibility: AssessmentVisibility): Promise<Assessment> {
     return prisma.assessment.update({
       where: { id },
@@ -956,6 +978,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tạo placement mới cho assessment.
   createPlacement(
     data: CreatePlacementDto
   ): Promise<AssessmentPlacement & { assessment: Assessment }> {
@@ -978,6 +1001,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Upsert placement chính của assessment.
   upsertSinglePlacement(
     assessmentId: string,
     data: Omit<CreatePlacementDto, 'assessmentId'>
@@ -1009,6 +1033,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Xóa placement chính nếu assessment chưa published.
   deleteSinglePlacement(
     assessmentId: string
   ): Promise<Assessment | { id: string; visibility: AssessmentVisibility } | null> {
@@ -1045,6 +1070,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Tìm placement trùng target để tránh gắn lặp.
   findDuplicatePlacement(data: CreatePlacementDto): Promise<AssessmentPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -1064,6 +1090,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Lấy submission đầy đủ để giáo viên chấm.
   findSubmissionForGrading(submissionId: string): Promise<StudentSubmissionComplete | null> {
     return prisma.submission.findUnique({
       where: {
@@ -1073,6 +1100,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Clone assessment cùng section, item và question/options.
   async cloneAssessment(data: { assessmentId: string; createdById: string; title: string }) {
     const source = await prisma.assessment.findFirst({
       where: {
@@ -1187,6 +1215,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Ghi điểm và ghi chú cho một câu essay.
   gradeEssay(data: {
     submissionId: string
     itemId: string
@@ -1210,6 +1239,7 @@ export class PrismaAdminAssessmentRepository implements AdminAssessmentRepositor
     })
   }
 
+  // Chốt submission đã chấm thủ công bằng finalScore.
   finalizeSubmission(
     submissionId: string,
     finalScore: number | string

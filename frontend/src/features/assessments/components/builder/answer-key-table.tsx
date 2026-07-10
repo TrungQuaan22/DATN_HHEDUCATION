@@ -32,11 +32,11 @@ export function AnswerKeyTable({
 
   return (
     <div className="flex-1 overflow-auto pr-1">
-      <table className="w-full min-w-[920px] table-fixed text-left border-collapse text-xs">
+      <table className="w-full min-w-[1040px] table-fixed text-left border-collapse text-xs">
         <colgroup>
           <col className="w-[84px]" />
-          <col className="w-[380px]" />
-          <col />
+          <col className="w-[340px]" />
+          <col className="w-[220px]" />
           <col className="w-[148px]" />
           <col className="w-[88px]" />
           <col className="w-[112px]" />

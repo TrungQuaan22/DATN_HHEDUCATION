@@ -121,9 +121,6 @@ export default function CourseStudentsTable({
                     {item.assessmentProgress.completedAssessments}/
                     {item.assessmentProgress.totalAssessments} hoàn thành
                   </p>
-                  <p className="mt-1 text-xs text-admin-muted">
-                    Điểm cao nhất: {item.assessmentProgress.bestScore ?? "—"}
-                  </p>
                 </td>
                 <td className="px-4 py-4 text-xs">
                   {item.assessmentProgress.notStartedAssessments > 0 && (

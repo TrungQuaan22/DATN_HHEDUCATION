@@ -5,6 +5,7 @@ import { AppError } from '~/common/error/app-error'
 
 import type { CreatePlacementDto } from '../dto'
 
+// Đảm bảo teacher chỉ dùng course mình quản lý.
 export function validateTeacherOwnsCourse(
   actor: { id: string; role: UserRole },
   course: { teacherId: string } | null
@@ -18,6 +19,7 @@ export function validateTeacherOwnsCourse(
   }
 }
 
+// Đảm bảo câu hỏi của assessment khớp môn/lớp và topic của course.
 export function validateCourseTopics(
   assessment: { subject: Subject; grade: number },
   items: Array<{ topicId?: string | null; topicName?: string | null }>,
@@ -32,13 +34,6 @@ export function validateCourseTopics(
     throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Assessment subject/grade must match course')
   }
 
-  const hasTopic = (item: { topicId?: string | null; topicName?: string | null }) =>
-    Boolean(item.topicId || item.topicName?.trim())
-
-  if (items.some((item) => !hasTopic(item))) {
-    throw new AppError(400, ERROR_CODE.BAD_REQUEST, 'Course assessments require topic for every item')
-  }
-
   const topicIds = items
     .map((item) => item.topicId)
     .filter((topicId): topicId is string => Boolean(topicId))
@@ -49,6 +44,7 @@ export function validateCourseTopics(
   }
 }
 
+// Kiểm tra assessment được gắn đúng target: public, course hoặc quiz lesson.
 export function validatePlacementTarget(
   actor: { id: string; role: UserRole },
   assessment: { subject: Subject; grade: number },
@@ -135,6 +131,7 @@ export function validatePlacementTarget(
   }
 }
 
+// Kiểm tra assessment placement đã mở và chưa đóng.
 export function validatePlacementAvailable(placement: {
   openTime: Date | null
   closeTime: Date | null
@@ -149,6 +146,7 @@ export function validatePlacementAvailable(placement: {
   }
 }
 
+// Kiểm tra user có quyền truy cập placement dựa trên đăng nhập và enrollment.
 export function validatePlacementAccess(
   userId: string | undefined,
   placement: {
@@ -168,6 +166,7 @@ export function validatePlacementAccess(
   }
 }
 
+// Kiểm tra user còn quyền thao tác trên submission theo placement hiện tại.
 export function validateSubmissionAccess(
   userId: string,
   submission: {

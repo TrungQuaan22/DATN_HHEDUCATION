@@ -151,7 +151,7 @@ export default function ProfileSettings() {
           <button
             type="submit"
             disabled={updateMutation.isPending}
-            className="inline-flex min-w-32 items-center justify-center gap-2 rounded-md bg-admin-pink px-4 py-2.5 text-sm font-bold text-admin-deep-black transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-pink/50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-w-32 items-center justify-center gap-2 rounded-md bg-brand-pink px-4 py-2.5 text-sm font-bold text-brand-dark transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-pink/50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {updateMutation.isPending ? (
               <Loader2 size={15} className="animate-spin" />

@@ -85,6 +85,13 @@ export type ListAdminCoursesFilters = {
   search?: string
 }
 
+export type AdminCourseStatsRecord = {
+  active: number
+  draft: number
+  teachers: number
+  monthlyRevenue: number
+}
+
 export interface AdminCourseRepositoryPort {
   findActiveCourseBySlug(slug: string): Promise<{ id: string } | null>
   findActiveTeacherById(teacherId: string): Promise<{ id: string } | null>
@@ -95,6 +102,11 @@ export interface AdminCourseRepositoryPort {
     page: number
     limit: number
   }): Promise<[AdminCourseRecord[], number]>
+  getAdminCourseStats(data: {
+    teacherId?: string
+    revenueFrom: Date
+    revenueTo: Date
+  }): Promise<AdminCourseStatsRecord>
   createCourse(data: {
     title: string
     slug: string

@@ -77,6 +77,7 @@ type PrismaParticipantAttempt = Prisma.SubmissionGetPayload<{
   select: typeof PARTICIPANT_SUBMISSION_SELECT
 }>
 
+// Map một lần làm bài sang record kết quả.
 function mapAttempt(attempt: PrismaParticipantAttempt): AssessmentResultAttemptRecord {
   return {
     ...attempt,
@@ -85,6 +86,7 @@ function mapAttempt(attempt: PrismaParticipantAttempt): AssessmentResultAttemptR
   }
 }
 
+// Map học sinh và các lần làm sang participant result.
 function mapParticipant(
   student: PrismaParticipantUser,
   attempts: PrismaParticipantAttempt[]
@@ -95,6 +97,7 @@ function mapParticipant(
   }
 }
 
+// Tạo điều kiện tìm kiếm học sinh theo tên hoặc email.
 function buildStudentSearch(search?: string): Prisma.UserWhereInput {
   if (!search) return {}
 
@@ -106,6 +109,7 @@ function buildStudentSearch(search?: string): Prisma.UserWhereInput {
   }
 }
 
+// Map assessment và placement thành context xem kết quả.
 function mapContext(assessment: PrismaResultContext): AssessmentResultContextRecord {
   const placement = assessment.placements[0] ?? null
   const maxScore = assessment.items.reduce((total, item) => total + Number(item.maxScore), 0)
@@ -138,6 +142,7 @@ function mapContext(assessment: PrismaResultContext): AssessmentResultContextRec
 }
 
 export class PrismaAdminAssessmentResultRepository implements AdminAssessmentResultRepositoryPort {
+  // Lấy context assessment để kiểm tra quyền xem kết quả.
   async findResultContext(assessmentId: string) {
     const assessment = await prisma.assessment.findFirst({
       where: {
@@ -150,6 +155,7 @@ export class PrismaAdminAssessmentResultRepository implements AdminAssessmentRes
     return assessment ? mapContext(assessment) : null
   }
 
+  // Liệt kê học sinh liên quan tới assessment và các attempt của họ.
   async listParticipants(data: { assessmentId: string; courseId: string | null; search?: string }) {
     if (data.courseId) {
       const enrollments = await prisma.enrollment.findMany({
@@ -202,6 +208,7 @@ export class PrismaAdminAssessmentResultRepository implements AdminAssessmentRes
     return students.map((student) => mapParticipant(student, student.submissions))
   }
 
+  // Lấy một học sinh cụ thể cùng các attempt trong assessment.
   async findParticipant(data: {
     assessmentId: string
     courseId: string | null

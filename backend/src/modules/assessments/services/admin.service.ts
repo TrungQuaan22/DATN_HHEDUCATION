@@ -55,6 +55,7 @@ import {
 } from '../policies/assessment-placement.policy'
 import type { NotificationEventService } from '~/modules/notifications/service'
 
+// Giữ teacher không phải chủ assessment chỉ được đổi cấu hình placement hiện tại.
 const ensureNonOwnerKeepsPlacementTarget = (
   actor: AssessmentActorDto,
   assessment: {
@@ -87,6 +88,7 @@ const ensureNonOwnerKeepsPlacementTarget = (
   }
 }
 
+// Trải phẳng các item trong nhiều section để xử lý chấm/sửa nhanh hơn.
 const flattenSections = <TItem>(sections: Array<{ items: TItem[] }>): TItem[] =>
   sections.flatMap((section) => section.items)
 
@@ -96,6 +98,7 @@ export class AdminAssessmentService {
     private readonly notifications: NotificationEventService
   ) {}
 
+  // Liệt kê assessment cho admin/teacher theo phạm vi và bộ lọc.
   async listAdminAssessments(data: ListAdminAssessmentsDto & { actor: AssessmentActorDto }) {
     if (data.actor.role === UserRole.teacher && data.scope === 'course' && data.courseId) {
       const course = await this.repository.findCourseForPlacement(data.courseId)
@@ -148,6 +151,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Lấy chi tiết assessment cho màn quản trị nội dung.
   async getAdminAssessment(data: { actor: AssessmentActorDto; assessmentId: string }) {
     const assessmentRecord = await this.repository.findAssessmentForPublish(data.assessmentId)
     const assessment = ensureAssessmentForPublishExists(assessmentRecord)
@@ -214,6 +218,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Liệt kê các submission có phần cần giáo viên chấm.
   async listGradingSubmissions(data: {
     actor: AssessmentActorDto
     assessmentId?: string
@@ -257,6 +262,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Lấy chi tiết submission phục vụ chấm tự luận.
   async getGradingSubmission(actor: AssessmentActorDto, submissionId: string) {
     const submissionRecord = await this.repository.findSubmissionForGrading(submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)
@@ -344,6 +350,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Tạo assessment mới và gắn người tạo hiện tại.
   async createAssessment(actor: AssessmentActorDto, data: CreateAssessmentDto) {
     if (data.sourceMediaId) {
       const media = await this.repository.findDocumentMediaById(data.sourceMediaId)
@@ -363,6 +370,7 @@ export class AdminAssessmentService {
     })
   }
 
+  // Cập nhật assessment, khóa các trường nhạy cảm nếu đã có submission.
   async updateAssessment(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -421,6 +429,7 @@ export class AdminAssessmentService {
     return this.repository.updateAssessment(assessmentId, data)
   }
 
+  // Tạo placement để phát hành assessment vào public/course/lesson.
   async createPlacement(actor: AssessmentActorDto, data: CreatePlacementDto) {
     const assessmentRecord = await this.repository.findAssessmentById(data.assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
@@ -458,6 +467,7 @@ export class AdminAssessmentService {
     return mapPlacementSummary(placement)
   }
 
+  // Tạo mới hoặc thay thế placement chính của assessment.
   async upsertPlacement(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -493,6 +503,7 @@ export class AdminAssessmentService {
     return mapPlacementSummary(placement)
   }
 
+  // Xóa placement hiện tại khỏi assessment.
   async deletePlacement(actor: AssessmentActorDto, assessmentId: string) {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
@@ -506,6 +517,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Tạo section mới trong assessment.
   async createSection(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -532,6 +544,7 @@ export class AdminAssessmentService {
     })
   }
 
+  // Cập nhật thông tin section khi assessment chưa bị khóa nội dung.
   async updateSection(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -559,6 +572,7 @@ export class AdminAssessmentService {
     })
   }
 
+  // Xóa section nếu section rỗng và assessment chưa có submission.
   async deleteSection(actor: AssessmentActorDto, assessmentId: string, sectionId: string) {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
@@ -582,6 +596,7 @@ export class AdminAssessmentService {
     return { sectionId, deleted: true }
   }
 
+  // Tạo các item/câu hỏi cho một section.
   async createSectionItems(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -638,6 +653,7 @@ export class AdminAssessmentService {
     return createdItems
   }
 
+  // Cập nhật một item/câu hỏi khi assessment chưa có submission.
   async updateSectionItem(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -673,6 +689,7 @@ export class AdminAssessmentService {
     return updated
   }
 
+  // Xóa một item/câu hỏi khỏi assessment.
   async deleteSectionItem(actor: AssessmentActorDto, assessmentId: string, itemId: string) {
     const assessmentRecord = await this.repository.findAssessmentById(assessmentId)
     const assessment = ensureAssessmentExists(assessmentRecord)
@@ -695,6 +712,7 @@ export class AdminAssessmentService {
     return { itemId, deleted: true }
   }
 
+  // Kiểm tra topic của item khớp với course trước khi publish.
   private async validatePublishCourseTopics(assessment: AssessmentForPublishDetail) {
     for (const placement of assessment.placements) {
       let courseId: string | null = null
@@ -719,6 +737,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Publish assessment sau khi qua toàn bộ kiểm tra nội dung và placement.
   async publishAssessment(actor: AssessmentActorDto, assessmentId: string) {
     const assessmentRecord = await this.repository.findAssessmentForPublish(assessmentId)
     const assessment = ensureAssessmentForPublishExists(assessmentRecord)
@@ -730,6 +749,7 @@ export class AdminAssessmentService {
     return this.repository.publishAssessment(assessmentId)
   }
 
+  // Đổi visibility và validate lại nếu chuyển sang published.
   async updateVisibility(
     actor: AssessmentActorDto,
     assessmentId: string,
@@ -756,6 +776,7 @@ export class AdminAssessmentService {
     return this.repository.updateVisibility(assessmentId, visibility)
   }
 
+  // Clone assessment để tạo bản chỉnh sửa độc lập.
   async cloneAssessment(actor: AssessmentActorDto, assessmentId: string, data: CloneAssessmentDto) {
     const sourceRecord = await this.repository.findAssessmentForPublish(assessmentId)
     const source = ensureAssessmentForPublishExists(sourceRecord)
@@ -784,6 +805,7 @@ export class AdminAssessmentService {
     }
   }
 
+  // Chấm điểm một câu tự luận của submission.
   async gradeEssay(data: GradeEssayDto & { actor: AssessmentActorDto; gradedBy: string }) {
     const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)
@@ -809,6 +831,7 @@ export class AdminAssessmentService {
     return this.repository.gradeEssay(data)
   }
 
+  // Chốt submission manual/mixed sau khi toàn bộ essay đã được chấm.
   async finalizeManualSubmission(data: { actor: AssessmentActorDto; submissionId: string }) {
     const submissionRecord = await this.repository.findSubmissionForGrading(data.submissionId)
     const submission = ensureSubmissionForGradingExists(submissionRecord)

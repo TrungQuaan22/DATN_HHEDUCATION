@@ -23,6 +23,7 @@ import type {
 } from '../types'
 
 export class PrismaStudentAssessmentRepository implements StudentAssessmentRepositoryPort {
+  // Liệt kê placement assessment mà học sinh có quyền nhìn thấy.
   listStudentAssessmentPlacements(data: {
     userId: string
     subject?: Subject
@@ -148,6 +149,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     ])
   }
 
+  // Lấy runtime đầy đủ của placement để mở workspace làm bài.
   findRuntimePlacementById(placementId: string): Promise<RuntimePlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -161,6 +163,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Lấy preview placement trước khi học sinh bắt đầu attempt.
   findRuntimePreviewPlacementById(placementId: string): Promise<RuntimePreviewPlacement | null> {
     return prisma.assessmentPlacement.findFirst({
       where: {
@@ -174,6 +177,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Kiểm tra submission đang làm có thuộc đúng học sinh và placement không.
   findSubmissionWorkspaceGate(data: {
     submissionId: string
     userId: string
@@ -211,6 +215,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Tìm enrollment cho assessment gắn trực tiếp vào course.
   findEnrollmentForPlacement(userId: string, placementId: string): Promise<Enrollment | null> {
     return prisma.enrollment.findFirst({
       where: {
@@ -226,6 +231,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Tìm enrollment cho assessment gắn vào lesson.
   findEnrollmentForLessonPlacement(
     userId: string,
     placementId: string
@@ -252,6 +258,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Đếm số lần học sinh đã làm placement này.
   countAttempts(userId: string, placementId: string): Promise<number> {
     return prisma.submission.count({
       where: {
@@ -261,6 +268,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Tìm attempt đang doing để cho phép resume.
   findDoingSubmissionForPlacement(
     userId: string,
     placementId: string
@@ -287,6 +295,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Tạo submission mới cho một attempt.
   createSubmission(data: {
     userId: string
     assessmentId: string
@@ -313,6 +322,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Lấy submission đầy đủ của một học sinh.
   findSubmissionForStudent(
     submissionId: string,
     userId: string
@@ -326,6 +336,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Liệt kê submission đang doing nhưng đã quá deadline.
   async listExpiredDoingSubmissions(data: {
     now: Date
     limit: number
@@ -359,6 +370,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Lưu/upsert toàn bộ câu trả lời của submission trong transaction.
   async saveAnswers(submissionId: string, answers: SaveAnswerDto[]): Promise<void> {
     await prisma.$transaction(async (tx) => {
       for (const answer of answers) {
@@ -467,6 +479,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Tăng số lần vi phạm nếu submission vẫn đang doing.
   recordViolation(submissionId: string): Promise<StudentSubmissionComplete | null> {
     return prisma.$transaction(async (tx) => {
       const updated = await tx.submission.updateMany({
@@ -489,6 +502,7 @@ export class PrismaStudentAssessmentRepository implements StudentAssessmentRepos
     })
   }
 
+  // Chốt submission, ghi điểm từng câu và đổi trạng thái.
   async finalizeSubmission(data: {
     submissionId: string
     mcqResults: Array<{ answerId: string; isCorrect: boolean; pointEarned: string }>
